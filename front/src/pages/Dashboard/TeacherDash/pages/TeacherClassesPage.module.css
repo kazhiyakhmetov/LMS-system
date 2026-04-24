@@ -1,0 +1,283 @@
+.page {
+  display: grid;
+  gap: 14px;
+}
+
+.header {
+  border: 1px solid rgba(47, 125, 218, 0.16);
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f4f9ff 0%, #ebf4ff 100%);
+  padding: 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  color: var(--text);
+}
+
+.sub {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.summaryCard {
+  border: 1px solid rgba(47, 125, 218, 0.14);
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.summaryLabel {
+  margin: 0;
+  font-size: 12px;
+  color: #5f7795;
+}
+
+.summaryValue {
+  margin: 8px 0 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: #173353;
+}
+
+.controls {
+  display: grid;
+  gap: 10px;
+}
+
+.searchInput {
+  height: 40px;
+  border: 1px solid rgba(47, 125, 218, 0.2);
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0 12px;
+  font-size: 14px;
+  color: #27486d;
+  outline: none;
+}
+
+.searchInput:focus {
+  border-color: rgba(47, 125, 218, 0.45);
+  box-shadow: 0 0 0 3px rgba(47, 125, 218, 0.12);
+}
+
+.selectRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.select {
+  height: 36px;
+  border: 1px solid rgba(47, 125, 218, 0.2);
+  border-radius: 10px;
+  background: #ffffff;
+  color: #27486d;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.classGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.classCard {
+  border: 1px solid rgba(47, 125, 218, 0.14);
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.classTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.classTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #173353;
+}
+
+.curatorBadge {
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(47, 125, 218, 0.2);
+  background: #eaf3ff;
+  color: #2f7dda;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.classMeta {
+  margin: 0;
+  font-size: 13px;
+  color: #4f6d8f;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.metrics span {
+  border: 1px solid rgba(47, 125, 218, 0.14);
+  border-radius: 8px;
+  background: #f7fbff;
+  padding: 7px 8px;
+  font-size: 12px;
+  color: #36577e;
+}
+
+.pending {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #214f86;
+}
+
+.risk {
+  border-left: 4px solid #ff5f6d;
+  background: linear-gradient(90deg, #fff4f6 0%, #ffffff 35%);
+}
+
+.watch {
+  border-left: 4px solid #ff9f43;
+  background: linear-gradient(90deg, #fff8ed 0%, #ffffff 35%);
+}
+
+.good {
+  border-left: 4px solid #2f8b57;
+  background: linear-gradient(90deg, #eef9f2 0%, #ffffff 35%);
+}
+
+.emptyState {
+  border: 1px dashed rgba(47, 125, 218, 0.28);
+  border-radius: 12px;
+  background: #f7fbff;
+  padding: 14px;
+  font-size: 13px;
+  color: #567191;
+}
+
+.bottom {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 10px;
+}
+
+.tableCard,
+.activityCard {
+  border: 1px solid rgba(47, 125, 218, 0.14);
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 16px;
+  color: #163252;
+}
+
+.table {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 10px;
+  border-bottom: 1px solid rgba(47, 125, 218, 0.12);
+  text-align: left;
+  font-size: 12px;
+  color: #2f4d70;
+}
+
+.table th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5f7795;
+  background: #f5f9ff;
+}
+
+.table tr:last-child td {
+  border-bottom: 0;
+}
+
+.activityList {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.activityItem {
+  border: 1px solid rgba(47, 125, 218, 0.12);
+  border-radius: 10px;
+  background: #f8fbff;
+  padding: 10px;
+}
+
+.activityTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #163252;
+}
+
+.activityMeta {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #5f7795;
+}
+
+@media (max-width: 1100px) {
+  .summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .classGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .bottom {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .summary {
+    grid-template-columns: 1fr;
+  }
+
+  .selectRow {
+    grid-template-columns: 1fr;
+  }
+
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+}

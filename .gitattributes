@@ -1,0 +1,22 @@
+# Line endings
+* text=auto eol=lf
+
+# Shell scripts & gradlew must stay LF on all OS
+backend/gradlew text eol=lf
+*.sh text eol=lf
+
+# Windows scripts
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary assets
+*.jar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.docx binary
+*.zip binary
+*.webp binary

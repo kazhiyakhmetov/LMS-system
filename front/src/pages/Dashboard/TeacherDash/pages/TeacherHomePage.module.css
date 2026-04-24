@@ -1,0 +1,419 @@
+.page {
+  display: grid;
+  gap: 14px;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  padding: 22px;
+  border: 1px solid rgba(31, 111, 214, 0.26);
+  background: linear-gradient(120deg, #0d62dc 0%, #1984f0 52%, #38b4ff 100%);
+  color: #f7fbff;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  right: -60px;
+  top: -58px;
+  width: 220px;
+  height: 220px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 72%);
+  pointer-events: none;
+}
+
+.heroEyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.92;
+}
+
+.heroTitle {
+  margin: 10px 0 0;
+  font-size: 32px;
+  line-height: 1.1;
+}
+
+.heroSub {
+  margin: 10px 0 0;
+  max-width: 680px;
+  font-size: 14px;
+  color: rgba(247, 251, 255, 0.92);
+}
+
+.heroDate {
+  position: relative;
+  z-index: 1;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.statCard {
+  border-radius: 14px;
+  padding: 12px;
+  border: 1px solid rgba(47, 125, 218, 0.18);
+  background: #ffffff;
+}
+
+.statLabel {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #4f6887;
+}
+
+.statValue {
+  margin: 8px 0 0;
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 800;
+  color: #122742;
+}
+
+.statMeta {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #5f7693;
+}
+
+.blue {
+  background: linear-gradient(160deg, #ffffff 0%, #edf4ff 100%);
+}
+
+.teal {
+  background: linear-gradient(160deg, #ffffff 0%, #ecfcfb 100%);
+}
+
+.orange {
+  background: linear-gradient(160deg, #ffffff 0%, #fff6ea 100%);
+}
+
+.violet {
+  background: linear-gradient(160deg, #ffffff 0%, #f3f1ff 100%);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(280px, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.mainColumn {
+  display: grid;
+  gap: 14px;
+}
+
+.scheduleCard,
+.eventsCard,
+.deadlineCard {
+  border-radius: 16px;
+  border: 1px solid rgba(23, 76, 145, 0.12);
+  background: #ffffff;
+}
+
+.scheduleCard {
+  padding: 16px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.15;
+  color: #122742;
+}
+
+.lessonList {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 9px;
+}
+
+.lessonItem {
+  border: 1px solid rgba(20, 84, 167, 0.14);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.lessonTime {
+  margin: 0;
+  border-radius: 10px;
+  background: #edf4ff;
+  color: #1e53a2;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+  padding: 8px 10px;
+}
+
+.lessonInfo {
+  min-width: 0;
+}
+
+.lessonTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.lessonTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #122742;
+}
+
+.statusChip {
+  height: 22px;
+  border-radius: 999px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.now {
+  background: #eaf3ff;
+  color: #2f7dda;
+}
+
+.next {
+  background: #ecfbf6;
+  color: #2f8b57;
+}
+
+.today {
+  background: #fff3e6;
+  color: #ba7019;
+}
+
+.lessonMeta {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #5f728b;
+}
+
+.eventsCard {
+  padding: 16px;
+}
+
+.eventList {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.eventItem {
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid rgba(30, 84, 158, 0.14);
+  background: #f8fbff;
+}
+
+.info {
+  background: linear-gradient(120deg, #ecf5ff 0%, #f7fbff 100%);
+}
+
+.eventFocus {
+  background: linear-gradient(120deg, #eef7ff 0%, #ffffff 100%);
+}
+
+.eventTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: #163a66;
+}
+
+.eventText {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #45688f;
+}
+
+.eventMeta {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #5f7795;
+}
+
+.emptyState {
+  margin: 12px 0 0;
+  border: 1px dashed rgba(37, 87, 161, 0.24);
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 14px;
+  color: #5f728b;
+  background: #f9fbff;
+}
+
+.deadlineCard {
+  padding: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+.deadlineHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.deadlineCount {
+  min-width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffffff;
+  background: linear-gradient(130deg, #1d63e6 0%, #35a5ff 100%);
+}
+
+.deadlineList {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.deadlineItem {
+  border-radius: 12px;
+  border: 1px solid rgba(20, 84, 167, 0.14);
+  background: #ffffff;
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.deadlineSubject {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.deadlineTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #122742;
+}
+
+.deadlineMeta {
+  margin: 2px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #5f728b;
+}
+
+.critical {
+  border-left: 5px solid #ff5f6d;
+  background: linear-gradient(90deg, #fff3f5 0%, #ffffff 35%);
+}
+
+.critical .deadlineSubject {
+  color: #d64052;
+}
+
+.warning {
+  border-left: 5px solid #ff9f43;
+  background: linear-gradient(90deg, #fff8ed 0%, #ffffff 35%);
+}
+
+.warning .deadlineSubject {
+  color: #c97415;
+}
+
+.deadlineFocus {
+  border-left: 5px solid #2f7dda;
+  background: linear-gradient(90deg, #eef5ff 0%, #ffffff 35%);
+}
+
+.deadlineFocus .deadlineSubject {
+  color: #1e5fb6;
+}
+
+@media (max-width: 1200px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 980px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 780px) {
+  .hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .heroTitle {
+    font-size: 27px;
+  }
+
+  .sectionTitle {
+    font-size: 20px;
+  }
+
+  .lessonItem {
+    grid-template-columns: 1fr;
+  }
+
+  .lessonTime {
+    text-align: left;
+  }
+}
+
+@media (max-width: 640px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}

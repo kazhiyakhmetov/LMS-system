@@ -1,0 +1,265 @@
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: hidden;
+  padding: 28px;
+}
+
+.bgGrid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.16;
+  background-image:
+    linear-gradient(to right, rgba(47, 125, 218, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(47, 125, 218, 0.06) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(
+    600px 380px at 50% 35%,
+    rgba(0, 0, 0, 1),
+    transparent 70%
+  );
+  animation: gridFloat 7.5s ease-in-out infinite;
+}
+
+@keyframes gridFloat {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(10px);
+  }
+}
+
+.glowA,
+.glowB {
+  position: absolute;
+  width: 460px;
+  height: 460px;
+  border-radius: 999px;
+  filter: blur(60px);
+  opacity: 0.2;
+  transform: translateZ(0);
+  animation: glow 6.8s ease-in-out infinite;
+}
+
+.glowA {
+  left: -140px;
+  top: -140px;
+  background: rgba(47, 125, 218, 0.7);
+}
+
+.glowB {
+  right: -160px;
+  bottom: -160px;
+  background: rgba(138, 179, 222, 0.85);
+  animation-delay: 900ms;
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    transform: scale(1) translateY(0px);
+  }
+  50% {
+    transform: scale(1.06) translateY(10px);
+  }
+}
+
+.cardWrap {
+  width: min(1040px, 100%);
+  min-height: 520px;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  align-items: stretch;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--stroke);
+}
+
+.card {
+  background: var(--panel);
+  padding: 96px 50px;
+  position: relative;
+  overflow: hidden;
+  animation: pop 420ms ease-out both;
+  color: var(--text);
+  font-family: var(--font-sans);
+  border-left: 1px solid var(--stroke);
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0px) scale(1);
+  }
+}
+
+.welcomeCard {
+  background: linear-gradient(135deg, #2f7dda 0%, #69a1d8 85%);
+  padding: 96px 66px;
+  text-align: left;
+  color: #f7fbff;
+  animation: pop 420ms ease-out both;
+  font-family: var(--font-sans);
+}
+
+.welcomeHeader {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+
+.welcomeLogoImg {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.welcome {
+  font-size: 46px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.welcomeH1 {
+  margin-top: 8px;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.welcomeSub {
+  margin-top: 12px;
+  font-size: 18px;
+  color: rgba(247, 251, 255, 0.92);
+  line-height: 1.45;
+}
+
+.header {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+  justify-content: center;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.subtitle {
+  font-size: 28px;
+  color: var(--text);
+  margin-top: 2px;
+  font-weight: 700;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.rowActions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
+
+.forgot {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+  transition:
+    background 160ms ease,
+    transform 120ms ease;
+}
+.forgot:hover {
+  background: var(--accent-soft);
+  transform: translateY(-1px);
+}
+
+.submitError {
+  border: 1px solid rgba(217, 76, 83, 0.2);
+  background: rgba(217, 76, 83, 0.08);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.forgotOverlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(
+    rgba(255, 255, 255, 0.9),
+    rgba(238, 245, 252, 0.92)
+  );
+  z-index: 60;
+}
+.forgotBox {
+  width: min(520px, 92%);
+  background: var(--panel);
+  padding: 18px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow2);
+  border: 1px solid var(--stroke);
+}
+.forgotForm {
+  display: grid;
+  gap: 10px;
+}
+.forgotStatus {
+  color: var(--muted);
+  font-size: 13px;
+  min-height: 20px;
+}
+.ghost {
+  background: transparent;
+  border: 1px solid var(--stroke);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .cardWrap {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .welcomeCard,
+  .card {
+    padding: 48px 26px;
+  }
+
+  .welcome {
+    font-size: 34px;
+  }
+
+  .welcomeH1 {
+    font-size: 28px;
+  }
+
+  .subtitle {
+    font-size: 24px;
+  }
+}

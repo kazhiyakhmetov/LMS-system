@@ -1,0 +1,151 @@
+.page {
+  display: grid;
+  gap: 16px;
+}
+
+.levelCard {
+  border: 1px solid rgba(47, 125, 218, 0.16);
+  border-radius: 14px;
+  background: linear-gradient(130deg, #f5f9ff 0%, #eaf3ff 100%);
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  color: var(--text);
+}
+
+.sub {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.progressWrap {
+  border: 1px solid rgba(47, 125, 218, 0.15);
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px;
+}
+
+.progressHead {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.progressTrack {
+  margin-top: 8px;
+  height: 9px;
+  border-radius: 999px;
+  background: #deebfa;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), #79addf);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 12px;
+}
+
+.panel {
+  border: 1px solid rgba(47, 125, 218, 0.14);
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px;
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 17px;
+  color: var(--text);
+}
+
+.badges {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.badgeCard {
+  border: 1px solid rgba(47, 125, 218, 0.12);
+  border-radius: 10px;
+  background: #f8fbff;
+  padding: 10px;
+}
+
+.badgeTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.badgeDesc {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.leaderboard {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(47, 125, 218, 0.12);
+  border-radius: 10px;
+  background: #f8fbff;
+  padding: 10px;
+}
+
+.rank {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-strong);
+}
+
+.name {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.xp {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .badges {
+    grid-template-columns: 1fr;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+}

@@ -1,0 +1,375 @@
+.page {
+  display: grid;
+  gap: 14px;
+}
+
+.header {
+  border: 1px solid rgba(47, 125, 218, 0.16);
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f5f9ff 0%, #eaf4ff 100%);
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  color: var(--text);
+}
+
+.sub {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.createBtn {
+  height: 38px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(120deg, #1d63e6 0%, #2f8cff 100%);
+  color: #ffffff;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.statCard {
+  border: 1px solid rgba(47, 125, 218, 0.14);
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.statLabel {
+  margin: 0;
+  font-size: 12px;
+  color: #5f7795;
+}
+
+.statValue {
+  margin: 8px 0 0;
+  font-size: 24px;
+  font-weight: 800;
+  color: #173353;
+}
+
+.controls {
+  display: grid;
+  gap: 10px;
+}
+
+.searchInput {
+  height: 40px;
+  border: 1px solid rgba(47, 125, 218, 0.2);
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0 12px;
+  font-size: 14px;
+  color: #27486d;
+  outline: none;
+}
+
+.searchInput:focus {
+  border-color: rgba(47, 125, 218, 0.45);
+  box-shadow: 0 0 0 3px rgba(47, 125, 218, 0.12);
+}
+
+.selectRow {
+  display: grid;
+  grid-template-columns: minmax(240px, 360px);
+}
+
+.select {
+  height: 36px;
+  border: 1px solid rgba(47, 125, 218, 0.2);
+  border-radius: 10px;
+  background: #ffffff;
+  color: #27486d;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filterChip {
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(47, 125, 218, 0.2);
+  background: #ffffff;
+  color: #355578;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.filterChipActive {
+  border-color: transparent;
+  background: linear-gradient(120deg, #1d63e6 0%, #2f8cff 100%);
+  color: #ffffff;
+}
+
+.list {
+  display: grid;
+  gap: 10px;
+}
+
+.card {
+  border: 1px solid rgba(47, 125, 218, 0.14);
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.subject {
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(47, 125, 218, 0.2);
+  background: #eef5ff;
+  color: #24548f;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badge {
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.draft {
+  background: #fff2e3;
+  color: #aa6618;
+}
+
+.active {
+  background: #eaf3ff;
+  color: #2f7dda;
+}
+
+.review {
+  background: #eef8ec;
+  color: #2f8b57;
+}
+
+.closed {
+  background: #edf1f6;
+  color: #4b6484;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #173353;
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  color: #5f7795;
+}
+
+.progress {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.progressTrack {
+  height: 7px;
+  border-radius: 999px;
+  background: #dce8f8;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #1f67df 0%, #41a2ff 100%);
+}
+
+.progressText {
+  font-size: 12px;
+  font-weight: 700;
+  color: #355578;
+}
+
+.cardActions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.actionBtn {
+  height: 36px;
+  border: 1px solid rgba(47, 125, 218, 0.2);
+  border-radius: 10px;
+  background: #f8fbff;
+  color: #1e5bb6;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 12px;
+}
+
+.actionBtn:hover {
+  background: #eef5ff;
+}
+
+.emptyState {
+  border: 1px dashed rgba(47, 125, 218, 0.26);
+  border-radius: 12px;
+  background: #f8fbff;
+  padding: 14px;
+  color: #5f7795;
+  font-size: 13px;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(14, 28, 45, 0.42);
+  backdrop-filter: blur(3px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.modal {
+  width: min(620px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  border-radius: 16px;
+  border: 1px solid rgba(47, 125, 218, 0.24);
+  background: #ffffff;
+  box-shadow: 0 18px 40px rgba(12, 34, 58, 0.2);
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.modalHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 20px;
+  color: #132a46;
+}
+
+.closeBtn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(47, 125, 218, 0.2);
+  border-radius: 9px;
+  background: #ffffff;
+  color: #355578;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.form {
+  display: grid;
+  gap: 8px;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.formInput {
+  border: 1px solid rgba(47, 125, 218, 0.2);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #27486d;
+  background: #ffffff;
+  outline: none;
+  min-height: 38px;
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #355578;
+}
+
+.submitBtn {
+  height: 36px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(120deg, #1d63e6 0%, #2f8cff 100%);
+  color: #ffffff;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 980px) {
+  .header {
+    flex-direction: column;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .selectRow {
+    grid-template-columns: 1fr;
+  }
+
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}

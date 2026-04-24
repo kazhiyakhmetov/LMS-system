@@ -1,0 +1,28 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+@import "./theme.css";
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+}
+
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background:
+    radial-gradient(1200px 620px at 12% 8%, rgba(47, 125, 218, 0.12), transparent 56%),
+    radial-gradient(980px 580px at 88% 16%, rgba(132, 181, 233, 0.16), transparent 52%),
+    linear-gradient(180deg, #f8fbff 0%, var(--bg) 52%, #eef4fb 100%);
+  color: var(--text);
+  padding: 0;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { color: inherit; }

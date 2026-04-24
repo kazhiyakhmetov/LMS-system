@@ -1,0 +1,209 @@
+.page {
+  display: grid;
+  gap: 14px;
+}
+
+.toolbar {
+  border: 1px solid rgba(41, 101, 184, 0.14);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #eef4ff 0%, #f7faff 100%);
+  padding: 14px;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.title {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.2;
+  color: #10233d;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-decoration-color: #1d63e6;
+  text-underline-offset: 4px;
+}
+
+.weekControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: center;
+}
+
+.arrowBtn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(29, 99, 230, 0.52);
+  background: #ffffff;
+  color: #123469;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.arrowBtn:hover {
+  background: #edf4ff;
+}
+
+.weekRange {
+  margin: 0;
+  white-space: nowrap;
+  font-size: 22px;
+  font-weight: 700;
+  color: #132a46;
+}
+
+.rightBlock {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.actionBtn {
+  height: 42px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 16px;
+  background: linear-gradient(120deg, #1d63e6 0%, #2f8cff 100%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.actionBtn:hover {
+  filter: brightness(1.05);
+}
+
+.tableCard {
+  border: 1px solid rgba(41, 101, 184, 0.14);
+  border-radius: 14px;
+  background: #f4f7fc;
+  padding: 10px;
+}
+
+.tableWrap {
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table thead th {
+  padding: 12px 10px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f2743;
+  border-bottom: 1px solid rgba(19, 42, 70, 0.28);
+}
+
+.slotHead {
+  width: 170px;
+}
+
+.table tbody th,
+.table tbody td {
+  padding: 12px 10px;
+  text-align: center;
+  vertical-align: middle;
+  border-right: 1px solid rgba(19, 42, 70, 0.2);
+}
+
+.table tbody th:last-child,
+.table tbody td:last-child {
+  border-right: 0;
+}
+
+.table tbody tr:not(:last-child) th,
+.table tbody tr:not(:last-child) td {
+  border-bottom: 1px dashed rgba(19, 42, 70, 0.26);
+}
+
+.slotCell {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+}
+
+.slotNumber {
+  font-size: 15px;
+  font-weight: 700;
+  color: #152c47;
+}
+
+.slotTime {
+  font-size: 13px;
+  font-weight: 600;
+  color: #3c5673;
+}
+
+.lesson {
+  display: grid;
+  gap: 2px;
+}
+
+.lessonSubject {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #102843;
+}
+
+.lessonMeta,
+.lessonExtra {
+  margin: 0;
+  font-size: 13px;
+  color: #395777;
+}
+
+.lessonExtra {
+  font-weight: 600;
+  color: #4d6785;
+}
+
+.empty {
+  color: #8ea1b7;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (max-width: 1200px) {
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .weekControls {
+    justify-self: start;
+  }
+
+  .rightBlock {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 700px) {
+  .rightBlock {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .title {
+    font-size: 22px;
+  }
+
+  .weekRange {
+    font-size: 18px;
+  }
+}

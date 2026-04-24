@@ -1,0 +1,15 @@
+.git
+.gitignore
+.gitattributes
+.gradle
+.idea
+bin
+build
+out
+uploads/*
+!uploads/.gitkeep
+hs_err_pid*.log
+*.log
+README.md
+Dockerfile
+.dockerignore
