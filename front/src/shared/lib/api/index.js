@@ -1,0 +1,20 @@
+export { http, httpRequest, ApiError, onUnauthorized } from "./httpClient";
+
+export { profileApi } from "./profile.api";
+export { scheduleApi } from "./schedule.api";
+export { assignmentsApi } from "./assignments.api";
+export { submissionsApi } from "./submissions.api";
+export { filesApi } from "./files.api";
+export { surveysApi } from "./surveys.api";
+export { journalApi } from "./journal.api";
+export { gamificationApi } from "./gamification.api";
+export { studentsApi } from "./students.api";
+export { statisticsApi } from "./statistics.api";
+export { teachingApi } from "./teaching.api";
+export { parentApi } from "./parent.api";
+export { adminApi } from "./admin.api";
+export { usersApi } from "./users.api";
+export { schoolsApi } from "./schools.api";
+export { chatApi } from "./chat.api";
+export { friendsApi } from "./friends.api";
+export { notificationsApi } from "./notifications.api";

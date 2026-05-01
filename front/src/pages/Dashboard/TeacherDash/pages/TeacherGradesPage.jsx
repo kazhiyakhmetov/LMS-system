@@ -1,200 +1,140 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styles from "./TeacherGradesPage.module.css";
 import { quarterOptions } from "../../../../shared/constants/academic";
 import { average } from "../../../../shared/lib/utils/math";
+import { useApi } from "../../../../shared/lib/hooks/useApi";
+import { journalApi } from "../../../../shared/lib/api";
+import { quarterKeyToNumber } from "../../../../shared/lib/utils/date";
 
-const initialGradebook = [
-  {
-    id: 1,
-    student: "Айгерим Каримова",
-    className: "10-А",
-    subject: "Алгебра",
-    quarterData: {
-      q1: { fo: [5, 5, 4, 5], sor: 5, soch: 5, quarter: 5, checked: 14, pending: 0, attendance: { present: 34, total: 36, N: 1, P: 0, B: 1, O: 0 } },
-      q2: { fo: [5, 4, 5, 5], sor: 5, soch: 4, quarter: 5, checked: 15, pending: 1, attendance: { present: 35, total: 36, N: 1, P: 0, B: 0, O: 0 } },
-      q3: { fo: [5, 4, 5, 4], sor: 5, soch: 4, quarter: 5, checked: 13, pending: 1, attendance: { present: 29, total: 30, N: 1, P: 0, B: 0, O: 0 } },
-      q4: { fo: [], sor: 0, soch: 0, quarter: 0, checked: 0, pending: 0, attendance: { present: 0, total: 0, N: 0, P: 0, B: 0, O: 0 } },
-    },
-  },
-  {
-    id: 2,
-    student: "Дамир Ахметов",
-    className: "10-А",
-    subject: "Алгебра",
-    quarterData: {
-      q1: { fo: [4, 4, 5, 3], sor: 4, soch: 4, quarter: 4, checked: 13, pending: 1, attendance: { present: 33, total: 36, N: 2, P: 0, B: 1, O: 0 } },
-      q2: { fo: [4, 4, 4, 4], sor: 4, soch: 4, quarter: 4, checked: 14, pending: 2, attendance: { present: 32, total: 36, N: 2, P: 1, B: 1, O: 0 } },
-      q3: { fo: [3, 4, 4, 3], sor: 3, soch: 4, quarter: 3, checked: 12, pending: 3, attendance: { present: 25, total: 30, N: 2, P: 2, B: 1, O: 0 } },
-      q4: { fo: [], sor: 0, soch: 0, quarter: 0, checked: 0, pending: 0, attendance: { present: 0, total: 0, N: 0, P: 0, B: 0, O: 0 } },
-    },
-  },
-  {
-    id: 3,
-    student: "Султан Алиев",
-    className: "10-А",
-    subject: "Геометрия",
-    quarterData: {
-      q1: { fo: [4, 5, 4, 4], sor: 4, soch: 5, quarter: 4, checked: 12, pending: 1, attendance: { present: 34, total: 36, N: 1, P: 0, B: 1, O: 0 } },
-      q2: { fo: [4, 4, 5, 4], sor: 4, soch: 4, quarter: 4, checked: 13, pending: 1, attendance: { present: 34, total: 36, N: 1, P: 0, B: 1, O: 0 } },
-      q3: { fo: [5, 4, 5, 4], sor: 5, soch: 4, quarter: 5, checked: 12, pending: 1, attendance: { present: 28, total: 30, N: 1, P: 1, B: 0, O: 0 } },
-      q4: { fo: [], sor: 0, soch: 0, quarter: 0, checked: 0, pending: 0, attendance: { present: 0, total: 0, N: 0, P: 0, B: 0, O: 0 } },
-    },
-  },
-  {
-    id: 4,
-    student: "Нурай Талгат",
-    className: "9-Б",
-    subject: "Геометрия",
-    quarterData: {
-      q1: { fo: [3, 4, 4, 3], sor: 3, soch: 4, quarter: 3, checked: 11, pending: 2, attendance: { present: 30, total: 36, N: 3, P: 1, B: 2, O: 0 } },
-      q2: { fo: [4, 3, 4, 3], sor: 4, soch: 3, quarter: 3, checked: 12, pending: 2, attendance: { present: 29, total: 36, N: 3, P: 2, B: 2, O: 0 } },
-      q3: { fo: [3, 3, 4, 3], sor: 3, soch: 3, quarter: 3, checked: 10, pending: 3, attendance: { present: 23, total: 30, N: 3, P: 3, B: 1, O: 0 } },
-      q4: { fo: [], sor: 0, soch: 0, quarter: 0, checked: 0, pending: 0, attendance: { present: 0, total: 0, N: 0, P: 0, B: 0, O: 0 } },
-    },
-  },
-  {
-    id: 5,
-    student: "Артур Нуров",
-    className: "9-Б",
-    subject: "Алгебра",
-    quarterData: {
-      q1: { fo: [5, 5, 4, 5], sor: 5, soch: 4, quarter: 5, checked: 13, pending: 0, attendance: { present: 35, total: 36, N: 1, P: 0, B: 0, O: 0 } },
-      q2: { fo: [4, 5, 5, 4], sor: 4, soch: 5, quarter: 5, checked: 14, pending: 1, attendance: { present: 34, total: 36, N: 1, P: 0, B: 1, O: 0 } },
-      q3: { fo: [4, 4, 5, 4], sor: 4, soch: 4, quarter: 4, checked: 11, pending: 1, attendance: { present: 28, total: 30, N: 1, P: 1, B: 0, O: 0 } },
-      q4: { fo: [], sor: 0, soch: 0, quarter: 0, checked: 0, pending: 0, attendance: { present: 0, total: 0, N: 0, P: 0, B: 0, O: 0 } },
-    },
-  },
-  {
-    id: 6,
-    student: "Ерасыл Данияр",
-    className: "11-А",
-    subject: "Математика",
-    quarterData: {
-      q1: { fo: [4, 5, 4, 4], sor: 4, soch: 4, quarter: 4, checked: 15, pending: 1, attendance: { present: 35, total: 36, N: 1, P: 0, B: 0, O: 0 } },
-      q2: { fo: [5, 4, 4, 5], sor: 5, soch: 4, quarter: 5, checked: 16, pending: 1, attendance: { present: 35, total: 36, N: 1, P: 0, B: 0, O: 0 } },
-      q3: { fo: [4, 5, 5, 4], sor: 5, soch: 5, quarter: 5, checked: 14, pending: 0, attendance: { present: 29, total: 30, N: 1, P: 0, B: 0, O: 0 } },
-      q4: { fo: [], sor: 0, soch: 0, quarter: 0, checked: 0, pending: 0, attendance: { present: 0, total: 0, N: 0, P: 0, B: 0, O: 0 } },
-    },
-  },
-];
+const ABSENCE_LETTERS = { Н: 0, П: 0, Б: 0, О: 0 };
 
-const recentEvents = [
-  { date: "10.03", quarter: "q3", className: "10-А", subject: "Алгебра", student: "Айгерим К.", type: "СОР", mark: 5 },
-  { date: "10.03", quarter: "q3", className: "10-А", subject: "Алгебра", student: "Дамир А.", type: "ФО", mark: 3 },
-  { date: "09.03", quarter: "q3", className: "9-Б", subject: "Геометрия", student: "Нурай Т.", type: "ФО", mark: 3 },
-  { date: "09.03", quarter: "q3", className: "9-Б", subject: "Алгебра", student: "Артур Н.", type: "СОР", mark: 4 },
-  { date: "08.03", quarter: "q3", className: "11-А", subject: "Математика", student: "Ерасыл Д.", type: "СОЧ", mark: 5 },
-];
-
-function getAttendancePercent(attendance) {
-  if (!attendance?.total) return 0;
-  return Math.round((attendance.present / attendance.total) * 100);
+function normalizeAbsenceCode(code) {
+  if (!code) return null;
+  const letter = String(code).trim().charAt(0).toUpperCase();
+  const map = { Н: "Н", N: "Н", П: "П", P: "П", Б: "Б", B: "Б", О: "О", O: "О" };
+  return map[letter] ?? null;
 }
 
-function parseMark(value) {
-  if (value === "") return 0;
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : 0;
+function buildStudentRow(studentDto) {
+  const cells = Array.isArray(studentDto.cells) ? studentDto.cells : [];
+  const marks = [];
+  const absence = { ...ABSENCE_LETTERS };
+  let total = 0;
+  let absent = 0;
+
+  cells.forEach((cell) => {
+    total += 1;
+    const code = normalizeAbsenceCode(cell.attendanceCode);
+    if (code) {
+      absence[code] += 1;
+      absent += 1;
+    }
+    (cell.entries || []).forEach((entry) => {
+      if (entry?.numericValue != null) {
+        marks.push(Math.round(entry.numericValue));
+      }
+    });
+  });
+
+  const quarterGrade = studentDto.finalGrade?.quarterGrade
+    ?? studentDto.finalGrade?.calculatedQuarterGrade
+    ?? null;
+  const marksAverage = marks.length ? average(marks) : 0;
+  const progress = marks.length ? Math.round((marksAverage / 5) * 100) : 0;
+  const attendancePercent = total > 0 ? Math.round(((total - absent) / total) * 100) : 0;
+
+  return {
+    studentId: studentDto.studentId,
+    student: studentDto.studentName || `Студент #${studentDto.studentId}`,
+    marks,
+    quarterGrade: quarterGrade != null ? Number(quarterGrade) : 0,
+    progress,
+    attendancePercent,
+    absence,
+  };
 }
 
 export default function TeacherGradesPage() {
-  const [gradebook, setGradebook] = useState(initialGradebook);
   const [quarter, setQuarter] = useState("q3");
-  const [classFilter, setClassFilter] = useState("all");
-  const [subjectFilter, setSubjectFilter] = useState("all");
+  const [pairKey, setPairKey] = useState("");
 
-  const classOptions = useMemo(() => ["all", ...new Set(gradebook.map((row) => row.className))], [gradebook]);
+  const pairsQuery = useApi(() => journalApi.teacherPairs(), []);
+  const pairs = useMemo(() => Array.isArray(pairsQuery.data) ? pairsQuery.data : [], [pairsQuery.data]);
 
-  const subjectOptions = useMemo(() => {
-    const rows = classFilter === "all" ? gradebook : gradebook.filter((row) => row.className === classFilter);
-    return ["all", ...new Set(rows.map((row) => row.subject))];
-  }, [gradebook, classFilter]);
+  useEffect(() => {
+    if (!pairKey && pairs.length) {
+      const first = pairs[0];
+      setPairKey(`${first.classId}-${first.subjectId}`);
+    }
+  }, [pairs, pairKey]);
 
-  const filteredRows = useMemo(() => {
-    return gradebook
-      .filter((row) => classFilter === "all" || row.className === classFilter)
-      .filter((row) => subjectFilter === "all" || row.subject === subjectFilter)
-      .map((row) => {
-        const quarterInfo = row.quarterData[quarter];
-        const foMarks = quarterInfo.fo.filter((mark) => mark > 0);
-        const foAverage = average(foMarks);
-        const progress = Math.round((foAverage / 5) * 100);
-        const attendancePercent = getAttendancePercent(quarterInfo.attendance);
+  const selectedPair = useMemo(() => {
+    if (!pairKey) return null;
+    const [classId, subjectId] = pairKey.split("-").map(Number);
+    return pairs.find((p) => p.classId === classId && p.subjectId === subjectId) || null;
+  }, [pairKey, pairs]);
 
-        return {
-          ...row,
-          quarterInfo,
-          foMarks,
-          progress,
-          attendancePercent,
-        };
-      });
-  }, [gradebook, classFilter, subjectFilter, quarter]);
+  const journalQuery = useApi(
+    () => (selectedPair
+      ? journalApi.teacherJournal({
+          classId: selectedPair.classId,
+          subjectId: selectedPair.subjectId,
+          quarter: quarterKeyToNumber(quarter),
+        })
+      : Promise.resolve(null)
+    ),
+    [selectedPair?.classId, selectedPair?.subjectId, quarter],
+    { immediate: Boolean(selectedPair) },
+  );
+
+  const journal = journalQuery.data || {};
+  const students = Array.isArray(journal.students) ? journal.students : [];
+  const rows = useMemo(() => students.map(buildStudentRow), [students]);
 
   const summary = useMemo(() => {
-    const quarterMarks = filteredRows.map((row) => row.quarterInfo.quarter).filter((value) => value > 0);
-    const progressValues = filteredRows.map((row) => row.progress).filter((value) => value > 0);
-    const attendanceValues = filteredRows.map((row) => row.attendancePercent).filter((value) => value > 0);
-    const pendingTotal = filteredRows.reduce((sum, row) => sum + row.quarterInfo.pending, 0);
-    const riskCount = filteredRows.filter((row) => row.quarterInfo.quarter > 0 && row.quarterInfo.quarter <= 3).length;
-
+    const grades = rows.map((r) => r.quarterGrade).filter((v) => v > 0);
+    const progressVals = rows.map((r) => r.progress).filter((v) => v > 0);
+    const attendVals = rows.map((r) => r.attendancePercent).filter((v) => v > 0);
+    const risk = rows.filter((r) => r.quarterGrade > 0 && r.quarterGrade <= 3).length;
     return {
-      quarterAverage: quarterMarks.length ? average(quarterMarks).toFixed(1) : "—",
-      progressAverage: progressValues.length ? `${Math.round(average(progressValues))}%` : "—",
-      attendanceAverage: attendanceValues.length ? `${Math.round(average(attendanceValues))}%` : "—",
-      pendingTotal,
-      riskCount,
+      quarterAverage: grades.length ? average(grades).toFixed(1) : "—",
+      progressAverage: progressVals.length ? `${Math.round(average(progressVals))}%` : "—",
+      attendanceAverage: attendVals.length ? `${Math.round(average(attendVals))}%` : "—",
+      riskCount: risk,
     };
-  }, [filteredRows]);
+  }, [rows]);
 
-  const events = useMemo(() => {
-    return recentEvents
-      .filter((item) => item.quarter === quarter)
-      .filter((item) => classFilter === "all" || item.className === classFilter)
-      .filter((item) => subjectFilter === "all" || item.subject === subjectFilter)
-      .slice(0, 6);
-  }, [quarter, classFilter, subjectFilter]);
+  const [savingFinal, setSavingFinal] = useState({});
+  async function setQuarterFinal(studentId, value) {
+    if (!selectedPair) return;
+    setSavingFinal((prev) => ({ ...prev, [studentId]: true }));
+    try {
+      await journalApi.upsertQuarterFinal({
+        classId: selectedPair.classId,
+        subjectId: selectedPair.subjectId,
+        studentId,
+        quarter: quarterKeyToNumber(quarter),
+        quarterGrade: value === "" ? null : Number(value),
+      });
+      await journalQuery.refetch();
+    } finally {
+      setSavingFinal((prev) => ({ ...prev, [studentId]: false }));
+    }
+  }
 
-  const risks = useMemo(() => {
-    return filteredRows
-      .filter((row) => row.quarterInfo.quarter > 0 && (row.quarterInfo.quarter <= 3 || row.attendancePercent < 80))
-      .map((row) => ({
-        id: row.id,
-        student: row.student,
-        className: row.className,
-        subject: row.subject,
-        quarter: row.quarterInfo.quarter,
-        attendancePercent: row.attendancePercent,
-        pending: row.quarterInfo.pending,
-      }));
-  }, [filteredRows]);
-
-  const updateMark = (recordId, field, rawValue) => {
-    const value = parseMark(rawValue);
-    setGradebook((prev) =>
-      prev.map((row) =>
-        row.id === recordId
-          ? {
-              ...row,
-              quarterData: {
-                ...row.quarterData,
-                [quarter]: {
-                  ...row.quarterData[quarter],
-                  [field]: value,
-                },
-              },
-            }
-          : row,
-      ),
-    );
-  };
+  if (pairsQuery.loading && !pairs.length) {
+    return <div style={{ padding: 24 }}>Загрузка журналов…</div>;
+  }
+  if (!pairs.length) {
+    return <div style={{ padding: 24 }}>Нет назначенных классов и предметов.</div>;
+  }
 
   return (
     <div className={styles.page}>
       <section className={styles.header}>
         <div>
           <h2 className={styles.title}>Оценки и журнал</h2>
-          <p className={styles.sub}>Управление оценками по четвертям, аттендансом и текущей нагрузкой на проверку.</p>
+          <p className={styles.sub}>Журнал по выбранному классу-предмету и четверти.</p>
         </div>
 
         <div className={styles.headerControls}>
@@ -212,32 +152,20 @@ export default function TeacherGradesPage() {
           </div>
 
           <div className={styles.actions}>
-            <select className={styles.select} value={classFilter} onChange={(event) => setClassFilter(event.target.value)}>
-              {classOptions.map((value) => (
-                <option key={value} value={value}>
-                  {value === "all" ? "Все классы" : value}
+            <select className={styles.select} value={pairKey} onChange={(e) => setPairKey(e.target.value)}>
+              {pairs.map((p) => (
+                <option key={`${p.classId}-${p.subjectId}`} value={`${p.classId}-${p.subjectId}`}>
+                  {p.className} • {p.subjectName}
                 </option>
               ))}
             </select>
-
-            <select className={styles.select} value={subjectFilter} onChange={(event) => setSubjectFilter(event.target.value)}>
-              {subjectOptions.map((value) => (
-                <option key={value} value={value}>
-                  {value === "all" ? "Все предметы" : value}
-                </option>
-              ))}
-            </select>
-
-            <button className={styles.exportBtn} type="button">
-              Скачать журнал
-            </button>
           </div>
         </div>
       </section>
 
       <section className={styles.cards}>
         <article className={styles.card}>
-          <p className={styles.cardLabel}>Средняя за четверть</p>
+          <p className={styles.cardLabel}>Средняя по классу</p>
           <p className={styles.cardValue}>{summary.quarterAverage}</p>
         </article>
         <article className={styles.card}>
@@ -249,146 +177,87 @@ export default function TeacherGradesPage() {
           <p className={styles.cardValue}>{summary.attendanceAverage}</p>
         </article>
         <article className={styles.card}>
-          <p className={styles.cardLabel}>На проверке</p>
-          <p className={styles.cardValue}>{summary.pendingTotal}</p>
+          <p className={styles.cardLabel}>В риске</p>
+          <p className={styles.cardValue}>{summary.riskCount}</p>
         </article>
       </section>
 
-      <section className={styles.tableWrap}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Ученик</th>
-              <th>Класс</th>
-              <th>Предмет</th>
-              <th>ФО</th>
-              <th>СОР</th>
-              <th>СОЧ</th>
-              <th>За четверть</th>
-              <th>Проверено</th>
-              <th>Аттенданс</th>
-              <th>Пропуски</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredRows.map((row) => (
-              <tr key={row.id}>
-                <td>{row.student}</td>
-                <td>{row.className}</td>
-                <td>{row.subject}</td>
-                <td>
-                  <div className={styles.markList}>
-                    {row.foMarks.length ? (
-                      row.foMarks.map((mark, index) => (
-                        <span key={`${row.id}-fo-${index}`} className={styles.markChip}>
-                          {mark}
-                        </span>
-                      ))
-                    ) : (
-                      <span className={styles.empty}>—</span>
-                    )}
-                  </div>
-                </td>
-                <td>
-                  <select
-                    className={styles.markSelect}
-                    value={row.quarterInfo.sor || ""}
-                    onChange={(event) => updateMark(row.id, "sor", event.target.value)}
-                  >
-                    <option value="">—</option>
-                    <option value="5">5</option>
-                    <option value="4">4</option>
-                    <option value="3">3</option>
-                    <option value="2">2</option>
-                  </select>
-                </td>
-                <td>
-                  <select
-                    className={styles.markSelect}
-                    value={row.quarterInfo.soch || ""}
-                    onChange={(event) => updateMark(row.id, "soch", event.target.value)}
-                  >
-                    <option value="">—</option>
-                    <option value="5">5</option>
-                    <option value="4">4</option>
-                    <option value="3">3</option>
-                    <option value="2">2</option>
-                  </select>
-                </td>
-                <td>
-                  <select
-                    className={styles.markSelect}
-                    value={row.quarterInfo.quarter || ""}
-                    onChange={(event) => updateMark(row.id, "quarter", event.target.value)}
-                  >
-                    <option value="">—</option>
-                    <option value="5">5</option>
-                    <option value="4">4</option>
-                    <option value="3">3</option>
-                    <option value="2">2</option>
-                  </select>
-                </td>
-                <td className={styles.checked}>
-                  {row.quarterInfo.checked} / {row.quarterInfo.pending}
-                </td>
-                <td>{row.attendancePercent ? `${row.attendancePercent}%` : "—"}</td>
-                <td className={styles.absence}>
-                  Н:{row.quarterInfo.attendance.N} П:{row.quarterInfo.attendance.P} Б:{row.quarterInfo.attendance.B} О:
-                  {row.quarterInfo.attendance.O}
-                </td>
+      {journalQuery.loading && !rows.length ? (
+        <p style={{ padding: 16 }}>Загрузка журнала…</p>
+      ) : journalQuery.error ? (
+        <p style={{ padding: 16, color: "var(--danger)" }}>Ошибка: {journalQuery.error.message}</p>
+      ) : (
+        <section className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>Ученик</th>
+                <th>Оценки</th>
+                <th>За четверть</th>
+                <th>Успеваемость</th>
+                <th>Аттенданс</th>
+                <th>Пропуски</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+            </thead>
+            <tbody>
+              {rows.length ? rows.map((row) => (
+                <tr key={row.studentId}>
+                  <td>{row.student}</td>
+                  <td>
+                    <div className={styles.markList}>
+                      {row.marks.length ? row.marks.map((mark, idx) => (
+                        <span key={`${row.studentId}-${idx}`} className={styles.markChip}>{mark}</span>
+                      )) : <span className={styles.empty}>—</span>}
+                    </div>
+                  </td>
+                  <td>
+                    <select
+                      className={styles.markSelect}
+                      value={row.quarterGrade || ""}
+                      onChange={(e) => setQuarterFinal(row.studentId, e.target.value)}
+                      disabled={!!savingFinal[row.studentId]}
+                    >
+                      <option value="">—</option>
+                      <option value="5">5</option>
+                      <option value="4">4</option>
+                      <option value="3">3</option>
+                      <option value="2">2</option>
+                    </select>
+                  </td>
+                  <td>
+                    <div className={styles.progressWrap}>
+                      <span className={styles.progressValue}>{row.progress ? `${row.progress}%` : "—"}</span>
+                      <div className={styles.progressTrack}>
+                        <div className={styles.progressFill} style={{ width: `${row.progress}%` }} />
+                      </div>
+                    </div>
+                  </td>
+                  <td>{row.attendancePercent ? `${row.attendancePercent}%` : "—"}</td>
+                  <td className={styles.absence}>
+                    Н:{row.absence.Н} П:{row.absence.П} Б:{row.absence.Б} О:{row.absence.О}
+                  </td>
+                </tr>
+              )) : (
+                <tr><td colSpan={6} style={{ textAlign: "center", padding: 16 }}>Нет данных за выбранный период</td></tr>
+              )}
+            </tbody>
+          </table>
+        </section>
+      )}
 
       <section className={styles.bottom}>
         <article className={styles.panel}>
-          <h3 className={styles.panelTitle}>Последние оценки</h3>
-          <ul className={styles.eventList}>
-            {events.length ? (
-              events.map((eventItem) => (
-                <li key={`${eventItem.date}-${eventItem.student}-${eventItem.type}`} className={styles.eventItem}>
-                  <span className={styles.eventDate}>{eventItem.date}</span>
-                  <span className={styles.eventSubject}>
-                    {eventItem.student} • {eventItem.subject}
-                  </span>
-                  <span className={styles.eventType}>{eventItem.type}</span>
-                  <span className={styles.eventMark}>{eventItem.mark}</span>
-                </li>
-              ))
-            ) : (
-              <li className={styles.eventEmpty}>Нет оценок за выбранные параметры.</li>
-            )}
-          </ul>
-        </article>
-
-        <article className={styles.panel}>
-          <h3 className={styles.panelTitle}>Зона внимания</h3>
-          {risks.length ? (
-            <ul className={styles.riskList}>
-              {risks.map((risk) => (
-                <li key={risk.id} className={styles.riskItem}>
-                  <p className={styles.riskName}>
-                    {risk.student} ({risk.className})
-                  </p>
-                  <p className={styles.riskMeta}>
-                    {risk.subject} • четверть: {risk.quarter || "—"} • посещаемость: {risk.attendancePercent || "—"}% • на
-                    проверке: {risk.pending}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className={styles.noRisk}>По текущим фильтрам учеников в риске нет.</p>
-          )}
-
+          <h3 className={styles.panelTitle}>Подсказка</h3>
+          <p style={{ color: "var(--muted)" }}>
+            Изменение оценки за четверть в селекте сразу отправляется на сервер
+            (PUT /api/journal/teacher/quarter-final). Для проставления текущих оценок (ФО) — используйте отдельный
+            endpoint upsertLessonGrade — UI для дат-журнала добавим на следующем шаге.
+          </p>
           <div className={styles.legend}>
             <span>Н — уважительная</span>
             <span>П — прогул</span>
             <span>Б — болезнь</span>
             <span>О — опоздание</span>
-            <span>Всего в риске: {summary.riskCount}</span>
           </div>
         </article>
       </section>

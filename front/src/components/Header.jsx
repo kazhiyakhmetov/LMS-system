@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useT } from "../shared/lib/i18n";
 import { roleSectionPath } from "../shared/lib/auth/roleRedirect";
 import styles from "./Header.module.css";
 
-const LANGUAGE_OPTIONS = ["Kazakh", "Russian", "English"];
 const ROLES_WITH_PROFILE = new Set(["STUDENT", "TEACHER"]);
 
 function useClickOutside(refs, onOutside) {
@@ -17,17 +17,12 @@ function useClickOutside(refs, onOutside) {
   });
 
   useEffect(() => {
-    // Слушатель навешивается один раз, а актуальные refs берём из ref-хранилища.
     const handleOutsideClick = (event) => {
       const clickedInside = refsRef.current.some((ref) => ref.current && ref.current.contains(event.target));
-      if (!clickedInside) {
-        onOutsideRef.current?.();
-      }
+      if (!clickedInside) onOutsideRef.current?.();
     };
-
     document.addEventListener("mousedown", handleOutsideClick);
     document.addEventListener("touchstart", handleOutsideClick);
-
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
       document.removeEventListener("touchstart", handleOutsideClick);
@@ -77,6 +72,12 @@ function Icon({ name }) {
           <path d="M14 4h6v16h-6" />
         </svg>
       );
+    case "check":
+      return (
+        <svg {...common} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M5 12l5 5L20 7" />
+        </svg>
+      );
     default:
       return null;
   }
@@ -84,6 +85,8 @@ function Icon({ name }) {
 
 export default function Header() {
   const { user, logout } = useAuth();
+  const { lang, setLang, languages, t } = useT();
+
   const [userOpen, setUserOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
 
@@ -95,33 +98,55 @@ export default function Header() {
   const profilePath = roleSectionPath(user?.role, "profile");
   const settingsPath = roleSectionPath(user?.role, "settings");
 
+  const activeLanguage = languages.find((l) => l.code === lang) ?? languages[0];
+
   useClickOutside([userButtonRef, userMenuRef], () => setUserOpen(false));
   useClickOutside([langContainerRef], () => setLangOpen(false));
 
   return (
     <header className={styles.header}>
       <div className={styles.right}>
-        <button className={styles.iconBtn} aria-label="Notifications" title="Notifications">
+        <button className={styles.iconBtn} aria-label={t("header.notifications")} title={t("header.notifications")}>
           <Icon name="bell" />
         </button>
 
         <div className={styles.dropdown} ref={langContainerRef}>
           <button
-            className={styles.iconBtn}
-            aria-label="Language"
-            title="Language"
-            onClick={() => setLangOpen((value) => !value)}
+            className={styles.langBtn}
+            aria-label={t("header.language")}
+            title={t("header.language")}
+            aria-expanded={langOpen}
+            onClick={() => setLangOpen((v) => !v)}
           >
             <Icon name="globe" />
+            <span className={styles.langCode}>{activeLanguage.short}</span>
           </button>
 
           {langOpen ? (
             <div className={styles.menu} role="menu">
-              {LANGUAGE_OPTIONS.map((option) => (
-                <button key={option} className={styles.menuItem} type="button">
-                  {option}
-                </button>
-              ))}
+              <div className={styles.menuHead}>{t("language.label")}</div>
+              {languages.map((option) => {
+                const active = option.code === lang;
+                return (
+                  <button
+                    key={option.code}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={active}
+                    className={`${styles.menuItem} ${active ? styles.menuItemActive : ""}`}
+                    onClick={() => {
+                      setLang(option.code);
+                      setLangOpen(false);
+                    }}
+                  >
+                    <span className={styles.langShort}>{option.short}</span>
+                    <span className={styles.langLabel}>{option.label}</span>
+                    {active ? (
+                      <span className={styles.menuCheck}><Icon name="check" /></span>
+                    ) : null}
+                  </button>
+                );
+              })}
             </div>
           ) : null}
         </div>
@@ -129,9 +154,10 @@ export default function Header() {
         <button
           ref={userButtonRef}
           className={styles.userBtn}
-          onClick={() => setUserOpen((value) => !value)}
-          aria-label="Profile"
-          title="Profile"
+          onClick={() => setUserOpen((v) => !v)}
+          aria-label={t("header.profile")}
+          title={t("header.profile")}
+          aria-expanded={userOpen}
         >
           <Icon name="user" />
         </button>
@@ -139,38 +165,32 @@ export default function Header() {
         {userOpen ? (
           <div ref={userMenuRef} className={styles.userMenu} role="menu">
             <div className={styles.userHead}>
-              <div className={styles.userName}>{user?.name || "User"}</div>
-              <div className={styles.userRole}>{user?.role || ""}</div>
+              <div className={styles.userName}>{user?.name || t("header.profile")}</div>
+              <div className={styles.userRole}>{t(`roles.${user?.role || "STUDENT"}`)}</div>
             </div>
 
             {hasProfile ? (
               <Link className={styles.userItem} to={profilePath} onClick={() => setUserOpen(false)}>
-                <span className={styles.userItemIco}>
-                  <Icon name="user" />
-                </span>
-                Профиль
+                <span className={styles.userItemIco}><Icon name="user" /></span>
+                {t("header.profile")}
               </Link>
             ) : null}
 
             <Link className={styles.userItem} to={settingsPath} onClick={() => setUserOpen(false)}>
-              <span className={styles.userItemIco}>
-                <Icon name="settings" />
-              </span>
-              Настройки
+              <span className={styles.userItemIco}><Icon name="settings" /></span>
+              {t("header.settings")}
             </Link>
 
             <button
-              className={styles.userItem}
+              className={`${styles.userItem} ${styles.userItemDanger}`}
               type="button"
               onClick={() => {
                 setUserOpen(false);
                 logout();
               }}
             >
-              <span className={styles.userItemIco}>
-                <Icon name="logout" />
-              </span>
-              Выйти
+              <span className={styles.userItemIco}><Icon name="logout" /></span>
+              {t("header.logout")}
             </button>
           </div>
         ) : null}

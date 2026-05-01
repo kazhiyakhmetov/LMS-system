@@ -1,33 +1,90 @@
 :root {
-  --bg: #f3f7fb;
+  /* === Background layers === */
+  --bg: #f6f7fb;
+  --bg-soft: #eef1f9;
   --bg-muted: #edf3fa;
+  --bg-mute: #e8ecf5;
+
+  /* === Surfaces === */
   --panel: #ffffff;
-  --panel-2: #f7fbff;
-  --stroke: rgba(12, 32, 56, 0.1);
-  --stroke-strong: rgba(12, 32, 56, 0.16);
+  --panel-2: #fafbff;
+  --panel-glass: rgba(255, 255, 255, 0.75);
+  --panel-glass-strong: rgba(255, 255, 255, 0.92);
 
-  --text: #15243a;
-  --muted: #62748c;
+  /* === Strokes === */
+  --stroke: rgba(15, 23, 42, 0.08);
+  --stroke-strong: rgba(15, 23, 42, 0.14);
+  --stroke-soft: rgba(15, 23, 42, 0.04);
+  --stroke-accent: rgba(99, 102, 241, 0.22);
 
-  --accent: #2f7dda;
-  --accent-alt: #69a1d8;
-  --accent-strong: #1f66c1;
-  --accent-soft: rgba(47, 125, 218, 0.14);
-  --accent-soft-2: rgba(47, 125, 218, 0.22);
-  --danger: #d94c53;
+  /* === Text === */
+  --text: #0f172a;
+  --text-2: #1e293b;
+  --muted: #475569;
+  --muted-soft: #94a3b8;
 
-  --sidebar-bg: #eff7ff;
-  --sidebar-bg-open: #e5f1ff;
-  --sidebar-text: #58739a;
-  --sidebar-active: #2f7dda;
-  --sidebar-divider: rgba(47, 125, 218, 0.24);
+  /* === Accent (modern indigo) === */
+  --accent: #4f46e5;
+  --accent-strong: #4338ca;
+  --accent-deep: #3730a3;
+  --accent-alt: #818cf8;
+  --accent-soft: rgba(99, 102, 241, 0.10);
+  --accent-soft-2: rgba(99, 102, 241, 0.18);
+  --accent-glow: rgba(99, 102, 241, 0.30);
 
+  /* === Semantic === */
+  --success: #10b981;
+  --success-soft: rgba(16, 185, 129, 0.12);
+  --success-strong: #059669;
+  --warning: #f59e0b;
+  --warning-soft: rgba(245, 158, 11, 0.14);
+  --warning-strong: #d97706;
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.12);
+  --danger-strong: #dc2626;
+  --info: #06b6d4;
+  --info-soft: rgba(6, 182, 212, 0.12);
+
+  /* === Sidebar (deep indigo) === */
+  --sidebar-bg: linear-gradient(180deg, #0f1f47 0%, #0a1735 100%);
+  --sidebar-bg-open: linear-gradient(180deg, #0f1f47 0%, #0a1735 100%);
+  --sidebar-text: #c7d2fe;
+  --sidebar-active: #6366f1;
+  --sidebar-divider: rgba(165, 180, 252, 0.18);
+
+  /* === Radii === */
+  --radius-xs: 8px;
   --radius-sm: 10px;
   --radius: 14px;
   --radius-lg: 18px;
-  --shadow: 0 14px 32px rgba(21, 36, 58, 0.08);
-  --shadow2: 0 8px 22px rgba(21, 36, 58, 0.06);
+  --radius-xl: 24px;
+  --radius-pill: 999px;
 
+  /* === Elevation (4-step) === */
+  --shadow-1: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.05);
+  --shadow-2: 0 4px 12px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.04);
+  --shadow-3: 0 12px 32px rgba(15, 23, 42, 0.10), 0 4px 12px rgba(15, 23, 42, 0.06);
+  --shadow-4: 0 24px 60px rgba(15, 23, 42, 0.16), 0 8px 24px rgba(15, 23, 42, 0.08);
+  --shadow-glow: 0 8px 28px rgba(79, 70, 229, 0.22);
+  --shadow-glow-soft: 0 6px 18px rgba(79, 70, 229, 0.14);
+
+  /* Legacy aliases — поддерживают старые компоненты */
+  --shadow: var(--shadow-3);
+  --shadow2: var(--shadow-2);
+
+  /* === Motion === */
+  --transition-fast: 150ms ease;
+  --transition: 200ms ease;
+  --transition-slow: 320ms ease;
+
+  /* === Layout === */
   --container: 100%;
   --font-sans: "Manrope", "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

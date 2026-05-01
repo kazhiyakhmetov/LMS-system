@@ -1,113 +1,66 @@
 import { useEffect, useMemo, useState } from "react";
 import styles from "./TeacherAssignmentsPage.module.css";
+import { useApi } from "../../../../shared/lib/hooks/useApi";
+import { assignmentsApi, submissionsApi, teachingApi } from "../../../../shared/lib/api";
+import { formatDateTime } from "../../../../shared/lib/utils/date";
 
 const PAGE_SIZE = 5;
 
-const initialTasks = [
-  {
-    id: 1,
-    title: "Домашняя работа №12",
-    subject: "Алгебра",
-    className: "10-А",
-    deadline: "2026-03-14",
-    status: "review",
-    description: "Решить задачи 1-12 из листа и загрузить решение в формате PDF.",
-    materials: ["Лист заданий №12", "Примеры решения темы 7"],
-    submissions: [
-      { id: 11, student: "Айгерим К.", file: "hw12_aigerim.pdf", submittedAt: "12.03 17:10", grade: "", note: "" },
-      { id: 12, student: "Дамир А.", file: "hw12_damir.pdf", submittedAt: "12.03 18:42", grade: "4", note: "Нужно оформить аккуратнее" },
-      { id: 13, student: "Султан А.", file: "hw12_sultan.pdf", submittedAt: "13.03 09:05", grade: "", note: "" },
-    ],
-  },
-  {
-    id: 2,
-    title: "Практика по геометрии",
-    subject: "Геометрия",
-    className: "9-Б",
-    deadline: "2026-03-16",
-    status: "inProgress",
-    description: "Подготовить карточки и задания на доказательство теорем.",
-    materials: ["Карточки задач", "Критерии проверки"],
-    submissions: [{ id: 21, student: "Нурай Т.", file: "geometry_nuray.docx", submittedAt: "13.03 10:25", grade: "", note: "" }],
-  },
-  {
-    id: 3,
-    title: "Тренировочный тест ЕНТ",
-    subject: "Математика",
-    className: "11-А",
-    deadline: "2026-03-18",
-    status: "new",
-    description: "Провести тест по 20 вопросам, загрузить ответы в систему.",
-    materials: ["Бланк ответов", "Инструкция к тесту"],
-    submissions: [],
-  },
-  {
-    id: 4,
-    title: "Итоговая проверка темы 'Функции'",
-    subject: "Алгебра",
-    className: "10-А",
-    deadline: "2026-03-10",
-    status: "urgent",
-    description: "Срочная проверка знаний перед контрольной работой.",
-    materials: ["Контрольный лист"],
-    submissions: [
-      { id: 41, student: "Алия Е.", file: "functions_aliya.pdf", submittedAt: "10.03 13:00", grade: "5", note: "Отлично" },
-      { id: 42, student: "Артур Н.", file: "functions_artur.pdf", submittedAt: "10.03 13:11", grade: "", note: "" },
-    ],
-  },
-  {
-    id: 5,
-    title: "Консультация по олимпиаде",
-    subject: "Алгебра",
-    className: "10-А",
-    deadline: "2026-03-20",
-    status: "done",
-    description: "Подготовить и выдать индивидуальные рекомендации ученикам.",
-    materials: ["Список тем"],
-    submissions: [
-      { id: 51, student: "Айгерим К.", file: "olymp_aigerim.pdf", submittedAt: "09.03 19:34", grade: "5", note: "Готова к следующему этапу" },
-      { id: 52, student: "Ерасыл Д.", file: "olymp_erasyl.pdf", submittedAt: "09.03 20:02", grade: "4", note: "Поработать над задачами на логику" },
-    ],
-  },
-  {
-    id: 6,
-    title: "Домашняя работа №13",
-    subject: "Алгебра",
-    className: "9-Б",
-    deadline: "2026-03-19",
-    status: "new",
-    description: "Решить задачи повышенной сложности и загрузить файл в LMS.",
-    materials: ["Лист №13"],
-    submissions: [],
-  },
+const ASSIGNMENT_TYPES = [
+  { value: "homework", label: "Домашнее" },
+  { value: "test", label: "Тест" },
+  { value: "sor", label: "СОР" },
+  { value: "soch", label: "СОЧ" },
+  { value: "quiz", label: "Квиз" },
 ];
+
+function statusOf(deadline) {
+  if (!deadline) return "new";
+  const diffHours = (new Date(deadline).getTime() - Date.now()) / 3_600_000;
+  if (diffHours < 0) return "done";
+  if (diffHours <= 24) return "urgent";
+  return "inProgress";
+}
+
+function statusLabel(status) {
+  switch (status) {
+    case "urgent": return "Срочно";
+    case "done": return "Завершено";
+    case "inProgress": return "В работе";
+    default: return "Новое";
+  }
+}
 
 const filters = [
   { key: "all", label: "Все" },
-  { key: "review", label: "На проверке" },
   { key: "inProgress", label: "В работе" },
-  { key: "new", label: "Новые" },
   { key: "urgent", label: "Срочные" },
   { key: "done", label: "Завершенные" },
 ];
 
-function statusLabel(status) {
-  switch (status) {
-    case "review":
-      return "На проверке";
-    case "inProgress":
-      return "В работе";
-    case "urgent":
-      return "Срочно";
-    case "done":
-      return "Завершено";
-    default:
-      return "Новое";
-  }
-}
-
 export default function TeacherAssignmentsPage() {
-  const [tasks, setTasks] = useState(initialTasks);
+  const assignmentsQuery = useApi(() => assignmentsApi.teacherMy(), []);
+  const pairsQuery = useApi(() => teachingApi.myPairs(), []);
+
+  const tasks = useMemo(() => {
+    const list = Array.isArray(assignmentsQuery.data) ? assignmentsQuery.data : [];
+    return list.map((a) => ({
+      id: a.id,
+      title: a.title,
+      subject: a.subjectName || "—",
+      subjectId: a.subjectId,
+      className: a.className || "—",
+      classId: a.classId,
+      deadline: a.deadline,
+      maxGrade: a.maxGrade,
+      type: a.type,
+      description: a.description,
+      status: statusOf(a.deadline),
+    }));
+  }, [assignmentsQuery.data]);
+
+  const pairs = Array.isArray(pairsQuery.data) ? pairsQuery.data : [];
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [classFilter, setClassFilter] = useState("all");
@@ -115,117 +68,124 @@ export default function TeacherAssignmentsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [createSubmitting, setCreateSubmitting] = useState(false);
   const [taskForm, setTaskForm] = useState({
     title: "",
-    subject: "",
-    className: "",
-    deadline: "",
     description: "",
-    materials: "",
+    type: "homework",
+    maxGrade: "5",
+    deadline: "",
+    pairKey: "",
   });
 
-  const classOptions = useMemo(() => ["all", ...new Set(tasks.map((item) => item.className))], [tasks]);
-  const subjectOptions = useMemo(() => ["all", ...new Set(tasks.map((item) => item.subject))], [tasks]);
+  const classOptions = useMemo(() => ["all", ...new Set(tasks.map((t) => t.className))], [tasks]);
+  const subjectOptions = useMemo(() => ["all", ...new Set(tasks.map((t) => t.subject))], [tasks]);
 
   const filteredTasks = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
+    const q = searchQuery.trim().toLowerCase();
     return tasks.filter((item) => {
-      const matchesQuery =
-        !query ||
-        item.title.toLowerCase().includes(query) ||
-        item.subject.toLowerCase().includes(query) ||
-        item.className.toLowerCase().includes(query);
+      const matchesQuery = !q
+        || item.title.toLowerCase().includes(q)
+        || item.subject.toLowerCase().includes(q)
+        || item.className.toLowerCase().includes(q);
       const matchesStatus = statusFilter === "all" || item.status === statusFilter;
       const matchesClass = classFilter === "all" || item.className === classFilter;
       const matchesSubject = subjectFilter === "all" || item.subject === subjectFilter;
-
       return matchesQuery && matchesStatus && matchesClass && matchesSubject;
     });
   }, [tasks, searchQuery, statusFilter, classFilter, subjectFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredTasks.length / PAGE_SIZE));
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, statusFilter, classFilter, subjectFilter]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, classFilter, subjectFilter]);
+  useEffect(() => { if (currentPage > totalPages) setCurrentPage(totalPages); }, [currentPage, totalPages]);
 
   const paginatedTasks = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
     return filteredTasks.slice(start, start + PAGE_SIZE);
   }, [filteredTasks, currentPage]);
 
-  const selectedTask = useMemo(() => tasks.find((item) => item.id === selectedTaskId) ?? null, [tasks, selectedTaskId]);
+  const selectedTask = useMemo(() => tasks.find((t) => t.id === selectedTaskId) ?? null, [tasks, selectedTaskId]);
+
+  const submissionsQuery = useApi(
+    () => (selectedTask ? submissionsApi.byAssignment(selectedTask.id) : Promise.resolve([])),
+    [selectedTask?.id],
+    { immediate: Boolean(selectedTask) },
+  );
+
+  const [grading, setGrading] = useState({});
+
+  useEffect(() => {
+    if (submissionsQuery.data) {
+      const init = {};
+      (Array.isArray(submissionsQuery.data) ? submissionsQuery.data : []).forEach((s) => {
+        init[s.id] = { grade: s.grade ?? "", comment: s.teacherComment ?? "", saving: false, error: "" };
+      });
+      setGrading(init);
+    }
+  }, [submissionsQuery.data]);
 
   const summary = useMemo(() => {
-    const review = tasks.filter((item) => item.status === "review").length;
-    const urgent = tasks.filter((item) => item.status === "urgent").length;
-    const active = tasks.filter((item) => item.status !== "done").length;
-    const checked = tasks
-      .flatMap((item) => item.submissions)
-      .filter((submission) => Boolean(submission.grade)).length;
-
-    return { review, urgent, active, checked };
+    const active = tasks.filter((t) => t.status !== "done").length;
+    const urgent = tasks.filter((t) => t.status === "urgent").length;
+    return { active, urgent, total: tasks.length };
   }, [tasks]);
 
-  const updateSubmission = (taskId, submissionId, field, value) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              submissions: task.submissions.map((submission) =>
-                submission.id === submissionId ? { ...submission, [field]: value } : submission,
-              ),
-            }
-          : task,
-      ),
-    );
-  };
+  async function gradeSubmission(submissionId) {
+    const entry = grading[submissionId];
+    if (!entry || entry.grade === "") return;
+    setGrading((prev) => ({ ...prev, [submissionId]: { ...prev[submissionId], saving: true, error: "" } }));
+    try {
+      await submissionsApi.grade({
+        submissionId,
+        gradeValue: Number(entry.grade),
+        comment: entry.comment || "",
+      });
+      await submissionsQuery.refetch();
+    } catch (err) {
+      setGrading((prev) => ({ ...prev, [submissionId]: { ...prev[submissionId], saving: false, error: err?.message || "Ошибка" } }));
+    }
+  }
 
-  const handleCreateTask = (event) => {
+  async function handleCreateTask(event) {
     event.preventDefault();
+    setCreateError("");
 
     const title = taskForm.title.trim();
-    const subject = taskForm.subject.trim();
-    const className = taskForm.className.trim();
-    const deadline = taskForm.deadline.trim();
     const description = taskForm.description.trim();
-    if (!title || !subject || !className || !deadline || !description) return;
+    const deadline = taskForm.deadline;
+    const pair = pairs.find((p) => `${p.classId}-${p.subjectId}` === taskForm.pairKey);
 
-    const materials = taskForm.materials
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean);
+    if (!title || !description || !deadline || !pair) {
+      setCreateError("Заполните все поля");
+      return;
+    }
 
-    const created = {
-      id: Date.now(),
-      title,
-      subject,
-      className,
-      deadline,
-      status: "new",
-      description,
-      materials,
-      submissions: [],
-    };
+    setCreateSubmitting(true);
+    try {
+      await assignmentsApi.teacherCreate({
+        title,
+        description,
+        type: taskForm.type,
+        maxGrade: Number(taskForm.maxGrade) || 5,
+        deadline: new Date(deadline).toISOString(),
+        subjectId: pair.subjectId,
+        classId: pair.classId,
+      });
+      await assignmentsQuery.refetch();
+      setTaskForm({ title: "", description: "", type: "homework", maxGrade: "5", deadline: "", pairKey: "" });
+      setIsCreateOpen(false);
+    } catch (err) {
+      setCreateError(err?.message || "Не удалось создать задание");
+    } finally {
+      setCreateSubmitting(false);
+    }
+  }
 
-    setTasks((prev) => [created, ...prev]);
-    setTaskForm({
-      title: "",
-      subject: "",
-      className: "",
-      deadline: "",
-      description: "",
-      materials: "",
-    });
-    setIsCreateOpen(false);
-  };
+  if (assignmentsQuery.loading && !tasks.length) {
+    return <div style={{ padding: 24 }}>Загрузка заданий…</div>;
+  }
 
   return (
     <div className={styles.page}>
@@ -241,20 +201,16 @@ export default function TeacherAssignmentsPage() {
 
       <section className={styles.stats}>
         <article className={styles.statCard}>
-          <p className={styles.statLabel}>Активные задачи</p>
+          <p className={styles.statLabel}>Активные</p>
           <p className={styles.statValue}>{summary.active}</p>
-        </article>
-        <article className={styles.statCard}>
-          <p className={styles.statLabel}>На проверке</p>
-          <p className={styles.statValue}>{summary.review}</p>
         </article>
         <article className={styles.statCard}>
           <p className={styles.statLabel}>Срочные</p>
           <p className={styles.statValue}>{summary.urgent}</p>
         </article>
         <article className={styles.statCard}>
-          <p className={styles.statLabel}>Оценок выставлено</p>
-          <p className={styles.statValue}>{summary.checked}</p>
+          <p className={styles.statLabel}>Всего</p>
+          <p className={styles.statValue}>{summary.total}</p>
         </article>
       </section>
 
@@ -263,100 +219,61 @@ export default function TeacherAssignmentsPage() {
           className={styles.searchInput}
           placeholder="Поиск по названию, предмету или классу..."
           value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
 
         <div className={styles.selectRow}>
-          <select className={styles.select} value={classFilter} onChange={(event) => setClassFilter(event.target.value)}>
-            {classOptions.map((value) => (
-              <option key={value} value={value}>
-                {value === "all" ? "Все классы" : value}
-              </option>
-            ))}
+          <select className={styles.select} value={classFilter} onChange={(e) => setClassFilter(e.target.value)}>
+            {classOptions.map((v) => <option key={v} value={v}>{v === "all" ? "Все классы" : v}</option>)}
           </select>
-
-          <select
-            className={styles.select}
-            value={subjectFilter}
-            onChange={(event) => setSubjectFilter(event.target.value)}
-          >
-            {subjectOptions.map((value) => (
-              <option key={value} value={value}>
-                {value === "all" ? "Все предметы" : value}
-              </option>
-            ))}
+          <select className={styles.select} value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)}>
+            {subjectOptions.map((v) => <option key={v} value={v}>{v === "all" ? "Все предметы" : v}</option>)}
           </select>
         </div>
 
         <div className={styles.filters}>
-          {filters.map((filter) => (
+          {filters.map((f) => (
             <button
-              key={filter.key}
+              key={f.key}
               type="button"
-              className={`${styles.filterChip} ${statusFilter === filter.key ? styles.filterChipActive : ""}`}
-              onClick={() => setStatusFilter(filter.key)}
+              className={`${styles.filterChip} ${statusFilter === f.key ? styles.filterChipActive : ""}`}
+              onClick={() => setStatusFilter(f.key)}
             >
-              {filter.label}
+              {f.label}
             </button>
           ))}
         </div>
       </section>
 
       <section className={styles.list}>
-        {paginatedTasks.length ? (
-          paginatedTasks.map((item) => {
-            const graded = item.submissions.filter((submission) => Boolean(submission.grade)).length;
-            return (
-              <article
-                key={item.id}
-                className={styles.card}
-                role="button"
-                tabIndex={0}
-                onClick={() => setSelectedTaskId(item.id)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    setSelectedTaskId(item.id);
-                  }
-                }}
-              >
-                <div className={styles.cardTop}>
-                  <p className={styles.subject}>
-                    {item.className} • {item.subject}
-                  </p>
-                  <span className={`${styles.badge} ${styles[item.status]}`}>{statusLabel(item.status)}</span>
-                </div>
-                <p className={styles.taskTitle}>{item.title}</p>
-                <p className={styles.meta}>Срок: {item.deadline}</p>
-                <p className={styles.meta}>
-                  Сдано: {item.submissions.length} • Оценено: {graded}
-                </p>
-              </article>
-            );
-          })
-        ) : (
+        {paginatedTasks.length ? paginatedTasks.map((item) => (
+          <article
+            key={item.id}
+            className={styles.card}
+            role="button"
+            tabIndex={0}
+            onClick={() => setSelectedTaskId(item.id)}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedTaskId(item.id); } }}
+          >
+            <div className={styles.cardTop}>
+              <p className={styles.subject}>{item.className} • {item.subject}</p>
+              <span className={`${styles.badge} ${styles[item.status]}`}>{statusLabel(item.status)}</span>
+            </div>
+            <p className={styles.taskTitle}>{item.title}</p>
+            <p className={styles.meta}>Срок: {formatDateTime(item.deadline)}</p>
+            <p className={styles.meta}>Тип: {item.type || "—"} • Макс. балл: {item.maxGrade ?? "—"}</p>
+          </article>
+        )) : (
           <div className={styles.emptyState}>По текущим параметрам задачи не найдены.</div>
         )}
       </section>
 
       <section className={styles.pagination}>
-        <button
-          type="button"
-          className={styles.pageBtn}
-          onClick={() => setCurrentPage((value) => Math.max(1, value - 1))}
-          disabled={currentPage === 1}
-        >
+        <button type="button" className={styles.pageBtn} onClick={() => setCurrentPage((v) => Math.max(1, v - 1))} disabled={currentPage === 1}>
           Назад
         </button>
-        <p className={styles.pageInfo}>
-          Страница {currentPage} из {totalPages}
-        </p>
-        <button
-          type="button"
-          className={styles.pageBtn}
-          onClick={() => setCurrentPage((value) => Math.min(totalPages, value + 1))}
-          disabled={currentPage === totalPages}
-        >
+        <p className={styles.pageInfo}>Страница {currentPage} из {totalPages}</p>
+        <button type="button" className={styles.pageBtn} onClick={() => setCurrentPage((v) => Math.min(totalPages, v + 1))} disabled={currentPage === totalPages}>
           Вперед
         </button>
       </section>
@@ -365,101 +282,86 @@ export default function TeacherAssignmentsPage() {
         <div
           className={styles.modalOverlay}
           role="presentation"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setSelectedTaskId(null);
-          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setSelectedTaskId(null); }}
         >
           <section className={styles.modal} role="dialog" aria-modal="true">
             <div className={styles.modalHead}>
               <div>
                 <h3 className={styles.modalTitle}>{selectedTask.title}</h3>
-                <p className={styles.modalSub}>
-                  {selectedTask.className} • {selectedTask.subject}
-                </p>
+                <p className={styles.modalSub}>{selectedTask.className} • {selectedTask.subject}</p>
               </div>
-              <button type="button" className={styles.closeBtn} onClick={() => setSelectedTaskId(null)}>
-                ×
-              </button>
+              <button type="button" className={styles.closeBtn} onClick={() => setSelectedTaskId(null)}>×</button>
             </div>
 
             <div className={styles.modalMeta}>
               <div className={styles.metaCard}>
                 <p className={styles.metaLabel}>Дедлайн</p>
-                <p className={styles.metaValue}>{selectedTask.deadline}</p>
+                <p className={styles.metaValue}>{formatDateTime(selectedTask.deadline)}</p>
               </div>
               <div className={styles.metaCard}>
                 <p className={styles.metaLabel}>Статус</p>
                 <p className={styles.metaValue}>{statusLabel(selectedTask.status)}</p>
               </div>
               <div className={styles.metaCard}>
-                <p className={styles.metaLabel}>Материалы</p>
-                <p className={styles.metaValue}>{selectedTask.materials.length || "0"}</p>
+                <p className={styles.metaLabel}>Тип</p>
+                <p className={styles.metaValue}>{selectedTask.type || "—"}</p>
               </div>
               <div className={styles.metaCard}>
-                <p className={styles.metaLabel}>Сдачи</p>
-                <p className={styles.metaValue}>{selectedTask.submissions.length}</p>
+                <p className={styles.metaLabel}>Макс. балл</p>
+                <p className={styles.metaValue}>{selectedTask.maxGrade ?? "—"}</p>
               </div>
             </div>
 
             <div className={styles.modalSection}>
               <p className={styles.sectionTitle}>Описание задания</p>
-              <p className={styles.sectionText}>{selectedTask.description}</p>
-              {selectedTask.materials.length ? (
-                <div className={styles.materials}>
-                  {selectedTask.materials.map((item) => (
-                    <span key={item} className={styles.materialChip}>
-                      {item}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className={styles.sectionText}>Материалы не прикреплены.</p>
-              )}
+              <p className={styles.sectionText}>{selectedTask.description || "—"}</p>
             </div>
 
             <div className={styles.modalSection}>
-              <p className={styles.sectionTitle}>Проверка и оценивание</p>
-              {selectedTask.submissions.length ? (
+              <p className={styles.sectionTitle}>Сданные работы</p>
+              {submissionsQuery.loading ? (
+                <p>Загрузка работ…</p>
+              ) : (Array.isArray(submissionsQuery.data) ? submissionsQuery.data : []).length ? (
                 <ul className={styles.submissionList}>
-                  {selectedTask.submissions.map((submission) => (
-                    <li key={submission.id} className={styles.submissionItem}>
-                      <div>
-                        <p className={styles.studentName}>{submission.student}</p>
-                        <p className={styles.studentMeta}>
-                          {submission.file} • {submission.submittedAt}
-                        </p>
-                      </div>
-
-                      <div className={styles.gradeControls}>
-                        <select
-                          className={styles.gradeSelect}
-                          value={submission.grade}
-                          onChange={(event) =>
-                            updateSubmission(selectedTask.id, submission.id, "grade", event.target.value)
-                          }
-                        >
-                          <option value="">Без оценки</option>
-                          <option value="5">5</option>
-                          <option value="4">4</option>
-                          <option value="3">3</option>
-                          <option value="2">2</option>
-                          <option value="Зачет">Зачет</option>
-                        </select>
-
-                        <input
-                          className={styles.noteInput}
-                          placeholder="Комментарий"
-                          value={submission.note}
-                          onChange={(event) =>
-                            updateSubmission(selectedTask.id, submission.id, "note", event.target.value)
-                          }
-                        />
-                      </div>
-                    </li>
-                  ))}
+                  {submissionsQuery.data.map((s) => {
+                    const g = grading[s.id] || { grade: "", comment: "" };
+                    return (
+                      <li key={s.id} className={styles.submissionItem}>
+                        <div>
+                          <p className={styles.studentName}>{s.studentName || `Студент #${s.studentId}`}</p>
+                          <p className={styles.studentMeta}>
+                            {s.fileName || "—"} • {s.submittedAt ? formatDateTime(s.submittedAt) : ""}
+                          </p>
+                        </div>
+                        <div className={styles.gradeControls}>
+                          <select
+                            className={styles.gradeSelect}
+                            value={g.grade}
+                            onChange={(e) => setGrading((prev) => ({ ...prev, [s.id]: { ...prev[s.id], grade: e.target.value } }))}
+                          >
+                            <option value="">—</option>
+                            <option value="5">5</option>
+                            <option value="4">4</option>
+                            <option value="3">3</option>
+                            <option value="2">2</option>
+                          </select>
+                          <input
+                            className={styles.noteInput}
+                            placeholder="Комментарий"
+                            value={g.comment}
+                            onChange={(e) => setGrading((prev) => ({ ...prev, [s.id]: { ...prev[s.id], comment: e.target.value } }))}
+                          />
+                          <button type="button" onClick={() => gradeSubmission(s.id)} disabled={g.saving || g.grade === ""}>
+                            {g.saving ? "…" : "Сохранить"}
+                          </button>
+                          {g.error ? <span style={{ color: "var(--danger)", fontSize: 12 }}>{g.error}</span> : null}
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : (
-                <p className={styles.sectionText}>Пока нет сданных работ по этому заданию.</p>
+                <p className={styles.sectionText}>Пока нет сданных работ.</p>
               )}
             </div>
           </section>
@@ -470,16 +372,12 @@ export default function TeacherAssignmentsPage() {
         <div
           className={styles.modalOverlay}
           role="presentation"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setIsCreateOpen(false);
-          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setIsCreateOpen(false); }}
         >
           <section className={styles.modal} role="dialog" aria-modal="true">
             <div className={styles.modalHead}>
               <h3 className={styles.modalTitle}>Новое задание</h3>
-              <button type="button" className={styles.closeBtn} onClick={() => setIsCreateOpen(false)}>
-                ×
-              </button>
+              <button type="button" className={styles.closeBtn} onClick={() => setIsCreateOpen(false)}>×</button>
             </div>
 
             <form className={styles.form} onSubmit={handleCreateTask}>
@@ -487,42 +385,59 @@ export default function TeacherAssignmentsPage() {
                 className={styles.formInput}
                 placeholder="Название задания"
                 value={taskForm.title}
-                onChange={(event) => setTaskForm((prev) => ({ ...prev, title: event.target.value }))}
+                onChange={(e) => setTaskForm((prev) => ({ ...prev, title: e.target.value }))}
               />
+
+              <select
+                className={styles.formInput}
+                value={taskForm.pairKey}
+                onChange={(e) => setTaskForm((prev) => ({ ...prev, pairKey: e.target.value }))}
+              >
+                <option value="">Класс • Предмет</option>
+                {pairs.map((p) => (
+                  <option key={`${p.classId}-${p.subjectId}`} value={`${p.classId}-${p.subjectId}`}>
+                    {p.className} • {p.subjectName}
+                  </option>
+                ))}
+              </select>
+
               <div className={styles.formRow}>
+                <select
+                  className={styles.formInput}
+                  value={taskForm.type}
+                  onChange={(e) => setTaskForm((prev) => ({ ...prev, type: e.target.value }))}
+                >
+                  {ASSIGNMENT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
                 <input
                   className={styles.formInput}
-                  placeholder="Предмет"
-                  value={taskForm.subject}
-                  onChange={(event) => setTaskForm((prev) => ({ ...prev, subject: event.target.value }))}
-                />
-                <input
-                  className={styles.formInput}
-                  placeholder="Класс (например 10-А)"
-                  value={taskForm.className}
-                  onChange={(event) => setTaskForm((prev) => ({ ...prev, className: event.target.value }))}
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={taskForm.maxGrade}
+                  onChange={(e) => setTaskForm((prev) => ({ ...prev, maxGrade: e.target.value }))}
+                  placeholder="Макс. балл"
                 />
               </div>
+
               <input
                 className={styles.formInput}
-                type="date"
+                type="datetime-local"
                 value={taskForm.deadline}
-                onChange={(event) => setTaskForm((prev) => ({ ...prev, deadline: event.target.value }))}
+                onChange={(e) => setTaskForm((prev) => ({ ...prev, deadline: e.target.value }))}
               />
-              <input
-                className={styles.formInput}
-                placeholder="Материалы через запятую"
-                value={taskForm.materials}
-                onChange={(event) => setTaskForm((prev) => ({ ...prev, materials: event.target.value }))}
-              />
+
               <textarea
                 className={styles.formTextarea}
                 placeholder="Описание задания"
                 value={taskForm.description}
-                onChange={(event) => setTaskForm((prev) => ({ ...prev, description: event.target.value }))}
+                onChange={(e) => setTaskForm((prev) => ({ ...prev, description: e.target.value }))}
               />
-              <button className={styles.submitBtn} type="submit">
-                Создать
+
+              {createError ? <p style={{ color: "var(--danger)" }}>{createError}</p> : null}
+
+              <button className={styles.submitBtn} type="submit" disabled={createSubmitting}>
+                {createSubmitting ? "Создание…" : "Создать"}
               </button>
             </form>
           </section>

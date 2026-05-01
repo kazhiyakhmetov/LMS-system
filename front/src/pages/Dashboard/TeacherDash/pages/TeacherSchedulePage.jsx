@@ -1,76 +1,61 @@
-import { defaultWeekRange, lessonSlots, weekDays } from "../../../../shared/constants/schedule";
-import { mapScheduleEntries } from "../../../../shared/lib/utils/schedule";
+import { useMemo, useState } from "react";
+import { lessonSlots, weekDays } from "../../../../shared/constants/schedule";
 import WeeklyScheduleTable from "../../../../shared/ui/WeeklyScheduleTable/WeeklyScheduleTable";
+import { useApi } from "../../../../shared/lib/hooks/useApi";
+import { scheduleApi } from "../../../../shared/lib/api";
+import { addDaysISO, formatWeekRange, getMondayISO } from "../../../../shared/lib/utils/date";
 
-const schedule = {
-  monday: [
-    { subject: "Алгебра", className: "10-А", room: "203 каб" },
-    { subject: "Геометрия", className: "9-Б", room: "205 каб" },
-    null,
-    { subject: "ЕНТ-практика", className: "11-А", room: "306 каб" },
-    { subject: "Классный час", className: "10-А", room: "Актовый зал" },
-    { subject: "Консультация", className: "11-А", room: "310 каб" },
-    null,
-    null,
-  ],
-  tuesday: [
-    { subject: "Математика", className: "8-В", room: "204 каб" },
-    { subject: "Геометрия", className: "10-А", room: "205 каб" },
-    { subject: "Алгебра", className: "9-Б", room: "203 каб" },
-    null,
-    { subject: "Проверка ДЗ", className: "9-Б", room: "Метод. кабинет" },
-    { subject: "Факультатив", className: "10-А", room: "306 каб" },
-    null,
-    null,
-  ],
-  wednesday: [
-    { subject: "ЕНТ-практика", className: "11-А", room: "306 каб" },
-    { subject: "Математика", className: "8-В", room: "204 каб" },
-    { subject: "Алгебра", className: "10-А", room: "203 каб" },
-    { subject: "Алгебра", className: "9-Б", room: "203 каб" },
-    null,
-    { subject: "Консультация", className: "11-А", room: "310 каб" },
-    null,
-    null,
-  ],
-  thursday: [
-    { subject: "Геометрия", className: "10-А", room: "205 каб" },
-    null,
-    { subject: "Математика", className: "8-В", room: "204 каб" },
-    { subject: "Геометрия", className: "9-Б", room: "205 каб" },
-    { subject: "Разбор тестов", className: "11-А", room: "306 каб" },
-    null,
-    null,
-    null,
-  ],
-  friday: [
-    { subject: "Классный час", className: "10-А", room: "213 каб" },
-    { subject: "ЕНТ-практика", className: "11-А", room: "306 каб" },
-    { subject: "Алгебра", className: "10-А", room: "203 каб" },
-    { subject: "Алгебра", className: "9-Б", room: "203 каб" },
-    { subject: "Методсовет", className: "Кафедра", room: "203 каб" },
-    { subject: "Проверка тетрадей", className: "9-Б", room: "Учительская" },
-    { subject: "Консультация", className: "10-А", room: "310 каб" },
-    null,
-  ],
-};
+function emptyGrid() {
+  return Object.fromEntries(weekDays.map((d) => [d.key, lessonSlots.map(() => null)]));
+}
 
-const normalizedSchedule = mapScheduleEntries(schedule, (lesson) => ({
-  subject: lesson.subject,
-  metaLine: lesson.className,
-  extraLine: lesson.room,
-}));
+function buildSchedule(lessons) {
+  const grid = emptyGrid();
+  if (!Array.isArray(lessons)) return grid;
+  lessons.forEach((lesson) => {
+    const key = lesson?.dayOfWeek?.toLowerCase();
+    if (!grid[key]) return;
+    const idx = (lesson.lessonNumber ?? 1) - 1;
+    if (idx < 0 || idx >= grid[key].length) return;
+    grid[key][idx] = {
+      subject: lesson.subjectName || "",
+      metaLine: lesson.className || "",
+      extraLine: lesson.classroom ? `${lesson.classroom} каб` : "",
+    };
+  });
+  return grid;
+}
 
 export default function TeacherSchedulePage() {
+  const [startDate, setStartDate] = useState(() => getMondayISO());
+
+  const { data, loading, error } = useApi(
+    () => scheduleApi.teacherWeek(startDate),
+    [startDate],
+  );
+
+  const schedule = useMemo(() => buildSchedule(data), [data]);
+  const weekRange = useMemo(() => formatWeekRange(startDate), [startDate]);
+
+  if (loading && !data) return <div style={{ padding: 24 }}>Загрузка расписания…</div>;
+  if (error) return <div style={{ padding: 24, color: "var(--danger)" }}>Ошибка: {error.message}</div>;
+
   return (
     <WeeklyScheduleTable
       title="Мое расписание"
-      weekRange={defaultWeekRange}
+      weekRange={weekRange}
       weekDays={weekDays}
       slots={lessonSlots}
-      schedule={normalizedSchedule}
+      schedule={schedule}
       actionLabel="Методический календарь"
       emptyLabel="Окно"
+      rightControls={
+        <div style={{ display: "flex", gap: 8 }}>
+          <button type="button" onClick={() => setStartDate(addDaysISO(startDate, -7))}>← неделя</button>
+          <button type="button" onClick={() => setStartDate(getMondayISO())}>Сегодня</button>
+          <button type="button" onClick={() => setStartDate(addDaysISO(startDate, 7))}>неделя →</button>
+        </div>
+      }
     />
   );
 }

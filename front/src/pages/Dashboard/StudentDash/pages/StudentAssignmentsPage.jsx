@@ -1,127 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import styles from "./StudentAssignmentsPage.module.css";
+import { useApi } from "../../../../shared/lib/hooks/useApi";
+import { assignmentsApi, filesApi, submissionsApi } from "../../../../shared/lib/api";
+import { formatDateTime } from "../../../../shared/lib/utils/date";
 
 const PAGE_SIZE = 5;
-
-const assignments = [
-  {
-    id: 1,
-    subject: "Физика",
-    title: "Лабораторная: Законы Ньютона",
-    deadline: "Завтра, 18:00",
-    status: "urgent",
-    teacher: "Н. Садыкова",
-    materials: [
-      { name: "Методичка: Законы Ньютона", href: "/materials/physics-newton-guide.txt" },
-      { name: "Шаблон отчета лабораторной", href: "/materials/physics-lab-report-template.txt" },
-    ],
-  },
-  {
-    id: 2,
-    subject: "Литература",
-    title: "Эссе: Анализ произведения",
-    deadline: "Через 2 дня",
-    status: "inProgress",
-    teacher: "Л. Толеу",
-    materials: [{ name: "Требования к эссе", href: "/materials/literature-essay-template.txt" }],
-  },
-  {
-    id: 3,
-    subject: "Алгебра",
-    title: "Домашняя работа №12",
-    deadline: "Пятница, 20:00",
-    status: "new",
-    teacher: "К. Муханова",
-    materials: [{ name: "Лист заданий №12", href: "/materials/algebra-hw12-sheet.txt" }],
-  },
-  {
-    id: 4,
-    subject: "История",
-    title: "Презентация по теме XIX века",
-    deadline: "Следующая неделя",
-    status: "completed",
-    teacher: "Д. Турсынбек",
-    grade: "5/5",
-    materials: [{ name: "Источники по теме XIX века", href: "/materials/history-xix-sources.txt" }],
-  },
-  {
-    id: 5,
-    subject: "Информатика",
-    title: "Практика: SQL-запросы",
-    deadline: "Сегодня, 21:00",
-    status: "urgent",
-    teacher: "А. Жанибек",
-    materials: [
-      { name: "Набор данных для SQL", href: "/materials/sql-practice-dataset.txt" },
-      { name: "Памятка SQL-команд", href: "/materials/sql-commands-cheatsheet.txt" },
-    ],
-  },
-  {
-    id: 6,
-    subject: "Английский",
-    title: "Vocabulary test preparation",
-    deadline: "Понедельник",
-    status: "inProgress",
-    teacher: "A. White",
-    materials: [{ name: "Vocabulary list", href: "/materials/english-vocabulary-list.txt" }],
-  },
-  {
-    id: 7,
-    subject: "Биология",
-    title: "Конспект: Клеточное строение",
-    deadline: "Суббота",
-    status: "new",
-    teacher: "А. Нурали",
-    materials: [{ name: "Конспект по клетке", href: "/materials/biology-cell-notes.txt" }],
-  },
-  {
-    id: 8,
-    subject: "Химия",
-    title: "Решение задач по реакциям",
-    deadline: "Через 3 дня",
-    status: "completed",
-    teacher: "С. Рахим",
-    grade: "4/5",
-    materials: [{ name: "Таблица формул и реакций", href: "/materials/chemistry-reactions-formula-sheet.txt" }],
-  },
-  {
-    id: 9,
-    subject: "География",
-    title: "Карта: страны Азии",
-    deadline: "Четверг",
-    status: "new",
-    teacher: "Г. Абдулла",
-    materials: [{ name: "Контурная карта Азии", href: "/materials/geography-asia-map-reference.txt" }],
-  },
-  {
-    id: 10,
-    subject: "Казахский",
-    title: "Сочинение на 250 слов",
-    deadline: "Завтра, 15:00",
-    status: "inProgress",
-    teacher: "Ж. Аблай",
-    materials: [{ name: "Критерии оценивания сочинения", href: "/materials/kazakh-essay-criteria.txt" }],
-  },
-  {
-    id: 11,
-    subject: "Физкультура",
-    title: "Дневник активности за неделю",
-    deadline: "Следующий вторник",
-    status: "completed",
-    teacher: "И. Ким",
-    grade: "Зачет",
-    materials: [{ name: "Шаблон дневника активности", href: "/materials/pe-activity-template.txt" }],
-  },
-  {
-    id: 12,
-    subject: "Алгебра",
-    title: "Контрольная подготовка: тема 7",
-    deadline: "Сегодня, 19:00",
-    status: "urgent",
-    teacher: "К. Муханова",
-    materials: [{ name: "Примеры задач по теме 7", href: "/materials/algebra-theme7-samples.txt" }],
-  },
-];
 
 const filters = [
   { key: "all", label: "Все" },
@@ -132,16 +15,41 @@ const filters = [
   { key: "new", label: "Новые" },
 ];
 
+function deriveStatus(source, assignment) {
+  if (source === "active") return "inProgress";
+  if (source === "overdue") return "urgent";
+  if (!assignment?.deadline) return "new";
+  const diffHours = (new Date(assignment.deadline).getTime() - Date.now()) / 3_600_000;
+  if (diffHours <= 24) return "urgent";
+  return "new";
+}
+
+function normalizeAssignment(raw, source) {
+  const a = raw?.assignment || raw;
+  const submission = raw?.assignment ? raw : null;
+  const status = submission?.grade != null ? "completed" : deriveStatus(source, a);
+  return {
+    id: a?.id,
+    subject: a?.subjectName || "—",
+    title: a?.title || "Без названия",
+    deadline: a?.deadline || null,
+    teacher: a?.teacherName || "",
+    description: a?.description || "",
+    maxGrade: a?.maxGrade,
+    status,
+    grade: submission?.grade != null ? `${submission.grade}${a?.maxGrade ? `/${a.maxGrade}` : ""}` : null,
+    submissionId: submission?.id,
+    submittedAt: submission?.submittedAt || null,
+    _source: source,
+  };
+}
+
 function statusLabel(status) {
   switch (status) {
-    case "completed":
-      return "Выполнено";
-    case "urgent":
-      return "Срочно";
-    case "inProgress":
-      return "В процессе";
-    default:
-      return "Новое";
+    case "completed": return "Выполнено";
+    case "urgent": return "Срочно";
+    case "inProgress": return "В процессе";
+    default: return "Новое";
   }
 }
 
@@ -151,81 +59,103 @@ function matchesStatus(item, statusFilter) {
   return item.status === statusFilter;
 }
 
-function assignmentDescription(item) {
-  return `Выполните задание по предмету "${item.subject}", внимательно проверьте требования преподавателя и загрузите итоговый файл до дедлайна. Формат сдачи: один файл с аккуратным оформлением и понятным названием.`;
-}
-
 export default function StudentAssignmentsPage() {
+  const toSubmitQuery = useApi(() => assignmentsApi.studentToSubmit(), []);
+  const activeQuery = useApi(() => assignmentsApi.studentActive(), []);
+  const overdueQuery = useApi(() => assignmentsApi.studentOverdue(), []);
+
+  const loading = toSubmitQuery.loading || activeQuery.loading || overdueQuery.loading;
+  const error = toSubmitQuery.error || activeQuery.error || overdueQuery.error;
+
+  const assignments = useMemo(() => {
+    const items = [];
+    (toSubmitQuery.data || []).forEach((a) => items.push(normalizeAssignment(a, "to-submit")));
+    (activeQuery.data || []).forEach((a) => items.push(normalizeAssignment(a, "active")));
+    (overdueQuery.data || []).forEach((a) => items.push(normalizeAssignment(a, "overdue")));
+    const seen = new Set();
+    return items.filter((item) => {
+      if (!item.id || seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    });
+  }, [toSubmitQuery.data, activeQuery.data, overdueQuery.data]);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedAssignment, setSelectedAssignment] = useState(null);
+  const [selected, setSelected] = useState(null);
+  const [submittingId, setSubmittingId] = useState(null);
+  const [submitError, setSubmitError] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState({});
 
   const subjectOptions = useMemo(() => {
-    return ["all", ...new Set(assignments.map((item) => item.subject))];
-  }, []);
+    return ["all", ...new Set(assignments.map((item) => item.subject).filter(Boolean))];
+  }, [assignments]);
 
-  const filteredAssignments = useMemo(() => {
-    const normalizedSearch = searchQuery.trim().toLowerCase();
-
+  const filtered = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
     return assignments.filter((item) => {
-      const matchesQuery =
-        !normalizedSearch ||
-        item.title.toLowerCase().includes(normalizedSearch) ||
-        item.subject.toLowerCase().includes(normalizedSearch);
+      const matchesQuery = !q ||
+        item.title.toLowerCase().includes(q) ||
+        (item.subject || "").toLowerCase().includes(q);
       const matchesSubject = subjectFilter === "all" || item.subject === subjectFilter;
-      const matchesByStatus = matchesStatus(item, statusFilter);
-
-      return matchesQuery && matchesSubject && matchesByStatus;
+      return matchesQuery && matchesSubject && matchesStatus(item, statusFilter);
     });
-  }, [searchQuery, statusFilter, subjectFilter]);
+  }, [assignments, searchQuery, subjectFilter, statusFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredAssignments.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, statusFilter, subjectFilter]);
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, subjectFilter]);
+  useEffect(() => { if (currentPage > totalPages) setCurrentPage(totalPages); }, [currentPage, totalPages]);
 
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
-
-  const paginatedAssignments = useMemo(() => {
+  const paginated = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
-    return filteredAssignments.slice(start, start + PAGE_SIZE);
-  }, [filteredAssignments, currentPage]);
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, currentPage]);
 
-  const startItem = filteredAssignments.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0;
-  const endItem = Math.min(currentPage * PAGE_SIZE, filteredAssignments.length);
-  const uploadedFileName = selectedAssignment ? uploadedFiles[selectedAssignment.id] : "";
-  const teacherMaterials = selectedAssignment?.materials ?? [];
+  const startItem = filtered.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0;
+  const endItem = Math.min(currentPage * PAGE_SIZE, filtered.length);
 
   useEffect(() => {
-    if (!selectedAssignment) return undefined;
-
-    const onKeyDown = (event) => {
-      if (event.key === "Escape") {
-        setSelectedAssignment(null);
-      }
-    };
-
+    if (!selected) return undefined;
+    const onKeyDown = (e) => { if (e.key === "Escape") setSelected(null); };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [selectedAssignment]);
+  }, [selected]);
 
-  const onFileChange = (event) => {
+  async function onFileChange(event) {
     const file = event.target.files?.[0];
-    if (!file || !selectedAssignment) return;
+    if (!file || !selected) return;
+    setSubmitError("");
+    setSubmittingId(selected.id);
+    try {
+      const uploaded = await filesApi.uploadSubmission(file);
+      await submissionsApi.submit({
+        assignmentId: selected.id,
+        filePath: uploaded.filePath,
+        fileName: uploaded.fileName,
+        fileSize: uploaded.fileSize,
+      });
+      setUploadedFiles((prev) => ({ ...prev, [selected.id]: file.name }));
+      await Promise.all([
+        toSubmitQuery.refetch(),
+        activeQuery.refetch(),
+      ]);
+    } catch (err) {
+      setSubmitError(err?.message || "Ошибка отправки файла");
+    } finally {
+      setSubmittingId(null);
+      event.target.value = "";
+    }
+  }
 
-    setUploadedFiles((prev) => ({
-      ...prev,
-      [selectedAssignment.id]: file.name,
-    }));
-  };
+  if (loading && !assignments.length) {
+    return <div className={styles.page}><p>Загрузка заданий…</p></div>;
+  }
+  if (error && !assignments.length) {
+    return <div className={styles.page}><p>Ошибка: {error.message}</p></div>;
+  }
 
   return (
     <div className={styles.page}>
@@ -236,9 +166,7 @@ export default function StudentAssignmentsPage() {
 
       <section className={styles.controls}>
         <div className={styles.field}>
-          <label className={styles.label} htmlFor="assignment-search">
-            Поиск
-          </label>
+          <label className={styles.label} htmlFor="assignment-search">Поиск</label>
           <input
             id="assignment-search"
             className={styles.input}
@@ -250,9 +178,7 @@ export default function StudentAssignmentsPage() {
         </div>
 
         <div className={styles.field}>
-          <label className={styles.label} htmlFor="subject-filter">
-            Предмет
-          </label>
+          <label className={styles.label} htmlFor="subject-filter">Предмет</label>
           <select
             id="subject-filter"
             className={styles.select}
@@ -282,22 +208,22 @@ export default function StudentAssignmentsPage() {
       </section>
 
       <p className={styles.resultMeta}>
-        Показано {startItem}-{endItem} из {filteredAssignments.length}
+        Показано {startItem}-{endItem} из {filtered.length}
       </p>
 
       <section className={styles.list}>
-        {paginatedAssignments.length ? (
-          paginatedAssignments.map((item) => (
+        {paginated.length ? (
+          paginated.map((item) => (
             <article
               key={item.id}
               className={styles.card}
               role="button"
               tabIndex={0}
-              onClick={() => setSelectedAssignment(item)}
+              onClick={() => setSelected(item)}
               onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
                   event.preventDefault();
-                  setSelectedAssignment(item);
+                  setSelected(item);
                 }
               }}
             >
@@ -309,11 +235,13 @@ export default function StudentAssignmentsPage() {
               <p className={styles.taskTitle}>{item.title}</p>
 
               <div className={styles.cardMetaRow}>
-                <p className={styles.meta}>Срок: {item.deadline}</p>
-                <p className={styles.meta}>Преподаватель: {item.teacher}</p>
+                <p className={styles.meta}>Срок: {item.deadline ? formatDateTime(item.deadline) : "—"}</p>
+                <p className={styles.meta}>Преподаватель: {item.teacher || "—"}</p>
               </div>
 
-              {item.status === "completed" ? <p className={styles.grade}>Оценка: {item.grade}</p> : null}
+              {item.status === "completed" && item.grade ? (
+                <p className={styles.grade}>Оценка: {item.grade}</p>
+              ) : null}
             </article>
           ))
         ) : (
@@ -347,31 +275,19 @@ export default function StudentAssignmentsPage() {
         </button>
       </section>
 
-      {selectedAssignment ? (
+      {selected ? (
         <div
           className={styles.modalOverlay}
           role="presentation"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) {
-              setSelectedAssignment(null);
-            }
-          }}
+          onClick={(event) => { if (event.target === event.currentTarget) setSelected(null); }}
         >
           <section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="assignment-modal-title">
             <div className={styles.modalHead}>
               <div>
-                <h3 id="assignment-modal-title" className={styles.modalTitle}>
-                  {selectedAssignment.title}
-                </h3>
+                <h3 id="assignment-modal-title" className={styles.modalTitle}>{selected.title}</h3>
                 <p className={styles.modalSub}>Карточка задания</p>
               </div>
-
-              <button
-                type="button"
-                className={styles.closeBtn}
-                aria-label="Закрыть"
-                onClick={() => setSelectedAssignment(null)}
-              >
+              <button type="button" className={styles.closeBtn} aria-label="Закрыть" onClick={() => setSelected(null)}>
                 ×
               </button>
             </div>
@@ -379,66 +295,56 @@ export default function StudentAssignmentsPage() {
             <div className={styles.modalInfoGrid}>
               <div className={styles.modalInfoItem}>
                 <p className={styles.modalLabel}>Предмет</p>
-                <p className={styles.modalValue}>{selectedAssignment.subject}</p>
+                <p className={styles.modalValue}>{selected.subject}</p>
               </div>
               <div className={styles.modalInfoItem}>
                 <p className={styles.modalLabel}>Статус</p>
-                <p className={styles.modalValue}>{statusLabel(selectedAssignment.status)}</p>
+                <p className={styles.modalValue}>{statusLabel(selected.status)}</p>
               </div>
               <div className={styles.modalInfoItem}>
                 <p className={styles.modalLabel}>Срок</p>
-                <p className={styles.modalValue}>{selectedAssignment.deadline}</p>
+                <p className={styles.modalValue}>{selected.deadline ? formatDateTime(selected.deadline) : "—"}</p>
               </div>
               <div className={styles.modalInfoItem}>
                 <p className={styles.modalLabel}>Преподаватель</p>
-                <p className={styles.modalValue}>{selectedAssignment.teacher}</p>
+                <p className={styles.modalValue}>{selected.teacher || "—"}</p>
               </div>
-              {selectedAssignment.grade ? (
+              {selected.grade ? (
                 <div className={styles.modalInfoItem}>
                   <p className={styles.modalLabel}>Оценка</p>
-                  <p className={styles.modalValue}>{selectedAssignment.grade}</p>
+                  <p className={styles.modalValue}>{selected.grade}</p>
                 </div>
               ) : null}
             </div>
 
             <div className={styles.modalSection}>
               <p className={styles.modalSectionTitle}>Описание</p>
-              <p className={styles.modalText}>{assignmentDescription(selectedAssignment)}</p>
+              <p className={styles.modalText}>{selected.description || "Описание не предоставлено."}</p>
             </div>
 
-            <div className={styles.modalSection}>
-              <p className={styles.modalSectionTitle}>Материалы от преподавателя</p>
-              {teacherMaterials.length ? (
-                <ul className={styles.materialList}>
-                  {teacherMaterials.map((material) => (
-                    <li key={material.href} className={styles.materialItem}>
-                      <span className={styles.materialName}>{material.name}</span>
-                      <a className={styles.materialLink} href={material.href} download>
-                        Скачать
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className={styles.noMaterial}>Материал не прикреплен.</p>
-              )}
-            </div>
-
-            <div className={styles.modalSection}>
-              <p className={styles.modalSectionTitle}>Файл на проверку</p>
-              <input
-                id="assignment-upload-input"
-                className={styles.fileInput}
-                type="file"
-                onChange={onFileChange}
-              />
-              <div className={styles.uploadRow}>
-                <label htmlFor="assignment-upload-input" className={styles.uploadBtn}>
-                  Сдать файл
-                </label>
-                <p className={styles.fileName}>{uploadedFileName ? `Выбрано: ${uploadedFileName}` : "Файл не выбран"}</p>
+            {selected.status !== "completed" ? (
+              <div className={styles.modalSection}>
+                <p className={styles.modalSectionTitle}>Файл на проверку</p>
+                <input
+                  id="assignment-upload-input"
+                  className={styles.fileInput}
+                  type="file"
+                  onChange={onFileChange}
+                  disabled={submittingId === selected.id}
+                />
+                <div className={styles.uploadRow}>
+                  <label htmlFor="assignment-upload-input" className={styles.uploadBtn}>
+                    {submittingId === selected.id ? "Отправка…" : "Сдать файл"}
+                  </label>
+                  <p className={styles.fileName}>
+                    {uploadedFiles[selected.id]
+                      ? `Отправлено: ${uploadedFiles[selected.id]}`
+                      : "Файл не выбран"}
+                  </p>
+                </div>
+                {submitError ? <p className={styles.fileName} style={{ color: "var(--danger)" }}>{submitError}</p> : null}
               </div>
-            </div>
+            ) : null}
           </section>
         </div>
       ) : null}

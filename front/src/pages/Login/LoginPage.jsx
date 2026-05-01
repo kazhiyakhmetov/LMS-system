@@ -8,7 +8,7 @@ import { roleToPath } from "../../shared/lib/auth/roleRedirect";
 import logo from "../../assets/logo.png";
 
 const INITIAL_FORM = {
-  login: "",
+  email: "",
   password: "",
 };
 
@@ -31,11 +31,11 @@ export default function LoginPage() {
   const fieldErrors = useMemo(() => {
     const errors = {};
 
-    if (!form.login.trim()) errors.login = "Обязательное поле";
+    if (!form.email.trim()) errors.email = "Обязательное поле";
     if (!form.password.trim()) errors.password = "Обязательное поле";
 
     return errors;
-  }, [form.login, form.password]);
+  }, [form.email, form.password]);
 
   const canSubmit = Object.keys(fieldErrors).length === 0 && !loading;
 
@@ -69,7 +69,7 @@ export default function LoginPage() {
 
       // Логин и пароль подчищаем только в момент отправки, чтобы не мешать вводу.
       const result = await doLogin({
-        login: form.login.trim(),
+        email: form.email.trim(),
         password: form.password,
       });
 
@@ -142,15 +142,16 @@ export default function LoginPage() {
 
           <form className={styles.form} onSubmit={onSubmit}>
             <Input
-              label="Логин"
+              label="Email"
+              type="email"
               placeholder=""
-              autoComplete="username"
-              value={form.login}
-              onChange={updateFormField("login")}
-              error={attemptedSubmit ? fieldErrors.login ?? "" : ""}
+              autoComplete="email"
+              value={form.email}
+              onChange={updateFormField("email")}
+              error={attemptedSubmit ? fieldErrors.email ?? "" : ""}
               icon={
                 <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z" />
+                  <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
                 </svg>
               }
             />

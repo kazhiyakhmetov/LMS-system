@@ -44,3 +44,7 @@ pnpm-debug.log*
 # ==== Docker ====
 # Оставляем Dockerfile и compose в git, но локальные override-файлы игнорим
 docker-compose.override.yml
+
+# ==== DB backups (большие/чувствительные дампы не в git) ====
+db/backups/*
+!db/backups/.gitkeep

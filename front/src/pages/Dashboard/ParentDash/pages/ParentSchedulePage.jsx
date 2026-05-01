@@ -1,119 +1,9 @@
-import { useMemo, useState } from "react";
-import { defaultWeekRange, lessonSlots, weekDays } from "../../../../shared/constants/schedule";
-import { mapScheduleEntries } from "../../../../shared/lib/utils/schedule";
+import { useEffect, useMemo, useState } from "react";
+import { lessonSlots, weekDays } from "../../../../shared/constants/schedule";
 import WeeklyScheduleTable from "../../../../shared/ui/WeeklyScheduleTable/WeeklyScheduleTable";
-
-const children = [
-  { id: "aliya", label: "Алия Есенова • 10-А" },
-  { id: "timur", label: "Тимур Есенов • 6-Б" },
-];
-
-const schedules = {
-  aliya: {
-    monday: [
-      { subject: "Физика", room: "112 каб", teacher: "Н. Садыкова" },
-      { subject: "Алгебра", room: "203 каб", teacher: "К. Муханова" },
-      { subject: "История", room: "108 каб", teacher: "Д. Турсынбек" },
-      { subject: "Информатика", room: "210 каб", teacher: "А. Жанибек" },
-      { subject: "Английский", room: "307 каб", teacher: "A. White" },
-      null,
-      null,
-      null,
-    ],
-    tuesday: [
-      { subject: "Физика", room: "112 каб", teacher: "Н. Садыкова" },
-      { subject: "Геометрия", room: "205 каб", teacher: "К. Муханова" },
-      { subject: "Литература", room: "109 каб", teacher: "Л. Толеу" },
-      { subject: "История", room: "108 каб", teacher: "Д. Турсынбек" },
-      { subject: "Химия", room: "116 каб", teacher: "С. Рахим" },
-      null,
-      null,
-      null,
-    ],
-    wednesday: [
-      { subject: "Алгебра", room: "203 каб", teacher: "К. Муханова" },
-      { subject: "Физика", room: "112 каб", teacher: "Н. Садыкова" },
-      { subject: "Информатика", room: "210 каб", teacher: "А. Жанибек" },
-      { subject: "География", room: "118 каб", teacher: "Г. Абдулла" },
-      { subject: "Английский", room: "307 каб", teacher: "A. White" },
-      null,
-      null,
-      null,
-    ],
-    thursday: [
-      { subject: "Физика", room: "112 каб", teacher: "Н. Садыкова" },
-      { subject: "Алгебра", room: "203 каб", teacher: "К. Муханова" },
-      { subject: "Казахский", room: "304 каб", teacher: "Ж. Аблай" },
-      { subject: "Английский", room: "307 каб", teacher: "A. White" },
-      { subject: "Информатика", room: "210 каб", teacher: "А. Жанибек" },
-      null,
-      null,
-      null,
-    ],
-    friday: [
-      { subject: "Биология", room: "114 каб", teacher: "А. Нурали" },
-      { subject: "Геометрия", room: "205 каб", teacher: "К. Муханова" },
-      { subject: "Физика", room: "112 каб", teacher: "Н. Садыкова" },
-      { subject: "Химия", room: "116 каб", teacher: "С. Рахим" },
-      { subject: "История", room: "108 каб", teacher: "Д. Турсынбек" },
-      null,
-      null,
-      null,
-    ],
-  },
-  timur: {
-    monday: [
-      { subject: "Математика", room: "104 каб", teacher: "С. Ермекова" },
-      { subject: "Русский язык", room: "110 каб", teacher: "Л. Толеу" },
-      { subject: "История", room: "101 каб", teacher: "Д. Турсынбек" },
-      { subject: "Биология", room: "114 каб", teacher: "А. Нурали" },
-      null,
-      null,
-      null,
-      null,
-    ],
-    tuesday: [
-      { subject: "Казахский", room: "109 каб", teacher: "Ж. Аблай" },
-      { subject: "Математика", room: "104 каб", teacher: "С. Ермекова" },
-      { subject: "Информатика", room: "209 каб", teacher: "А. Жанибек" },
-      { subject: "География", room: "115 каб", teacher: "Г. Абдулла" },
-      null,
-      null,
-      null,
-      null,
-    ],
-    wednesday: [
-      { subject: "Математика", room: "104 каб", teacher: "С. Ермекова" },
-      { subject: "Английский", room: "307 каб", teacher: "A. White" },
-      { subject: "География", room: "115 каб", teacher: "Г. Абдулла" },
-      { subject: "Русский язык", room: "110 каб", teacher: "Л. Толеу" },
-      null,
-      null,
-      null,
-      null,
-    ],
-    thursday: [
-      { subject: "История", room: "101 каб", teacher: "Д. Турсынбек" },
-      { subject: "Математика", room: "104 каб", teacher: "С. Ермекова" },
-      { subject: "Казахский", room: "109 каб", teacher: "Ж. Аблай" },
-      { subject: "Биология", room: "114 каб", teacher: "А. Нурали" },
-      null,
-      null,
-      null,
-      null,
-    ],
-    friday: [
-      { subject: "Математика", room: "104 каб", teacher: "С. Ермекова" },
-      { subject: "Информатика", room: "209 каб", teacher: "А. Жанибек" },
-      { subject: "Русский язык", room: "110 каб", teacher: "Л. Толеу" },
-      null,
-      null,
-      null,
-      null,
-      null,
-    ],
-  },
-};
+import { useApi } from "../../../../shared/lib/hooks/useApi";
+import { parentApi } from "../../../../shared/lib/api";
+import { addDaysISO, formatWeekRange, getMondayISO } from "../../../../shared/lib/utils/date";
 
 const childSelectStyle = {
   height: "42px",
@@ -126,37 +16,81 @@ const childSelectStyle = {
   color: "#123469",
 };
 
+function emptyGrid() {
+  return Object.fromEntries(weekDays.map((d) => [d.key, lessonSlots.map(() => null)]));
+}
+
+function dayOfWeekFromISO(iso) {
+  const d = new Date(iso);
+  const map = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  return map[d.getDay()];
+}
+
+function buildScheduleFromMap(scheduleMap) {
+  const grid = emptyGrid();
+  if (!scheduleMap || typeof scheduleMap !== "object") return grid;
+  Object.entries(scheduleMap).forEach(([dateStr, lessons]) => {
+    const dayKey = dayOfWeekFromISO(dateStr);
+    if (!grid[dayKey]) return;
+    (lessons || []).forEach((lesson) => {
+      const idx = (lesson.lessonNumber ?? 1) - 1;
+      if (idx < 0 || idx >= grid[dayKey].length) return;
+      grid[dayKey][idx] = {
+        subject: lesson.subjectName || "",
+        metaLine: lesson.classroom ? `${lesson.classroom} каб` : "",
+        extraLine: lesson.teacherName || "",
+      };
+    });
+  });
+  return grid;
+}
+
 export default function ParentSchedulePage() {
-  const [childId, setChildId] = useState(children[0].id);
+  const [startDate, setStartDate] = useState(() => getMondayISO());
 
-  const selectedSchedule = useMemo(() => schedules[childId], [childId]);
+  const childrenQuery = useApi(() => parentApi.children(), []);
+  const children = useMemo(() => Array.isArray(childrenQuery.data) ? childrenQuery.data : [], [childrenQuery.data]);
 
-  const normalizedSchedule = useMemo(
-    () =>
-      mapScheduleEntries(selectedSchedule, (lesson) => ({
-        subject: lesson.subject,
-        metaLine: lesson.room,
-        extraLine: lesson.teacher,
-      })),
-    [selectedSchedule],
+  const [childId, setChildId] = useState(null);
+  useEffect(() => {
+    if (childId == null && children.length) setChildId(children[0].id);
+  }, [children, childId]);
+
+  const scheduleQuery = useApi(
+    () => (childId ? parentApi.childScheduleWeek(childId, startDate) : Promise.resolve(null)),
+    [childId, startDate],
+    { immediate: Boolean(childId) },
   );
+
+  const schedule = useMemo(() => buildScheduleFromMap(scheduleQuery.data), [scheduleQuery.data]);
+  const weekRange = useMemo(() => formatWeekRange(startDate), [startDate]);
+
+  if (childrenQuery.loading && !children.length) {
+    return <div style={{ padding: 24 }}>Загрузка…</div>;
+  }
+  if (!children.length) {
+    return <div style={{ padding: 24 }}>К вашему аккаунту не привязаны дети.</div>;
+  }
 
   return (
     <WeeklyScheduleTable
       title="Расписание ребенка"
-      weekRange={defaultWeekRange}
+      weekRange={weekRange}
       weekDays={weekDays}
       slots={lessonSlots}
-      schedule={normalizedSchedule}
+      schedule={schedule}
       actionLabel="Календарь родителя"
       rightControls={
-        <select style={childSelectStyle} value={childId} onChange={(event) => setChildId(event.target.value)}>
-          {children.map((child) => (
-            <option key={child.id} value={child.id}>
-              {child.label}
-            </option>
-          ))}
-        </select>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <select style={childSelectStyle} value={childId ?? ""} onChange={(e) => setChildId(e.target.value)}>
+            {children.map((c) => (
+              <option key={c.id} value={c.id}>{c.fio} ({c.className || "—"})</option>
+            ))}
+          </select>
+          <button type="button" onClick={() => setStartDate(addDaysISO(startDate, -7))}>← неделя</button>
+          <button type="button" onClick={() => setStartDate(getMondayISO())}>Сегодня</button>
+          <button type="button" onClick={() => setStartDate(addDaysISO(startDate, 7))}>неделя →</button>
+        </div>
       }
     />
   );

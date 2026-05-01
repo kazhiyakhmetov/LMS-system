@@ -1,67 +1,40 @@
 import { useMemo } from "react";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { useApi } from "../../../../shared/lib/hooks/useApi";
+import { assignmentsApi, scheduleApi, surveysApi } from "../../../../shared/lib/api";
+import { formatDateTime, formatTime, toISODate } from "../../../../shared/lib/utils/date";
 import styles from "./StudentHomePage.module.css";
 
-const todayLessons = [
-  {
-    time: "08:30 - 09:15",
-    subject: "Алгебра",
-    room: "203",
-    teacher: "К. Муханова",
-  },
-  {
-    time: "09:30 - 10:15",
-    subject: "Информатика",
-    room: "210",
-    teacher: "А. Жанибек",
-  },
-  {
-    time: "10:30 - 11:15",
-    subject: "Английский язык",
-    room: "307",
-    teacher: "A. White",
-  },
-  {
-    time: "12:00 - 12:45",
-    subject: "История Казахстана",
-    room: "112",
-    teacher: "Д. Турсынбек",
-  },
-];
+function pickUpcomingSurvey(surveys) {
+  if (!Array.isArray(surveys) || !surveys.length) return null;
+  const withDeadline = surveys
+    .map((s) => ({ s, dl: s.deadline ? new Date(s.deadline).getTime() : Infinity }))
+    .sort((a, b) => a.dl - b.dl);
+  return withDeadline[0]?.s ?? null;
+}
 
-const assignedSurvey = {
-  title: "Опрос по информатике: цифровая гигиена",
-  deadline: "Сегодня до 18:00",
-};
-
-const deadlines = [
-  {
-    subject: "Физика",
-    title: "Лабораторная работа №4",
-    due: "Сегодня, 18:00",
-    tone: "critical",
-  },
-  {
-    subject: "Литература",
-    title: "Эссе по роману",
-    due: "Завтра, 12:00",
-    tone: "warning",
-  },
-  {
-    subject: "Биология",
-    title: "Тест из 20 вопросов",
-    due: "Пятница, 09:00",
-    tone: "focus",
-  },
-];
+function toneFor(deadline) {
+  if (!deadline) return "focus";
+  const now = Date.now();
+  const dl = new Date(deadline).getTime();
+  const diffHours = (dl - now) / 3_600_000;
+  if (diffHours <= 24) return "critical";
+  if (diffHours <= 72) return "warning";
+  return "focus";
+}
 
 export default function StudentHomePage() {
   const { user } = useAuth();
+  const today = useMemo(() => toISODate(new Date()), []);
+
+  const todayLessonsQuery = useApi(() => scheduleApi.studentDay(today), [today]);
+  const surveysQuery = useApi(() => surveysApi.available(), []);
+  const assignmentsQuery = useApi(() => assignmentsApi.studentToSubmit(), []);
 
   const studentName = useMemo(() => {
-    if (!user?.name) return "ученик";
-    return user.name.split(" ")[0];
-  }, [user?.name]);
+    const name = user?.firstName || user?.name || "ученик";
+    return name.split(" ")[0];
+  }, [user]);
 
   const longDate = useMemo(
     () =>
@@ -73,6 +46,15 @@ export default function StudentHomePage() {
       }).format(new Date()),
     [],
   );
+
+  const todayLessons = Array.isArray(todayLessonsQuery.data) ? todayLessonsQuery.data : [];
+  const assignedSurvey = pickUpcomingSurvey(surveysQuery.data);
+  const deadlines = Array.isArray(assignmentsQuery.data)
+    ? assignmentsQuery.data
+        .filter((a) => a?.deadline)
+        .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+        .slice(0, 3)
+    : [];
 
   return (
     <div className={styles.page}>
@@ -104,38 +86,47 @@ export default function StudentHomePage() {
             </div>
 
             <div className={styles.dayNavigator}>
-              <button type="button" className={styles.navBtn} aria-label="Предыдущий день">
-                ←
-              </button>
               <span className={styles.navToday}>Сегодня</span>
-              <span className={styles.todayBadge}>📅 Сегодня</span>
-              <button type="button" className={styles.navBtn} aria-label="Следующий день">
-                →
-              </button>
+              <span className={styles.todayBadge}>{longDate}</span>
             </div>
 
-            <ul className={styles.lessonList}>
-              {todayLessons.map((lesson) => (
-                <li key={`${lesson.time}-${lesson.subject}`} className={styles.lessonItem}>
-                  <p className={styles.lessonTime}>{lesson.time}</p>
-                  <div className={styles.lessonInfo}>
-                    <p className={styles.lessonTitle}>{lesson.subject}</p>
-                    <p className={styles.lessonMeta}>
-                      Кабинет {lesson.room} • {lesson.teacher}
+            {todayLessonsQuery.loading && !todayLessons.length ? (
+              <p className={styles.emptyState}>Загрузка уроков…</p>
+            ) : todayLessonsQuery.error ? (
+              <p className={styles.emptyState}>Не удалось загрузить расписание</p>
+            ) : todayLessons.length ? (
+              <ul className={styles.lessonList}>
+                {todayLessons.map((lesson) => (
+                  <li key={lesson.id} className={styles.lessonItem}>
+                    <p className={styles.lessonTime}>
+                      {formatTime(lesson.startTime)} - {formatTime(lesson.endTime)}
                     </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                    <div className={styles.lessonInfo}>
+                      <p className={styles.lessonTitle}>{lesson.subjectName}</p>
+                      <p className={styles.lessonMeta}>
+                        {lesson.classroom ? `Кабинет ${lesson.classroom}` : ""}
+                        {lesson.teacherName ? ` • ${lesson.teacherName}` : ""}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className={styles.emptyState}>На сегодня уроков нет</p>
+            )}
           </article>
 
           <article className={styles.eventsCard}>
             <h3 className={styles.sectionTitle}>Важные события</h3>
-            {assignedSurvey ? (
+            {surveysQuery.loading && !assignedSurvey ? (
+              <p className={styles.emptyState}>Загрузка событий…</p>
+            ) : assignedSurvey ? (
               <div className={styles.surveyNotice}>
-                <p className={styles.noticeTitle}>Вам назначен опрос</p>
+                <p className={styles.noticeTitle}>Вам доступен опрос</p>
                 <p className={styles.noticeText}>{assignedSurvey.title}</p>
-                <p className={styles.noticeMeta}>Срок: {assignedSurvey.deadline}</p>
+                {assignedSurvey.deadline ? (
+                  <p className={styles.noticeMeta}>Срок: {formatDateTime(assignedSurvey.deadline)}</p>
+                ) : null}
               </div>
             ) : (
               <p className={styles.emptyState}>Пока важных событий нет</p>
@@ -149,15 +140,24 @@ export default function StudentHomePage() {
             <span className={styles.deadlineCount}>{deadlines.length}</span>
           </div>
 
-          <ul className={styles.deadlineList}>
-            {deadlines.map((item) => (
-              <li key={item.title} className={`${styles.deadlineItem} ${styles[item.tone]}`}>
-                <p className={styles.deadlineSubject}>{item.subject}</p>
-                <p className={styles.deadlineTitle}>{item.title}</p>
-                <p className={styles.deadlineMeta}>{item.due}</p>
-              </li>
-            ))}
-          </ul>
+          {assignmentsQuery.loading && !deadlines.length ? (
+            <p className={styles.emptyState}>Загрузка заданий…</p>
+          ) : deadlines.length ? (
+            <ul className={styles.deadlineList}>
+              {deadlines.map((item) => (
+                <li
+                  key={item.id}
+                  className={`${styles.deadlineItem} ${styles[toneFor(item.deadline)]}`}
+                >
+                  <p className={styles.deadlineSubject}>{item.subjectName || item.subject || ""}</p>
+                  <p className={styles.deadlineTitle}>{item.title}</p>
+                  <p className={styles.deadlineMeta}>{formatDateTime(item.deadline)}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className={styles.emptyState}>Ближайших дедлайнов нет</p>
+          )}
         </aside>
       </section>
     </div>

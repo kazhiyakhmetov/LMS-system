@@ -3,8 +3,9 @@ import { useAuth } from "../../../contexts/AuthContext";
 import { roleToPath } from "./roleRedirect";
 
 export default function RoleRoute({ allow = [], children }) {
-  const { user, isAuthed } = useAuth();
+  const { user, isAuthed, ready } = useAuth();
 
+  if (!ready) return null;
   if (!isAuthed) return <Navigate to="/" replace />;
 
   const role = user?.role;

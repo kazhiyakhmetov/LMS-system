@@ -5,8 +5,11 @@ import { adminMenu } from "./adminMenu";
 import AdminStatsView from "./pages/AdminStatsView";
 import AdminUsersView from "./pages/AdminUsersView";
 import AdminRegistrationView from "./pages/AdminRegistrationView";
+import AdminClassesView from "./pages/AdminClassesView";
+import AdminTeachingView from "./pages/AdminTeachingView";
 import AdminScheduleView from "./pages/AdminScheduleView";
 import AdminSurveyView from "./pages/AdminSurveyView";
+import AdminSettingsView from "./pages/AdminSettingsView";
 import { resolveDashboardSection } from "../shared/resolveDashboardSection";
 
 const defaultSection = {
@@ -15,26 +18,13 @@ const defaultSection = {
 };
 
 const sections = [
-  {
-    path: "/admin/users",
-    title: "Списки пользователей",
-    component: AdminUsersView,
-  },
-  {
-    path: "/admin/registration",
-    title: "Регистрация пользователей",
-    component: AdminRegistrationView,
-  },
-  {
-    path: "/admin/schedule",
-    title: "Расписание",
-    component: AdminScheduleView,
-  },
-  {
-    path: "/admin/surveys",
-    title: "Опросы",
-    component: AdminSurveyView,
-  },
+  { path: "/admin/users", title: "Пользователи", component: AdminUsersView },
+  { path: "/admin/registration", title: "Регистрация", component: AdminRegistrationView },
+  { path: "/admin/classes", title: "Классы", component: AdminClassesView },
+  { path: "/admin/teaching", title: "Назначения учителей", component: AdminTeachingView },
+  { path: "/admin/schedule", title: "Расписание", component: AdminScheduleView },
+  { path: "/admin/surveys", title: "Опросы", component: AdminSurveyView },
+  { path: "/admin/settings", title: "Настройки", component: AdminSettingsView },
 ];
 
 export default function AdminPage() {

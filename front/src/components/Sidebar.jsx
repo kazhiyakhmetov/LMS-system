@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
 import styles from "./Sidebar.module.css";
 import logo from "../assets/logo.png";
+import { useT } from "../shared/lib/i18n";
 
 function NavIcon({ name }) {
   const common = {
@@ -122,6 +123,28 @@ function NavIcon({ name }) {
           <path d="M5 5h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" />
         </svg>
       );
+    case "settings":
+      return (
+        <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1A2 2 0 1 1 4.3 17l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 7 4.3l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" />
+        </svg>
+      );
+    case "academic":
+      return (
+        <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 10L12 5 2 10l10 5 10-5Z" />
+          <path d="M6 12v5c0 0 3 2 6 2s6-2 6-2v-5" />
+          <path d="M22 10v6" />
+        </svg>
+      );
+    case "link":
+      return (
+        <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5" />
+          <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5" />
+        </svg>
+      );
     default:
       return (
         <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -133,35 +156,18 @@ function NavIcon({ name }) {
 
 function ChevronIcon({ isOpen }) {
   return (
-    <svg
-      className={styles.ico}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
+    <svg className={styles.ico} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
       {isOpen ? (
-        <path
-          d="M15 6l-6 6 6 6"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       ) : (
-        <path
-          d="M9 6l6 6-6 6"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       )}
     </svg>
   );
 }
 
 export default function Sidebar({ items }) {
+  const { t } = useT();
   const menu = useMemo(() => items ?? [], [items]);
   const [pinned, setPinned] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -173,7 +179,6 @@ export default function Sidebar({ items }) {
       setPinned(false);
       setHovered(false);
     };
-
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
@@ -186,9 +191,7 @@ export default function Sidebar({ items }) {
       onMouseLeave={() => setHovered(false)}
       onFocusCapture={() => setHovered(true)}
       onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) {
-          setHovered(false);
-        }
+        if (!event.currentTarget.contains(event.relatedTarget)) setHovered(false);
       }}
     >
       <div className={styles.top}>
@@ -216,20 +219,23 @@ export default function Sidebar({ items }) {
       </div>
 
       <nav className={styles.nav}>
-        {menu.map((item) => (
-          <NavLink
-            key={item.href}
-            to={item.href}
-            end={Boolean(item.end)}
-            className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ""}`}
-            title={!isOpen ? item.label : undefined}
-          >
-            <span className={styles.iconWrap}>
-              {typeof item.icon === "string" ? <NavIcon name={item.icon} /> : item.icon}
-            </span>
-            <span className={styles.label}>{item.label}</span>
-          </NavLink>
-        ))}
+        {menu.map((item) => {
+          const label = item.labelKey ? t(item.labelKey) : item.label;
+          return (
+            <NavLink
+              key={item.href}
+              to={item.href}
+              end={Boolean(item.end)}
+              className={({ isActive }) => `${styles.link} ${isActive ? styles.active : ""}`}
+              title={!isOpen ? label : undefined}
+            >
+              <span className={styles.iconWrap}>
+                {typeof item.icon === "string" ? <NavIcon name={item.icon} /> : item.icon}
+              </span>
+              <span className={styles.label}>{label}</span>
+            </NavLink>
+          );
+        })}
       </nav>
     </aside>
   );
