@@ -17,7 +17,7 @@ export default function ParentGradesPage() {
   }, [children, childId]);
 
   const gradesQuery = useApi(
-    () => (childId ? parentApi.childGrades(childId, 100) : Promise.resolve([])),
+    () => (childId ? parentApi.childGrades(childId, 200) : Promise.resolve([])),
     [childId],
     { immediate: Boolean(childId) },
   );
@@ -59,10 +59,10 @@ export default function ParentGradesPage() {
   }, [filteredGrades, subjectStats]);
 
   if (childrenQuery.loading && !children.length) {
-    return <div style={{ padding: 24 }}>Загрузка…</div>;
+    return <div style={{ padding: 24, color: "var(--muted)" }}>Загрузка…</div>;
   }
   if (!children.length) {
-    return <div style={{ padding: 24 }}>К вашему аккаунту не привязаны дети.</div>;
+    return <div style={{ padding: 24, color: "var(--muted)" }}>К вашему аккаунту не привязаны дети.</div>;
   }
 
   return (
@@ -71,7 +71,7 @@ export default function ParentGradesPage() {
         <div>
           <h2 className={styles.title}>Оценки ребенка</h2>
           <p className={styles.sub}>
-            Журнал последних оценок ребёнка с разбивкой по предметам.
+            Журнал последних оценок ребёнка с разбивкой по предметам и средними значениями.
           </p>
         </div>
 
@@ -108,7 +108,7 @@ export default function ParentGradesPage() {
       </section>
 
       {gradesQuery.loading && !grades.length ? (
-        <p style={{ padding: 16 }}>Загрузка журнала…</p>
+        <p style={{ padding: 16, color: "var(--muted)" }}>Загрузка журнала…</p>
       ) : (
         <section className={styles.tableWrap}>
           <table className={styles.table}>
@@ -135,7 +135,7 @@ export default function ParentGradesPage() {
                   <td>{row.count}</td>
                 </tr>
               )) : (
-                <tr><td colSpan={4} style={{ textAlign: "center", padding: 16 }}>Нет данных</td></tr>
+                <tr><td colSpan={4} style={{ textAlign: "center", padding: 16, color: "var(--muted)" }}>Нет данных</td></tr>
               )}
             </tbody>
           </table>
@@ -146,11 +146,15 @@ export default function ParentGradesPage() {
         <article className={styles.panel}>
           <h3 className={styles.panelTitle}>Последние оценки</h3>
           <ul className={styles.eventList}>
-            {filteredGrades.length ? filteredGrades.slice(0, 10).map((g, idx) => (
+            {filteredGrades.length ? filteredGrades.slice(0, 12).map((g, idx) => (
               <li key={`${g.date}-${idx}`} className={styles.eventItem}>
                 <span className={styles.eventDate}>{g.date ? formatDayMonth(g.date) : "—"}</span>
                 <span className={styles.eventSubject}>{g.subject || "—"}</span>
-                <span className={styles.eventType}>{g.date ? formatDateTime(g.date) : ""}</span>
+                <span className={styles.eventType}>
+                  {g.title || ""}
+                  {g.title && g.date ? " • " : ""}
+                  {g.date ? formatDateTime(g.date) : ""}
+                </span>
                 <span className={styles.eventMark}>{g.grade ?? "—"}</span>
               </li>
             )) : (

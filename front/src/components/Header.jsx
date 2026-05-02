@@ -7,7 +7,7 @@ import { notificationsApi } from "../shared/lib/api";
 import { roleSectionPath } from "../shared/lib/auth/roleRedirect";
 import styles from "./Header.module.css";
 
-const ROLES_WITH_PROFILE = new Set(["STUDENT", "TEACHER"]);
+const ROLES_WITH_PROFILE = new Set(["STUDENT", "TEACHER", "PARENT"]);
 const NOTIF_POLL_MS = 60_000;
 
 function useClickOutside(refs, onOutside) {

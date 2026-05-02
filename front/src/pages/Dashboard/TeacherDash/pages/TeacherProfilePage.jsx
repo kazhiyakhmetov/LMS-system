@@ -3,8 +3,10 @@ import { useAuth } from "../../../../contexts/AuthContext";
 import styles from "./TeacherProfilePage.module.css";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { profileApi, statisticsApi, teachingApi } from "../../../../shared/lib/api";
+import { useT } from "../../../../shared/lib/i18n";
 
 export default function TeacherProfilePage() {
+  const { t } = useT();
   const { user } = useAuth();
   const fileRef = useRef(null);
 
@@ -26,8 +28,8 @@ export default function TeacherProfilePage() {
     if (profile.firstName || profile.lastName) {
       return [profile.firstName, profile.lastName].filter(Boolean).join(" ");
     }
-    return user?.name || "Преподаватель";
-  }, [profile.firstName, profile.lastName, user?.name]);
+    return user?.name || t("teacher.profile.defaultName");
+  }, [profile.firstName, profile.lastName, user?.name, t]);
 
   const initials = useMemo(
     () => fullName.split(" ").slice(0, 2).map((p) => p[0] || "").join("").toUpperCase(),
@@ -50,7 +52,7 @@ export default function TeacherProfilePage() {
       await profileQuery.refetch();
       setBioDraft(null);
     } catch (err) {
-      setBioError(err?.message || "Не удалось сохранить");
+      setBioError(err?.message || t("common.error"));
     } finally {
       setSavingBio(false);
     }
@@ -64,7 +66,7 @@ export default function TeacherProfilePage() {
       await profileApi.uploadAvatar(file);
       await profileQuery.refetch();
     } catch (err) {
-      setAvatarError(err?.message || "Ошибка загрузки");
+      setAvatarError(err?.message || t("common.error"));
     } finally {
       event.target.value = "";
     }
@@ -80,7 +82,6 @@ export default function TeacherProfilePage() {
             tabIndex={0}
             onClick={() => fileRef.current?.click()}
             onKeyDown={(e) => { if (e.key === "Enter") fileRef.current?.click(); }}
-            title="Загрузить аватар"
           >
             {profile.profilePhotoUrl ? (
               <img src={profile.profilePhotoUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} />
@@ -93,7 +94,7 @@ export default function TeacherProfilePage() {
               {user?.schoolName || "—"} • ID: {user?.id ?? "—"} • {profile.email || user?.email || ""}
             </p>
             <div className={styles.tags}>
-              <span className={styles.tag}>Преподаватель</span>
+              <span className={styles.tag}>{t("roles.TEACHER")}</span>
             </div>
             {avatarError ? <p style={{ color: "var(--danger)", fontSize: 13 }}>{avatarError}</p> : null}
           </div>
@@ -101,19 +102,19 @@ export default function TeacherProfilePage() {
 
         <div className={styles.heroStats}>
           <article className={styles.metric}>
-            <p className={styles.metricLabel}>Классов в работе</p>
+            <p className={styles.metricLabel}>{t("teacher.profile.kpiClasses")}</p>
             <p className={styles.metricValue}>{summary.length || "—"}</p>
           </article>
           <article className={styles.metric}>
-            <p className={styles.metricLabel}>Учеников</p>
+            <p className={styles.metricLabel}>{t("teacher.profile.kpiStudents")}</p>
             <p className={styles.metricValue}>{studentsTotal || "—"}</p>
           </article>
           <article className={styles.metric}>
-            <p className={styles.metricLabel}>Заданий</p>
+            <p className={styles.metricLabel}>{t("teacher.profile.kpiAssignments")}</p>
             <p className={styles.metricValue}>{assignmentsTotal || "—"}</p>
           </article>
           <article className={styles.metric}>
-            <p className={styles.metricLabel}>Средний балл</p>
+            <p className={styles.metricLabel}>{t("teacher.profile.kpiAvgScore")}</p>
             <p className={styles.metricValue}>{avgGrade}</p>
           </article>
         </div>
@@ -121,48 +122,48 @@ export default function TeacherProfilePage() {
 
       <section className={styles.grid}>
         <article className={styles.panel}>
-          <h3 className={styles.panelTitle}>Контакты</h3>
+          <h3 className={styles.panelTitle}>{t("teacher.profile.contactInfo")}</h3>
           <ul className={styles.rows}>
             <li className={styles.row}>
               <span className={styles.rowLabel}>Email</span>
               <span className={styles.rowValue}>{profile.email || user?.email || "—"}</span>
             </li>
             <li className={styles.row}>
-              <span className={styles.rowLabel}>Имя</span>
+              <span className={styles.rowLabel}>{t("admin.registration.firstName")}</span>
               <span className={styles.rowValue}>{profile.firstName || "—"}</span>
             </li>
             <li className={styles.row}>
-              <span className={styles.rowLabel}>Фамилия</span>
+              <span className={styles.rowLabel}>{t("admin.registration.lastName")}</span>
               <span className={styles.rowValue}>{profile.lastName || "—"}</span>
             </li>
             <li className={styles.row}>
-              <span className={styles.rowLabel}>Школа</span>
+              <span className={styles.rowLabel}>{t("admin.registration.school")}</span>
               <span className={styles.rowValue}>{user?.schoolName || "—"}</span>
             </li>
           </ul>
         </article>
 
         <article className={styles.panel}>
-          <h3 className={styles.panelTitle}>О себе</h3>
+          <h3 className={styles.panelTitle}>{t("teacher.profile.account")}</h3>
           <textarea
             rows={5}
             value={bio}
             onChange={(e) => setBioDraft(e.target.value)}
-            placeholder="Коротко о себе"
+            placeholder={t("teacher.profile.bioPlaceholder")}
             style={{ width: "100%", padding: 10, border: "1px solid var(--stroke)", borderRadius: "var(--radius-sm)", resize: "vertical", fontFamily: "inherit" }}
           />
           <div style={{ display: "flex", gap: 10, marginTop: 10, alignItems: "center" }}>
             <button type="button" onClick={saveBio} disabled={savingBio || bioDraft === null}>
-              {savingBio ? "Сохранение…" : "Сохранить"}
+              {savingBio ? t("common.saving") : t("common.save")}
             </button>
-            {bioDraft !== null ? <button type="button" onClick={() => setBioDraft(null)}>Отмена</button> : null}
+            {bioDraft !== null ? <button type="button" onClick={() => setBioDraft(null)}>{t("common.cancel")}</button> : null}
             {bioError ? <span style={{ color: "var(--danger)", fontSize: 13 }}>{bioError}</span> : null}
           </div>
         </article>
 
         <article className={`${styles.panel} ${styles.widePanel}`}>
-          <h3 className={styles.panelTitle}>Мои классы и предметы</h3>
-          {pairsQuery.loading && !pairs.length ? <p>Загрузка…</p> : pairs.length ? (
+          <h3 className={styles.panelTitle}>{t("teacher.profile.myClasses")}</h3>
+          {pairsQuery.loading && !pairs.length ? <p>{t("common.loading")}</p> : pairs.length ? (
             <div className={styles.classList}>
               {pairs.map((pair) => (
                 <div key={pair.assignmentId ?? `${pair.classId}-${pair.subjectId}`} className={styles.classItem}>
@@ -172,7 +173,7 @@ export default function TeacherProfilePage() {
               ))}
             </div>
           ) : (
-            <p style={{ color: "var(--muted)" }}>Пока нет назначений на классы.</p>
+            <p style={{ color: "var(--muted)" }}>{t("teacher.profile.noClasses")}</p>
           )}
         </article>
       </section>

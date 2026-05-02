@@ -1,28 +1,31 @@
 import styles from "./StudentSettingsPage.module.css";
+import { useT } from "../../../../shared/lib/i18n";
 
-const preferences = [
-  { title: "Push-уведомления о заданиях", hint: "Напоминания о дедлайнах и новых заданиях", enabled: true },
-  { title: "Email-отчеты по оценкам", hint: "Еженедельная сводка оценок", enabled: true },
-  { title: "Показывать статус онлайн в чате", hint: "Другие видят вашу активность", enabled: false },
-  { title: "Темный режим", hint: "Экспериментальная тема интерфейса", enabled: false },
+const PREF_KEYS = [
+  { key: "pushAssignments", enabled: true },
+  { key: "emailGrades", enabled: true },
+  { key: "onlineStatus", enabled: false },
+  { key: "darkMode", enabled: false },
 ];
 
 export default function StudentSettingsPage() {
+  const { t } = useT();
+
   return (
     <div className={styles.page}>
       <section className={styles.header}>
-        <h2 className={styles.title}>Настройки</h2>
-        <p className={styles.sub}>Персональные параметры, уведомления и безопасность аккаунта.</p>
+        <h2 className={styles.title}>{t("student.settings.title")}</h2>
+        <p className={styles.sub}>{t("student.settings.sub")}</p>
       </section>
 
       <section className={styles.settingsCard}>
-        <h3 className={styles.blockTitle}>Предпочтения</h3>
+        <h3 className={styles.blockTitle}>{t("admin.settings.account")}</h3>
         <ul className={styles.list}>
-          {preferences.map((item) => (
-            <li key={item.title} className={styles.row}>
+          {PREF_KEYS.map((item) => (
+            <li key={item.key} className={styles.row}>
               <div>
-                <p className={styles.rowTitle}>{item.title}</p>
-                <p className={styles.rowHint}>{item.hint}</p>
+                <p className={styles.rowTitle}>{t(`student.settings.${item.key}`)}</p>
+                <p className={styles.rowHint}>{t(`student.settings.${item.key}Hint`)}</p>
               </div>
               <label className={styles.switch}>
                 <input type="checkbox" defaultChecked={item.enabled} />
@@ -34,13 +37,13 @@ export default function StudentSettingsPage() {
       </section>
 
       <section className={styles.securityCard}>
-        <h3 className={styles.blockTitle}>Безопасность</h3>
+        <h3 className={styles.blockTitle}>{t("admin.settings.security")}</h3>
         <div className={styles.actions}>
           <button className={styles.primaryBtn} type="button">
-            Сменить пароль
+            {t("admin.settings.changePassword")}
           </button>
           <button className={styles.ghostBtn} type="button">
-            Включить 2FA
+            {t("admin.settings.twoFactor")}
           </button>
         </div>
       </section>

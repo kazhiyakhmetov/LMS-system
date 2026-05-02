@@ -41,7 +41,7 @@ export default function StudentGamificationPage() {
             <p className={styles.sub}>
               {toNext > 0
                 ? `${t("student.gamification.nextLevelXp")}: ${toNext} XP`
-                : "🎉 Максимальный уровень достигнут!"}
+                : t("student.gamification.maxLevel")}
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 14, marginTop: 18 }}>
               <div style={{ padding: "10px 12px", background: "var(--panel)", border: "1px solid var(--stroke)", borderRadius: "var(--radius-sm)" }}>
@@ -92,7 +92,7 @@ export default function StudentGamificationPage() {
 
       <section className={styles.grid}>
         <article className={styles.panel}>
-          <h3 className={styles.panelTitle}>Твои бейджи</h3>
+          <h3 className={styles.panelTitle}>{t("student.gamification.myBadges")}</h3>
           {achievementsQuery.loading && !earnedBadges.length ? (
             <p>{t("common.loading")}</p>
           ) : earnedBadges.length ? (
@@ -105,12 +105,12 @@ export default function StudentGamificationPage() {
               ))}
             </div>
           ) : (
-            <p style={{ color: "var(--muted)" }}>Пока нет разблокированных достижений.</p>
+            <p style={{ color: "var(--muted)" }}>{t("student.gamification.noBadges")}</p>
           )}
         </article>
 
         <article className={styles.panel}>
-          <h3 className={styles.panelTitle}>Лидерборд класса</h3>
+          <h3 className={styles.panelTitle}>{t("student.gamification.leaderboard")}</h3>
           {leaderboardQuery.loading && !leaderboard.length ? (
             <p>{t("common.loading")}</p>
           ) : leaderboard.length ? (
@@ -186,7 +186,7 @@ export default function StudentGamificationPage() {
                         color: isMe ? "var(--accent-strong)" : "var(--text)",
                       }}
                     >
-                      {isMe ? "Вы" : row.studentName}
+                      {isMe ? t("student.gamification.you") : row.studentName}
                       {row.className ? <span style={{ marginLeft: 6, color: "var(--muted)", fontWeight: 500, fontSize: 12 }}>· {row.className}</span> : null}
                     </span>
                     <span
@@ -204,7 +204,7 @@ export default function StudentGamificationPage() {
               })}
             </ul>
           ) : (
-            <p style={{ color: "var(--muted)" }}>Данных по лидерборду пока нет.</p>
+            <p style={{ color: "var(--muted)" }}>{t("student.gamification.leaderboardEmpty")}</p>
           )}
         </article>
       </section>

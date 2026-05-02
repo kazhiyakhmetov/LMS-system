@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import styles from "./TeacherClassesPage.module.css";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { statisticsApi, teachingApi } from "../../../../shared/lib/api";
+import { useT } from "../../../../shared/lib/i18n";
 
 function getRiskTone(row) {
   if (row.average < 3.5) return "risk";
@@ -9,13 +10,14 @@ function getRiskTone(row) {
   return "good";
 }
 
-function progressLabel(row) {
-  if (row.average >= 4.5) return "Сильная динамика";
-  if (row.average >= 4) return "Стабильно";
-  return "Требует внимания";
+function progressKey(row) {
+  if (row.average >= 4.5) return "good";
+  if (row.average >= 4) return "watch";
+  return "risk";
 }
 
 export default function TeacherClassesPage() {
+  const { t } = useT();
   const pairsQuery = useApi(() => teachingApi.myPairs(), []);
   const summaryQuery = useApi(() => statisticsApi.teacherSummary(), []);
 
@@ -76,33 +78,31 @@ export default function TeacherClassesPage() {
   }, [filteredRows]);
 
   if (pairsQuery.loading && !rows.length) {
-    return <div style={{ padding: 24 }}>Загрузка классов…</div>;
+    return <div style={{ padding: 24 }}>{t("teacher.classes.loading")}</div>;
   }
 
   return (
     <div className={styles.page}>
       <section className={styles.header}>
-        <h2 className={styles.title}>Классы</h2>
-        <p className={styles.sub}>
-          Список ваших классов и предметов, нагрузка и средний балл по статистике.
-        </p>
+        <h2 className={styles.title}>{t("teacher.classes.title")}</h2>
+        <p className={styles.sub}>{t("teacher.classes.sub")}</p>
       </section>
 
       <section className={styles.summary}>
         <article className={styles.summaryCard}>
-          <p className={styles.summaryLabel}>Классов в работе</p>
+          <p className={styles.summaryLabel}>{t("teacher.classes.kpiClasses")}</p>
           <p className={styles.summaryValue}>{summaryStats.classesCount}</p>
         </article>
         <article className={styles.summaryCard}>
-          <p className={styles.summaryLabel}>Учеников (суммарно)</p>
+          <p className={styles.summaryLabel}>{t("teacher.classes.kpiStudents")}</p>
           <p className={styles.summaryValue}>{summaryStats.studentsTotal}</p>
         </article>
         <article className={styles.summaryCard}>
-          <p className={styles.summaryLabel}>Заданий всего</p>
+          <p className={styles.summaryLabel}>{t("teacher.classes.kpiAssignments")}</p>
           <p className={styles.summaryValue}>{summaryStats.assignmentsTotal}</p>
         </article>
         <article className={styles.summaryCard}>
-          <p className={styles.summaryLabel}>Средний балл</p>
+          <p className={styles.summaryLabel}>{t("teacher.classes.kpiAvgScore")}</p>
           <p className={styles.summaryValue}>{summaryStats.averageGrade}</p>
         </article>
       </section>
@@ -110,7 +110,7 @@ export default function TeacherClassesPage() {
       <section className={styles.controls}>
         <input
           className={styles.searchInput}
-          placeholder="Поиск по классу или предмету..."
+          placeholder={t("teacher.classes.searchPlaceholder")}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
@@ -118,12 +118,12 @@ export default function TeacherClassesPage() {
         <div className={styles.selectRow}>
           <select className={styles.select} value={classFilter} onChange={(e) => setClassFilter(e.target.value)}>
             {classOptions.map((opt) => (
-              <option key={opt} value={opt}>{opt === "all" ? "Все классы" : opt}</option>
+              <option key={opt} value={opt}>{opt === "all" ? t("teacher.classes.allClasses") : opt}</option>
             ))}
           </select>
           <select className={styles.select} value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)}>
             {subjectOptions.map((opt) => (
-              <option key={opt} value={opt}>{opt === "all" ? "Все предметы" : opt}</option>
+              <option key={opt} value={opt}>{opt === "all" ? t("teacher.classes.allSubjects") : opt}</option>
             ))}
           </select>
         </div>
@@ -137,31 +137,31 @@ export default function TeacherClassesPage() {
               <div className={styles.classTop}>
                 <p className={styles.classTitle}>{row.className} • {row.subject}</p>
               </div>
-              <p className={styles.classMeta}>{progressLabel(row)}</p>
+              <p className={styles.classMeta}>{t(`teacher.classes.performance.${progressKey(row)}`)}</p>
 
               <div className={styles.metrics}>
-                <span>Учеников: {row.students}</span>
-                <span>Заданий: {row.assignments}</span>
-                <span>Средний балл: {row.average ? row.average.toFixed(1) : "—"}</span>
+                <span>{t("teacher.classes.meta.students", { n: row.students })}</span>
+                <span>{t("teacher.classes.meta.assignments", { n: row.assignments })}</span>
+                <span>{t("teacher.classes.meta.avgScore", { n: row.average ? row.average.toFixed(1) : "—" })}</span>
               </div>
             </article>
           );
         }) : (
-          <div className={styles.emptyState}>По текущим фильтрам классы не найдены.</div>
+          <div className={styles.emptyState}>{t("teacher.classes.empty")}</div>
         )}
       </section>
 
       <section className={styles.bottom}>
         <article className={styles.tableCard}>
-          <h3 className={styles.sectionTitle}>Сводка по классам</h3>
+          <h3 className={styles.sectionTitle}>{t("teacher.classes.summary")}</h3>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Класс</th>
-                <th>Предмет</th>
-                <th>Учеников</th>
-                <th>Заданий</th>
-                <th>Средний балл</th>
+                <th>{t("teacher.classes.tableHeaders.class")}</th>
+                <th>{t("teacher.classes.tableHeaders.subject")}</th>
+                <th>{t("teacher.classes.tableHeaders.students")}</th>
+                <th>{t("teacher.classes.tableHeaders.assignments")}</th>
+                <th>{t("teacher.classes.tableHeaders.avgScore")}</th>
               </tr>
             </thead>
             <tbody>

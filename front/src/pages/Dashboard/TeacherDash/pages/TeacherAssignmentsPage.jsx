@@ -3,16 +3,11 @@ import styles from "./TeacherAssignmentsPage.module.css";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { assignmentsApi, submissionsApi, teachingApi } from "../../../../shared/lib/api";
 import { formatDateTime } from "../../../../shared/lib/utils/date";
+import { useT } from "../../../../shared/lib/i18n";
 
 const PAGE_SIZE = 5;
 
-const ASSIGNMENT_TYPES = [
-  { value: "homework", label: "Домашнее" },
-  { value: "test", label: "Тест" },
-  { value: "sor", label: "СОР" },
-  { value: "soch", label: "СОЧ" },
-  { value: "quiz", label: "Квиз" },
-];
+const ASSIGNMENT_TYPE_KEYS = ["homework", "test", "sor", "soch", "quiz"];
 
 function statusOf(deadline) {
   if (!deadline) return "new";
@@ -22,23 +17,10 @@ function statusOf(deadline) {
   return "inProgress";
 }
 
-function statusLabel(status) {
-  switch (status) {
-    case "urgent": return "Срочно";
-    case "done": return "Завершено";
-    case "inProgress": return "В работе";
-    default: return "Новое";
-  }
-}
-
-const filters = [
-  { key: "all", label: "Все" },
-  { key: "inProgress", label: "В работе" },
-  { key: "urgent", label: "Срочные" },
-  { key: "done", label: "Завершенные" },
-];
+const FILTER_KEYS = ["all", "inProgress", "urgent", "done"];
 
 export default function TeacherAssignmentsPage() {
+  const { t } = useT();
   const assignmentsQuery = useApi(() => assignmentsApi.teacherMy(), []);
   const pairsQuery = useApi(() => teachingApi.myPairs(), []);
 
@@ -68,6 +50,9 @@ export default function TeacherAssignmentsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [createError, setCreateError] = useState("");
   const [createSubmitting, setCreateSubmitting] = useState(false);
   const [taskForm, setTaskForm] = useState({
@@ -79,8 +64,62 @@ export default function TeacherAssignmentsPage() {
     pairKey: "",
   });
 
-  const classOptions = useMemo(() => ["all", ...new Set(tasks.map((t) => t.className))], [tasks]);
-  const subjectOptions = useMemo(() => ["all", ...new Set(tasks.map((t) => t.subject))], [tasks]);
+  function statusLabel(status) {
+    return t(`teacher.assignments.statusLabels.${status}`);
+  }
+
+  function typeLabel(type) {
+    if (!type) return "—";
+    return t(`teacher.assignments.types.${type}`) || type;
+  }
+
+  function toLocalInput(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "";
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function openEditModal(task) {
+    setEditingTaskId(task.id);
+    setIsCreateOpen(true);
+    setSelectedTaskId(null);
+    setCreateError("");
+    setTaskForm({
+      title: task.title || "",
+      description: task.description || "",
+      type: task.type || "homework",
+      maxGrade: String(task.maxGrade ?? "5"),
+      deadline: toLocalInput(task.deadline),
+      pairKey: task.classId && task.subjectId ? `${task.classId}-${task.subjectId}` : "",
+    });
+  }
+
+  function closeCreateModal() {
+    setIsCreateOpen(false);
+    setEditingTaskId(null);
+    setCreateError("");
+    setTaskForm({ title: "", description: "", type: "homework", maxGrade: "5", deadline: "", pairKey: "" });
+  }
+
+  async function handleDeleteTask() {
+    if (!confirmDeleteId) return;
+    setDeleting(true);
+    try {
+      await assignmentsApi.teacherDelete(confirmDeleteId);
+      await assignmentsQuery.refetch();
+      setSelectedTaskId(null);
+      setConfirmDeleteId(null);
+    } catch (err) {
+      alert(err?.message || t("teacher.assignments.form.deleteFailed"));
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  const classOptions = useMemo(() => ["all", ...new Set(tasks.map((tk) => tk.className))], [tasks]);
+  const subjectOptions = useMemo(() => ["all", ...new Set(tasks.map((tk) => tk.subject))], [tasks]);
 
   const filteredTasks = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -106,7 +145,7 @@ export default function TeacherAssignmentsPage() {
     return filteredTasks.slice(start, start + PAGE_SIZE);
   }, [filteredTasks, currentPage]);
 
-  const selectedTask = useMemo(() => tasks.find((t) => t.id === selectedTaskId) ?? null, [tasks, selectedTaskId]);
+  const selectedTask = useMemo(() => tasks.find((tk) => tk.id === selectedTaskId) ?? null, [tasks, selectedTaskId]);
 
   const submissionsQuery = useApi(
     () => (selectedTask ? submissionsApi.byAssignment(selectedTask.id) : Promise.resolve([])),
@@ -127,8 +166,8 @@ export default function TeacherAssignmentsPage() {
   }, [submissionsQuery.data]);
 
   const summary = useMemo(() => {
-    const active = tasks.filter((t) => t.status !== "done").length;
-    const urgent = tasks.filter((t) => t.status === "urgent").length;
+    const active = tasks.filter((tk) => tk.status !== "done").length;
+    const urgent = tasks.filter((tk) => tk.status === "urgent").length;
     return { active, urgent, total: tasks.length };
   }, [tasks]);
 
@@ -144,7 +183,7 @@ export default function TeacherAssignmentsPage() {
       });
       await submissionsQuery.refetch();
     } catch (err) {
-      setGrading((prev) => ({ ...prev, [submissionId]: { ...prev[submissionId], saving: false, error: err?.message || "Ошибка" } }));
+      setGrading((prev) => ({ ...prev, [submissionId]: { ...prev[submissionId], saving: false, error: err?.message || t("common.error") } }));
     }
   }
 
@@ -158,13 +197,13 @@ export default function TeacherAssignmentsPage() {
     const pair = pairs.find((p) => `${p.classId}-${p.subjectId}` === taskForm.pairKey);
 
     if (!title || !description || !deadline || !pair) {
-      setCreateError("Заполните все поля");
+      setCreateError(t("common.fillAllFields"));
       return;
     }
 
     setCreateSubmitting(true);
     try {
-      await assignmentsApi.teacherCreate({
+      const payload = {
         title,
         description,
         type: taskForm.type,
@@ -172,44 +211,48 @@ export default function TeacherAssignmentsPage() {
         deadline: new Date(deadline).toISOString(),
         subjectId: pair.subjectId,
         classId: pair.classId,
-      });
+      };
+      if (editingTaskId) {
+        await assignmentsApi.teacherUpdate(editingTaskId, payload);
+      } else {
+        await assignmentsApi.teacherCreate(payload);
+      }
       await assignmentsQuery.refetch();
-      setTaskForm({ title: "", description: "", type: "homework", maxGrade: "5", deadline: "", pairKey: "" });
-      setIsCreateOpen(false);
+      closeCreateModal();
     } catch (err) {
-      setCreateError(err?.message || "Не удалось создать задание");
+      setCreateError(err?.message || (editingTaskId ? t("teacher.assignments.form.editFailed") : t("teacher.assignments.form.createFailed")));
     } finally {
       setCreateSubmitting(false);
     }
   }
 
   if (assignmentsQuery.loading && !tasks.length) {
-    return <div style={{ padding: 24 }}>Загрузка заданий…</div>;
+    return <div style={{ padding: 24 }}>{t("teacher.assignments.loading")}</div>;
   }
 
   return (
     <div className={styles.page}>
       <section className={styles.header}>
         <div>
-          <h2 className={styles.title}>Задачи</h2>
-          <p className={styles.sub}>Создание заданий, проверка сданных работ и выставление оценок.</p>
+          <h2 className={styles.title}>{t("teacher.assignments.title")}</h2>
+          <p className={styles.sub}>{t("teacher.assignments.sub")}</p>
         </div>
         <button className={styles.createBtn} type="button" onClick={() => setIsCreateOpen(true)}>
-          Новое задание
+          {t("teacher.assignments.newBtn")}
         </button>
       </section>
 
       <section className={styles.stats}>
         <article className={styles.statCard}>
-          <p className={styles.statLabel}>Активные</p>
+          <p className={styles.statLabel}>{t("teacher.assignments.kpiActive")}</p>
           <p className={styles.statValue}>{summary.active}</p>
         </article>
         <article className={styles.statCard}>
-          <p className={styles.statLabel}>Срочные</p>
+          <p className={styles.statLabel}>{t("teacher.assignments.kpiUrgent")}</p>
           <p className={styles.statValue}>{summary.urgent}</p>
         </article>
         <article className={styles.statCard}>
-          <p className={styles.statLabel}>Всего</p>
+          <p className={styles.statLabel}>{t("teacher.assignments.kpiTotal")}</p>
           <p className={styles.statValue}>{summary.total}</p>
         </article>
       </section>
@@ -217,29 +260,29 @@ export default function TeacherAssignmentsPage() {
       <section className={styles.controls}>
         <input
           className={styles.searchInput}
-          placeholder="Поиск по названию, предмету или классу..."
+          placeholder={t("teacher.assignments.searchPlaceholder")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
 
         <div className={styles.selectRow}>
           <select className={styles.select} value={classFilter} onChange={(e) => setClassFilter(e.target.value)}>
-            {classOptions.map((v) => <option key={v} value={v}>{v === "all" ? "Все классы" : v}</option>)}
+            {classOptions.map((v) => <option key={v} value={v}>{v === "all" ? t("teacher.assignments.allClasses") : v}</option>)}
           </select>
           <select className={styles.select} value={subjectFilter} onChange={(e) => setSubjectFilter(e.target.value)}>
-            {subjectOptions.map((v) => <option key={v} value={v}>{v === "all" ? "Все предметы" : v}</option>)}
+            {subjectOptions.map((v) => <option key={v} value={v}>{v === "all" ? t("teacher.assignments.allSubjects") : v}</option>)}
           </select>
         </div>
 
         <div className={styles.filters}>
-          {filters.map((f) => (
+          {FILTER_KEYS.map((key) => (
             <button
-              key={f.key}
+              key={key}
               type="button"
-              className={`${styles.filterChip} ${statusFilter === f.key ? styles.filterChipActive : ""}`}
-              onClick={() => setStatusFilter(f.key)}
+              className={`${styles.filterChip} ${statusFilter === key ? styles.filterChipActive : ""}`}
+              onClick={() => setStatusFilter(key)}
             >
-              {f.label}
+              {t(`teacher.assignments.filters.${key}`)}
             </button>
           ))}
         </div>
@@ -260,21 +303,23 @@ export default function TeacherAssignmentsPage() {
               <span className={`${styles.badge} ${styles[item.status]}`}>{statusLabel(item.status)}</span>
             </div>
             <p className={styles.taskTitle}>{item.title}</p>
-            <p className={styles.meta}>Срок: {formatDateTime(item.deadline)}</p>
-            <p className={styles.meta}>Тип: {item.type || "—"} • Макс. балл: {item.maxGrade ?? "—"}</p>
+            <p className={styles.meta}>{t("teacher.assignments.meta.deadline", { date: formatDateTime(item.deadline) })}</p>
+            <p className={styles.meta}>
+              {t("teacher.assignments.meta.type", { type: typeLabel(item.type), max: item.maxGrade ?? "—" })}
+            </p>
           </article>
         )) : (
-          <div className={styles.emptyState}>По текущим параметрам задачи не найдены.</div>
+          <div className={styles.emptyState}>{t("teacher.assignments.empty")}</div>
         )}
       </section>
 
       <section className={styles.pagination}>
         <button type="button" className={styles.pageBtn} onClick={() => setCurrentPage((v) => Math.max(1, v - 1))} disabled={currentPage === 1}>
-          Назад
+          {t("common.back")}
         </button>
-        <p className={styles.pageInfo}>Страница {currentPage} из {totalPages}</p>
+        <p className={styles.pageInfo}>{t("teacher.assignments.pageInfo", { current: currentPage, total: totalPages })}</p>
         <button type="button" className={styles.pageBtn} onClick={() => setCurrentPage((v) => Math.min(totalPages, v + 1))} disabled={currentPage === totalPages}>
-          Вперед
+          {t("common.next")}
         </button>
       </section>
 
@@ -290,37 +335,59 @@ export default function TeacherAssignmentsPage() {
                 <h3 className={styles.modalTitle}>{selectedTask.title}</h3>
                 <p className={styles.modalSub}>{selectedTask.className} • {selectedTask.subject}</p>
               </div>
-              <button type="button" className={styles.closeBtn} onClick={() => setSelectedTaskId(null)}>×</button>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <button
+                  type="button"
+                  onClick={() => openEditModal(selectedTask)}
+                  style={{
+                    height: 32, padding: "0 14px", border: "1px solid var(--stroke-accent)", borderRadius: "var(--radius-sm)",
+                    background: "var(--accent-soft)", color: "var(--accent-strong)", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                    fontFamily: "inherit",
+                  }}
+                  title={t("teacher.assignments.modal.edit")}
+                >{t("teacher.assignments.modal.edit")}</button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDeleteId(selectedTask.id)}
+                  style={{
+                    height: 32, padding: "0 14px", border: "1px solid var(--danger)", borderRadius: "var(--radius-sm)",
+                    background: "var(--danger-soft)", color: "var(--danger-strong)", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                    fontFamily: "inherit",
+                  }}
+                  title={t("teacher.assignments.modal.del")}
+                >{t("teacher.assignments.modal.del")}</button>
+                <button type="button" className={styles.closeBtn} onClick={() => setSelectedTaskId(null)}>×</button>
+              </div>
             </div>
 
             <div className={styles.modalMeta}>
               <div className={styles.metaCard}>
-                <p className={styles.metaLabel}>Дедлайн</p>
+                <p className={styles.metaLabel}>{t("teacher.assignments.modal.deadline")}</p>
                 <p className={styles.metaValue}>{formatDateTime(selectedTask.deadline)}</p>
               </div>
               <div className={styles.metaCard}>
-                <p className={styles.metaLabel}>Статус</p>
+                <p className={styles.metaLabel}>{t("teacher.assignments.modal.statusLabel")}</p>
                 <p className={styles.metaValue}>{statusLabel(selectedTask.status)}</p>
               </div>
               <div className={styles.metaCard}>
-                <p className={styles.metaLabel}>Тип</p>
-                <p className={styles.metaValue}>{selectedTask.type || "—"}</p>
+                <p className={styles.metaLabel}>{t("teacher.assignments.modal.type")}</p>
+                <p className={styles.metaValue}>{typeLabel(selectedTask.type)}</p>
               </div>
               <div className={styles.metaCard}>
-                <p className={styles.metaLabel}>Макс. балл</p>
+                <p className={styles.metaLabel}>{t("teacher.assignments.modal.maxGrade")}</p>
                 <p className={styles.metaValue}>{selectedTask.maxGrade ?? "—"}</p>
               </div>
             </div>
 
             <div className={styles.modalSection}>
-              <p className={styles.sectionTitle}>Описание задания</p>
+              <p className={styles.sectionTitle}>{t("teacher.assignments.modal.descriptionTitle")}</p>
               <p className={styles.sectionText}>{selectedTask.description || "—"}</p>
             </div>
 
             <div className={styles.modalSection}>
-              <p className={styles.sectionTitle}>Сданные работы</p>
+              <p className={styles.sectionTitle}>{t("teacher.assignments.modal.submissionsTitle")}</p>
               {submissionsQuery.loading ? (
-                <p>Загрузка работ…</p>
+                <p>{t("teacher.assignments.modal.loadingSubs")}</p>
               ) : (Array.isArray(submissionsQuery.data) ? submissionsQuery.data : []).length ? (
                 <ul className={styles.submissionList}>
                   {submissionsQuery.data.map((s) => {
@@ -328,7 +395,7 @@ export default function TeacherAssignmentsPage() {
                     return (
                       <li key={s.id} className={styles.submissionItem}>
                         <div>
-                          <p className={styles.studentName}>{s.studentName || `Студент #${s.studentId}`}</p>
+                          <p className={styles.studentName}>{s.studentName || t("teacher.assignments.modal.studentFallback", { id: s.studentId })}</p>
                           <p className={styles.studentMeta}>
                             {s.fileName || "—"} • {s.submittedAt ? formatDateTime(s.submittedAt) : ""}
                           </p>
@@ -347,12 +414,12 @@ export default function TeacherAssignmentsPage() {
                           </select>
                           <input
                             className={styles.noteInput}
-                            placeholder="Комментарий"
+                            placeholder={t("teacher.assignments.modal.commentPlaceholder")}
                             value={g.comment}
                             onChange={(e) => setGrading((prev) => ({ ...prev, [s.id]: { ...prev[s.id], comment: e.target.value } }))}
                           />
                           <button type="button" onClick={() => gradeSubmission(s.id)} disabled={g.saving || g.grade === ""}>
-                            {g.saving ? "…" : "Сохранить"}
+                            {g.saving ? "…" : t("teacher.assignments.modal.gradeSave")}
                           </button>
                           {g.error ? <span style={{ color: "var(--danger)", fontSize: 12 }}>{g.error}</span> : null}
                         </div>
@@ -361,7 +428,7 @@ export default function TeacherAssignmentsPage() {
                   })}
                 </ul>
               ) : (
-                <p className={styles.sectionText}>Пока нет сданных работ.</p>
+                <p className={styles.sectionText}>{t("teacher.assignments.modal.submissionsEmpty")}</p>
               )}
             </div>
           </section>
@@ -372,18 +439,18 @@ export default function TeacherAssignmentsPage() {
         <div
           className={styles.modalOverlay}
           role="presentation"
-          onClick={(e) => { if (e.target === e.currentTarget) setIsCreateOpen(false); }}
+          onClick={(e) => { if (e.target === e.currentTarget) closeCreateModal(); }}
         >
           <section className={styles.modal} role="dialog" aria-modal="true">
             <div className={styles.modalHead}>
-              <h3 className={styles.modalTitle}>Новое задание</h3>
-              <button type="button" className={styles.closeBtn} onClick={() => setIsCreateOpen(false)}>×</button>
+              <h3 className={styles.modalTitle}>{editingTaskId ? t("teacher.assignments.form.editTitle") : t("teacher.assignments.form.newTitle")}</h3>
+              <button type="button" className={styles.closeBtn} onClick={closeCreateModal}>×</button>
             </div>
 
             <form className={styles.form} onSubmit={handleCreateTask}>
               <input
                 className={styles.formInput}
-                placeholder="Название задания"
+                placeholder={t("teacher.assignments.form.title")}
                 value={taskForm.title}
                 onChange={(e) => setTaskForm((prev) => ({ ...prev, title: e.target.value }))}
               />
@@ -393,7 +460,7 @@ export default function TeacherAssignmentsPage() {
                 value={taskForm.pairKey}
                 onChange={(e) => setTaskForm((prev) => ({ ...prev, pairKey: e.target.value }))}
               >
-                <option value="">Класс • Предмет</option>
+                <option value="">{t("teacher.assignments.form.pair")}</option>
                 {pairs.map((p) => (
                   <option key={`${p.classId}-${p.subjectId}`} value={`${p.classId}-${p.subjectId}`}>
                     {p.className} • {p.subjectName}
@@ -407,7 +474,7 @@ export default function TeacherAssignmentsPage() {
                   value={taskForm.type}
                   onChange={(e) => setTaskForm((prev) => ({ ...prev, type: e.target.value }))}
                 >
-                  {ASSIGNMENT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  {ASSIGNMENT_TYPE_KEYS.map((tp) => <option key={tp} value={tp}>{t(`teacher.assignments.types.${tp}`)}</option>)}
                 </select>
                 <input
                   className={styles.formInput}
@@ -416,7 +483,7 @@ export default function TeacherAssignmentsPage() {
                   max="100"
                   value={taskForm.maxGrade}
                   onChange={(e) => setTaskForm((prev) => ({ ...prev, maxGrade: e.target.value }))}
-                  placeholder="Макс. балл"
+                  placeholder={t("teacher.assignments.form.maxGrade")}
                 />
               </div>
 
@@ -429,7 +496,7 @@ export default function TeacherAssignmentsPage() {
 
               <textarea
                 className={styles.formTextarea}
-                placeholder="Описание задания"
+                placeholder={t("teacher.assignments.form.descPlaceholder")}
                 value={taskForm.description}
                 onChange={(e) => setTaskForm((prev) => ({ ...prev, description: e.target.value }))}
               />
@@ -437,9 +504,57 @@ export default function TeacherAssignmentsPage() {
               {createError ? <p style={{ color: "var(--danger)" }}>{createError}</p> : null}
 
               <button className={styles.submitBtn} type="submit" disabled={createSubmitting}>
-                {createSubmitting ? "Создание…" : "Создать"}
+                {createSubmitting ? t("teacher.assignments.form.saving") : (editingTaskId ? t("teacher.assignments.form.save") : t("teacher.assignments.form.create"))}
               </button>
             </form>
+          </section>
+        </div>
+      ) : null}
+
+      {confirmDeleteId ? (
+        <div
+          className={styles.modalOverlay}
+          role="presentation"
+          onClick={(e) => { if (e.target === e.currentTarget) setConfirmDeleteId(null); }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            style={{
+              background: "var(--panel)", border: "1px solid var(--stroke)", borderRadius: "var(--radius-xl)",
+              padding: 24, width: "100%", maxWidth: 420, boxShadow: "var(--shadow-3)",
+            }}
+          >
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "var(--text)" }}>
+              {t("teacher.assignments.modal.confirmDeleteTitle")}
+            </h3>
+            <p style={{ margin: "10px 0 20px", fontSize: 13, color: "var(--muted)", lineHeight: 1.5 }}>
+              {t("teacher.assignments.modal.confirmDeleteSub")}
+            </p>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteId(null)}
+                style={{
+                  height: 38, padding: "0 16px", border: "1px solid var(--stroke)", borderRadius: "var(--radius-sm)",
+                  background: "var(--panel)", color: "var(--text)", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >{t("common.cancel")}</button>
+              <button
+                type="button"
+                onClick={handleDeleteTask}
+                disabled={deleting}
+                style={{
+                  height: 38, padding: "0 18px", border: 0, borderRadius: "var(--radius-sm)",
+                  background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                  color: "#ffffff", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                  boxShadow: "0 4px 12px rgba(239, 68, 68, 0.3)", fontFamily: "inherit",
+                }}
+              >
+                {deleting ? t("common.deleting") : t("common.delete")}
+              </button>
+            </div>
           </section>
         </div>
       ) : null}

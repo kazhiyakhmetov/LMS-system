@@ -1,28 +1,31 @@
-﻿import styles from "./TeacherSettingsPage.module.css";
+import styles from "./TeacherSettingsPage.module.css";
+import { useT } from "../../../../shared/lib/i18n";
 
-const preferences = [
-  { title: "Push-уведомления о новых сообщениях", hint: "Уведомления из чатов с классами и родителями", enabled: true },
-  { title: "Email-отчеты по успеваемости", hint: "Недельная сводка по классам и предметам", enabled: true },
-  { title: "Напоминания о проверке работ", hint: "Уведомления за 24 часа до дедлайна", enabled: true },
-  { title: "Показывать статус в рабочем чате", hint: "Коллеги и родители видят вашу активность", enabled: false },
+const PREF_KEYS = [
+  { key: "pushNotifications", enabled: true },
+  { key: "emailReports", enabled: true },
+  { key: "autoGrade", enabled: false },
+  { key: "darkMode", enabled: false },
 ];
 
 export default function TeacherSettingsPage() {
+  const { t } = useT();
+
   return (
     <div className={styles.page}>
       <section className={styles.header}>
-        <h2 className={styles.title}>Настройки</h2>
-        <p className={styles.sub}>Персональные параметры аккаунта преподавателя, уведомления и безопасность.</p>
+        <h2 className={styles.title}>{t("teacher.settings.title")}</h2>
+        <p className={styles.sub}>{t("teacher.settings.sub")}</p>
       </section>
 
       <section className={styles.settingsCard}>
-        <h3 className={styles.blockTitle}>Предпочтения</h3>
+        <h3 className={styles.blockTitle}>{t("admin.settings.account")}</h3>
         <ul className={styles.list}>
-          {preferences.map((item) => (
-            <li key={item.title} className={styles.row}>
+          {PREF_KEYS.map((item) => (
+            <li key={item.key} className={styles.row}>
               <div>
-                <p className={styles.rowTitle}>{item.title}</p>
-                <p className={styles.rowHint}>{item.hint}</p>
+                <p className={styles.rowTitle}>{t(`teacher.settings.${item.key}`)}</p>
+                <p className={styles.rowHint}>{t(`teacher.settings.${item.key}Hint`)}</p>
               </div>
               <label className={styles.switch}>
                 <input type="checkbox" defaultChecked={item.enabled} />
@@ -34,17 +37,16 @@ export default function TeacherSettingsPage() {
       </section>
 
       <section className={styles.securityCard}>
-        <h3 className={styles.blockTitle}>Безопасность</h3>
+        <h3 className={styles.blockTitle}>{t("admin.settings.security")}</h3>
         <div className={styles.actions}>
           <button className={styles.primaryBtn} type="button">
-            Сменить пароль
+            {t("admin.settings.changePassword")}
           </button>
           <button className={styles.ghostBtn} type="button">
-            Включить 2FA
+            {t("admin.settings.twoFactor")}
           </button>
         </div>
       </section>
     </div>
   );
 }
-

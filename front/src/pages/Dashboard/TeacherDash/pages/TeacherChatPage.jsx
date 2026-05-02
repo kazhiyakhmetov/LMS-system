@@ -1,8 +1,10 @@
 import ChatWorkspace from "../../../../shared/ui/ChatWorkspace/ChatWorkspace";
 import { useChatApi } from "../../../../shared/lib/hooks/useChatApi";
 import { useAuth } from "../../../../contexts/AuthContext";
+import { useT } from "../../../../shared/lib/i18n";
 
 export default function TeacherChatPage() {
+  const { t } = useT();
   const { user } = useAuth();
   const {
     search,
@@ -21,18 +23,18 @@ export default function TeacherChatPage() {
   } = useChatApi(user?.id);
 
   if (loading && !filteredChats.length) {
-    return <div style={{ padding: 24 }}>Загрузка чатов…</div>;
+    return <div style={{ padding: 24 }}>{t("teacher.chat.loading")}</div>;
   }
   if (error && !filteredChats.length) {
-    return <div style={{ padding: 24, color: "var(--danger)" }}>Ошибка: {error.message}</div>;
+    return <div style={{ padding: 24, color: "var(--danger)" }}>{t("common.error")}: {error.message}</div>;
   }
 
   return (
     <ChatWorkspace
-      title="Рабочие чаты"
-      primaryActionLabel="Новый чат"
-      secondaryActionLabel="Рассылка"
-      searchPlaceholder="Поиск по контактам..."
+      title={t("teacher.chat.title")}
+      primaryActionLabel={t("teacher.chat.newChat")}
+      secondaryActionLabel={t("teacher.chat.broadcast")}
+      searchPlaceholder={t("teacher.chat.searchPlaceholder")}
       filters={[]}
       typeFilter={typeFilter}
       onTypeFilterChange={setTypeFilter}
@@ -45,7 +47,7 @@ export default function TeacherChatPage() {
       draft={draft}
       onDraftChange={setDraft}
       onSend={handleSend}
-      emptyText="Нет активных диалогов."
+      emptyText={t("teacher.chat.empty")}
     />
   );
 }

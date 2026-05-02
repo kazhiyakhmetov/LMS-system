@@ -4,12 +4,23 @@ import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { parentApi } from "../../../../shared/lib/api";
 import { formatDateTime, formatTime, toISODate } from "../../../../shared/lib/utils/date";
 
-function toneFor(date) {
-  if (!date) return "focus";
-  const diffH = (new Date(date).getTime() - Date.now()) / 3_600_000;
+function toneFor(deadline) {
+  if (!deadline) return "focus";
+  const diffH = (new Date(deadline).getTime() - Date.now()) / 3_600_000;
   if (diffH <= 24) return "critical";
   if (diffH <= 72) return "warning";
   return "focus";
+}
+
+function StatIcon({ name }) {
+  const c = { width: 18, height: 18, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
+  switch (name) {
+    case "avg":    return <svg {...c}><path d="M12 3l2.6 5.6 6.1.9-4.4 4.3 1 6.1L12 17.8 6.7 20 7.7 13.8 3.3 9.5l6.1-.9L12 3Z"/></svg>;
+    case "tasks":  return <svg {...c}><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5h6v3H9zM8 12h8M8 16h5"/></svg>;
+    case "clock":  return <svg {...c}><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>;
+    case "alert":  return <svg {...c}><path d="M12 2 2 22h20L12 2Z"/><path d="M12 9v6M12 18v.01"/></svg>;
+    default: return null;
+  }
 }
 
 export default function ParentHomePage() {
@@ -35,37 +46,58 @@ export default function ParentHomePage() {
   );
 
   const gradesQuery = useApi(
-    () => (selectedChild ? parentApi.childGrades(selectedChild.id, 5) : Promise.resolve([])),
+    () => (selectedChild ? parentApi.childGrades(selectedChild.id, 6) : Promise.resolve([])),
+    [selectedChild?.id],
+    { immediate: Boolean(selectedChild) },
+  );
+
+  const statsQuery = useApi(
+    () => (selectedChild ? parentApi.childStats(selectedChild.id) : Promise.resolve({})),
     [selectedChild?.id],
     { immediate: Boolean(selectedChild) },
   );
 
   const lessons = Array.isArray(lessonsQuery.data) ? lessonsQuery.data : [];
   const grades = Array.isArray(gradesQuery.data) ? gradesQuery.data : [];
+  const stats = statsQuery.data || {};
 
   const longDate = useMemo(
     () => new Intl.DateTimeFormat("ru-RU", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date()),
     [],
   );
 
+  const kpis = [
+    { key: "avg", label: "Средний балл", value: stats.avgGrade ?? "—", sub: `${stats.totalGrades ?? 0} оценок`, tone: "indigo", icon: "avg" },
+    { key: "lessons", label: "Уроки сегодня", value: lessons.length, sub: lessons.length === 1 ? "урок" : "уроков", tone: "mint", icon: "clock" },
+    { key: "pending", label: "Активные задания", value: stats.pending ?? 0, sub: "ждут сдачи", tone: "gold", icon: "tasks" },
+    { key: "overdue", label: "Просрочено", value: stats.overdue ?? 0, sub: "пропущенных", tone: "rose", icon: "alert" },
+  ];
+
   if (childrenQuery.loading && !children.length) {
-    return <div style={{ padding: 24 }}>Загрузка детей…</div>;
+    return <div style={{ padding: 24, color: "var(--muted)" }}>Загрузка детей…</div>;
   }
   if (!children.length) {
-    return <div style={{ padding: 24 }}>К вашему аккаунту не привязаны дети.</div>;
+    return (
+      <div className={styles.emptyState} style={{ margin: 24 }}>
+        К вашему аккаунту не привязаны дети. Обратитесь к администратору школы.
+      </div>
+    );
   }
 
   return (
     <div className={styles.page}>
       <section className={styles.hero}>
-        <div>
+        <div className={styles.heroBody}>
           <p className={styles.heroEyebrow}>Parent LMS</p>
           <h2 className={styles.heroTitle}>Главная родителя</h2>
           <p className={styles.heroSub}>
-            Контролируйте оценки, расписание и события вашего ребёнка.
+            Контролируйте учебный процесс ребёнка: оценки, расписание, домашние задания и посещаемость.
           </p>
         </div>
-        <div className={styles.heroDate}>{longDate}</div>
+        <div className={styles.heroDate}>
+          <span className={styles.heroDateLabel}>Сегодня</span>
+          <span className={styles.heroDateValue}>{longDate}</span>
+        </div>
       </section>
 
       <section className={styles.studentCard}>
@@ -74,35 +106,57 @@ export default function ParentHomePage() {
           <p className={styles.studentMeta}>
             {selectedChild?.className || "—"}
             {selectedChild?.schoolName ? ` • ${selectedChild.schoolName}` : ""}
+            {selectedChild?.email ? ` • ${selectedChild.email}` : ""}
           </p>
         </div>
 
-        <select
-          className={styles.childSelect}
-          value={childId ?? ""}
-          onChange={(event) => setChildId(event.target.value)}
-        >
-          {children.map((child) => (
-            <option key={child.id} value={child.id}>
-              {child.fio} {child.className ? `(${child.className})` : ""}
-            </option>
-          ))}
-        </select>
+        {children.length > 1 ? (
+          <select
+            className={styles.childSelect}
+            value={childId ?? ""}
+            onChange={(event) => setChildId(event.target.value)}
+          >
+            {children.map((child) => (
+              <option key={child.id} value={child.id}>
+                {child.fio} {child.className ? `(${child.className})` : ""}
+              </option>
+            ))}
+          </select>
+        ) : null}
+      </section>
+
+      <section className={styles.kpiRow}>
+        {kpis.map((k) => (
+          <article key={k.key} className={`${styles.kpiCard} ${styles[`tone_${k.tone}`]}`}>
+            <div className={styles.kpiHead}>
+              <span className={styles.kpiLabel}>{k.label}</span>
+              <span className={styles.kpiIcon}><StatIcon name={k.icon} /></span>
+            </div>
+            <p className={styles.kpiValue}>{k.value}</p>
+            {k.sub ? <p className={styles.kpiSub}>{k.sub}</p> : null}
+          </article>
+        ))}
       </section>
 
       <section className={styles.layout}>
         <div className={styles.mainColumn}>
           <article className={styles.scheduleCard}>
-            <h3 className={styles.sectionTitle}>Расписание на сегодня</h3>
+            <div className={styles.cardHead}>
+              <h3 className={styles.sectionTitle}>Расписание на сегодня</h3>
+              <span className={styles.lessonCount}>{lessons.length}</span>
+            </div>
+
             {lessonsQuery.loading && !lessons.length ? (
               <p className={styles.emptyState}>Загрузка…</p>
             ) : lessons.length ? (
               <ul className={styles.lessonList}>
-                {lessons.map((lesson) => (
+                {lessons.map((lesson, i) => (
                   <li key={lesson.id} className={styles.lessonItem}>
-                    <p className={styles.lessonTime}>
-                      {formatTime(lesson.startTime)} - {formatTime(lesson.endTime)}
-                    </p>
+                    <span className={styles.lessonNumber}>{lesson.lessonNumber ?? i + 1}</span>
+                    <div className={styles.lessonTimes}>
+                      <span className={styles.lessonStart}>{formatTime(lesson.startTime)}</span>
+                      <span className={styles.lessonEnd}>{formatTime(lesson.endTime)}</span>
+                    </div>
                     <div className={styles.lessonInfo}>
                       <p className={styles.lessonTitle}>{lesson.subjectName}</p>
                       <p className={styles.lessonMeta}>
@@ -119,16 +173,23 @@ export default function ParentHomePage() {
           </article>
 
           <article className={styles.eventsCard}>
-            <h3 className={styles.sectionTitle}>Последние оценки</h3>
+            <div className={styles.cardHead}>
+              <h3 className={styles.sectionTitle}>Последние оценки</h3>
+              {grades.length ? <span className={styles.lessonCount}>{grades.length}</span> : null}
+            </div>
+
             {gradesQuery.loading && !grades.length ? (
               <p className={styles.emptyState}>Загрузка…</p>
             ) : grades.length ? (
               <ul className={styles.eventList}>
                 {grades.map((g, idx) => (
                   <li key={`${g.date}-${idx}`} className={styles.eventItem}>
-                    <p className={styles.eventTitle}>{g.subject || "—"}</p>
-                    <p className={styles.eventText}>Оценка: {g.grade ?? "—"}</p>
-                    <p className={styles.eventMeta}>{g.date ? formatDateTime(g.date) : ""}</p>
+                    <div>
+                      <p className={styles.eventTitle}>{g.subject || "—"}</p>
+                      {g.title ? <p className={styles.eventDesc}>{g.title}</p> : null}
+                      <p className={styles.eventMeta}>{g.date ? formatDateTime(g.date) : ""}</p>
+                    </div>
+                    <span className={styles.eventMark}>{g.grade ?? "—"}</span>
                   </li>
                 ))}
               </ul>
@@ -139,9 +200,9 @@ export default function ParentHomePage() {
         </div>
 
         <aside className={styles.deadlineCard}>
-          <div className={styles.deadlineHead}>
+          <div className={styles.cardHead}>
             <h3 className={styles.sectionTitle}>Уроки сегодня</h3>
-            <span className={styles.deadlineCount}>{lessons.length}</span>
+            <span className={styles.lessonCount}>{lessons.length}</span>
           </div>
 
           {lessons.length ? (
@@ -154,6 +215,7 @@ export default function ParentHomePage() {
                   </p>
                   <p className={styles.deadlineMeta}>
                     {lesson.classroom ? `Каб. ${lesson.classroom}` : ""}
+                    {lesson.teacherName ? ` • ${lesson.teacherName}` : ""}
                   </p>
                 </li>
               ))}

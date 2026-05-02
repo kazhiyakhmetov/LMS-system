@@ -2,14 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import styles from "./StudentSurveyPage.module.css";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { surveysApi } from "../../../../shared/lib/api";
+import { useT } from "../../../../shared/lib/i18n";
 
-const filters = [
-  { key: "all", label: "Все" },
-  { key: "active", label: "Активные" },
-  { key: "done", label: "Завершенные" },
-];
+const FILTER_KEYS = ["all", "active", "done"];
 
 export default function StudentSurveyPage() {
+  const { t } = useT();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [answeredIds, setAnsweredIds] = useState(() => new Set());
@@ -25,11 +23,11 @@ export default function StudentSurveyPage() {
 
   const normalized = useMemo(() => surveys.map((s) => ({
     id: s.id,
-    title: s.title || "Без названия",
+    title: s.title || t("common.untitled"),
     description: s.description || "",
     questionsCount: s.questionsCount ?? s.questions?.length ?? 0,
     done: answeredIds.has(s.id),
-  })), [surveys, answeredIds]);
+  })), [surveys, answeredIds, t]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -61,10 +59,10 @@ export default function StudentSurveyPage() {
     surveysApi
       .byId(selectedSurvey.id)
       .then((data) => { if (!cancelled) setDetails(data); })
-      .catch((err) => { if (!cancelled) setSubmitError(err?.message || "Ошибка загрузки"); })
+      .catch((err) => { if (!cancelled) setSubmitError(err?.message || t("common.error")); })
       .finally(() => { if (!cancelled) setDetailsLoading(false); });
     return () => { cancelled = true; };
-  }, [selectedSurvey]);
+  }, [selectedSurvey, t]);
 
   useEffect(() => {
     if (!selectedSurvey) return undefined;
@@ -95,7 +93,7 @@ export default function StudentSurveyPage() {
       });
       setSelectedSurvey(null);
     } catch (err) {
-      setSubmitError(err?.message || "Не удалось сохранить ответы");
+      setSubmitError(err?.message || t("student.surveys.modal.submitError"));
     } finally {
       setSubmitting(false);
     }
@@ -104,23 +102,21 @@ export default function StudentSurveyPage() {
   return (
     <div className={styles.page}>
       <section className={styles.header}>
-        <h2 className={styles.title}>Опросы</h2>
-        <p className={styles.sub}>
-          Доступные опросы. Проходите их и отслеживайте статус заполнения.
-        </p>
+        <h2 className={styles.title}>{t("student.surveys.title")}</h2>
+        <p className={styles.sub}>{t("student.surveys.sub")}</p>
       </section>
 
       <section className={styles.stats}>
         <article className={`${styles.statCard} ${styles.tone_indigo}`}>
-          <p className={styles.statLabel}>Активные</p>
+          <p className={styles.statLabel}>{t("student.surveys.kpiActive")}</p>
           <p className={styles.statValue}>{stats.active}</p>
         </article>
         <article className={`${styles.statCard} ${styles.tone_mint}`}>
-          <p className={styles.statLabel}>Завершенные</p>
+          <p className={styles.statLabel}>{t("student.surveys.kpiCompleted")}</p>
           <p className={styles.statValue}>{stats.completed}</p>
         </article>
         <article className={`${styles.statCard} ${styles.tone_gold}`}>
-          <p className={styles.statLabel}>Всего</p>
+          <p className={styles.statLabel}>{t("student.surveys.kpiTotal")}</p>
           <p className={styles.statValue}>{stats.total}</p>
         </article>
       </section>
@@ -128,38 +124,38 @@ export default function StudentSurveyPage() {
       <section className={styles.controls}>
         <input
           className={styles.searchInput}
-          placeholder="Поиск по названию или описанию..."
+          placeholder={t("student.surveys.searchPlaceholder")}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
         />
         <div className={styles.filters}>
-          {filters.map((filter) => (
+          {FILTER_KEYS.map((key) => (
             <button
-              key={filter.key}
+              key={key}
               type="button"
-              className={`${styles.filterChip} ${statusFilter === filter.key ? styles.filterChipActive : ""}`}
-              onClick={() => setStatusFilter(filter.key)}
+              className={`${styles.filterChip} ${statusFilter === key ? styles.filterChipActive : ""}`}
+              onClick={() => setStatusFilter(key)}
             >
-              {filter.label}
+              {t(`student.surveys.filters.${key}`)}
             </button>
           ))}
         </div>
       </section>
 
       {listQuery.loading && !normalized.length ? (
-        <p className={styles.emptyState}>Загрузка опросов…</p>
+        <p className={styles.emptyState}>{t("common.loading")}</p>
       ) : listQuery.error ? (
         <p className={styles.emptyState} style={{ color: "var(--danger-strong)", borderColor: "var(--danger)", background: "var(--danger-soft)" }}>
-          Ошибка: {listQuery.error.message}
+          {t("common.error")}: {listQuery.error.message}
         </p>
       ) : (
         <section className={styles.list}>
           {filtered.length ? filtered.map((survey) => (
             <article key={survey.id} className={styles.card}>
               <div className={styles.cardTop}>
-                <span className={styles.subject}>Опрос</span>
+                <span className={styles.subject}>{t("student.surveys.surveyBadge")}</span>
                 <span className={`${styles.badge} ${survey.done ? styles.done : styles.new}`}>
-                  {survey.done ? "Завершен" : "Доступен"}
+                  {survey.done ? t("student.surveys.statusDone") : t("student.surveys.statusActive")}
                 </span>
               </div>
 
@@ -167,7 +163,11 @@ export default function StudentSurveyPage() {
               {survey.description ? <p className={styles.cardDesc}>{survey.description}</p> : null}
 
               <div className={styles.metaRow}>
-                <span>{survey.questionsCount} {survey.questionsCount === 1 ? "вопрос" : "вопросов"}</span>
+                <span>
+                  {survey.questionsCount === 1
+                    ? t("student.surveys.questionCountOne", { count: survey.questionsCount })
+                    : t("student.surveys.questionsCount", { count: survey.questionsCount })}
+                </span>
               </div>
 
               <button
@@ -176,11 +176,11 @@ export default function StudentSurveyPage() {
                 onClick={() => setSelectedSurvey(survey)}
                 disabled={survey.done}
               >
-                {survey.done ? "Пройден ✓" : "Пройти опрос"}
+                {survey.done ? t("student.surveys.passed") : t("student.surveys.pass")}
               </button>
             </article>
           )) : (
-            <div className={styles.emptyState}>По выбранным параметрам опросы не найдены.</div>
+            <div className={styles.emptyState}>{t("student.surveys.empty")}</div>
           )}
         </section>
       )}
@@ -198,14 +198,14 @@ export default function StudentSurveyPage() {
                 type="button"
                 className={styles.modalClose}
                 onClick={() => setSelectedSurvey(null)}
-                aria-label="Закрыть"
+                aria-label={t("common.close")}
               >
                 ×
               </button>
             </header>
 
             {detailsLoading ? (
-              <p className={styles.modalDesc}>Загрузка опроса…</p>
+              <p className={styles.modalDesc}>{t("student.surveys.modal.loading")}</p>
             ) : details ? (
               <form onSubmit={onSubmit}>
                 {details.description ? (
@@ -220,7 +220,7 @@ export default function StudentSurveyPage() {
                         rows={3}
                         value={answers[q.id] || ""}
                         onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
-                        placeholder="Ваш ответ..."
+                        placeholder={t("student.surveys.modal.answerPlaceholder")}
                       />
                     ) : (
                       (q.options || []).map((opt) => (
@@ -243,15 +243,15 @@ export default function StudentSurveyPage() {
 
                 <div className={styles.modalActions}>
                   <button type="button" className={styles.btnSecondary} onClick={() => setSelectedSurvey(null)}>
-                    Отмена
+                    {t("student.surveys.modal.cancel")}
                   </button>
                   <button type="submit" className={styles.btnPrimary} disabled={submitting}>
-                    {submitting ? "Отправка…" : "Отправить"}
+                    {submitting ? t("student.surveys.modal.submitting") : t("student.surveys.modal.submit")}
                   </button>
                 </div>
               </form>
             ) : (
-              <p className={styles.errorBanner}>{submitError || "Не удалось загрузить вопросы"}</p>
+              <p className={styles.errorBanner}>{submitError || t("student.surveys.modal.loadError")}</p>
             )}
           </section>
         </div>

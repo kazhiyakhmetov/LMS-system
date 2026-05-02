@@ -29,7 +29,7 @@ function StatIcon({ name }) {
 }
 
 export default function StudentHomePage() {
-  const { t } = useT();
+  const { t, lang } = useT();
   const { user } = useAuth();
   const today = useMemo(() => toISODate(new Date()), []);
 
@@ -40,13 +40,14 @@ export default function StudentHomePage() {
   const statsQuery = useApi(() => gamificationApi.studentStats(), []);
 
   const studentName = useMemo(() => {
-    const name = user?.firstName || user?.name || "ученик";
+    const name = user?.firstName || user?.name || t("student.home.defaultName");
     return name.split(" ")[0];
-  }, [user]);
+  }, [user, t]);
 
+  const localeMap = { ru: "ru-RU", kk: "kk-KZ", en: "en-US" };
   const longDate = useMemo(
-    () => new Intl.DateTimeFormat("ru-RU", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date()),
-    [],
+    () => new Intl.DateTimeFormat(localeMap[lang] || "ru-RU", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date()),
+    [lang],
   );
 
   const todayLessons = Array.isArray(todayLessonsQuery.data) ? todayLessonsQuery.data : [];
@@ -63,29 +64,29 @@ export default function StudentHomePage() {
       .slice(0, 5);
   }, [pendingAssignments, overdueAssignments]);
 
+  const tasksCount = pendingAssignments.length + overdueAssignments.length;
+
   const kpis = [
-    { key: "xp", label: t("student.gamification.totalEarned"), value: stats.totalXp ?? 0, tone: "indigo", icon: "xp" },
-    { key: "rank", label: t("student.gamification.rank"), value: stats.rank != null ? `#${stats.rank}` : "—", tone: "gold", icon: "rank" },
-    { key: "lessons", label: t("nav.student.schedule"), value: todayLessons.length, sub: t("common.today").toLowerCase(), tone: "mint", icon: "clock" },
-    { key: "tasks", label: t("nav.student.assignments"), value: pendingAssignments.length + overdueAssignments.length, sub: pendingAssignments.length + overdueAssignments.length === 1 ? "активная" : "активных", tone: "rose", icon: "tasks" },
+    { key: "xp", label: t("student.home.kpiXp"), value: stats.totalXp ?? 0, tone: "indigo", icon: "xp" },
+    { key: "rank", label: t("student.home.kpiRank"), value: stats.rank != null ? `#${stats.rank}` : "—", tone: "gold", icon: "rank" },
+    { key: "lessons", label: t("student.home.kpiLessons"), value: todayLessons.length, sub: t("common.today").toLowerCase(), tone: "mint", icon: "clock" },
+    { key: "tasks", label: t("student.home.kpiTasks"), value: tasksCount, sub: tasksCount === 1 ? t("student.home.activeTask") : t("student.home.activeTasks"), tone: "rose", icon: "tasks" },
   ];
 
   return (
     <div className={styles.page}>
       <section className={styles.hero}>
         <div className={styles.heroBody}>
-          <p className={styles.heroEyebrow}>Student LMS · {stats.level != null ? t("student.gamification.currentLevel", { level: stats.level }) : ""}</p>
-          <h2 className={styles.heroTitle}>Привет, {studentName} 👋</h2>
-          <p className={styles.heroSub}>
-            Проверь занятия на сегодня, важные события и дедлайны — чтобы ничего не пропустить.
-          </p>
+          <p className={styles.heroEyebrow}>{t("student.home.eyebrow")} · {stats.level != null ? t("student.gamification.currentLevel", { level: stats.level }) : ""}</p>
+          <h2 className={styles.heroTitle}>{t("student.home.greeting", { name: studentName })} 👋</h2>
+          <p className={styles.heroSub}>{t("student.home.sub")}</p>
         </div>
         <div className={styles.heroDate}>
-          <span className={styles.heroDateLabel}>Сегодня</span>
+          <span className={styles.heroDateLabel}>{t("student.home.todayLabel")}</span>
           <span className={styles.heroDateValue}>{longDate}</span>
           {stats.currentStreak ? (
             <span className={styles.heroStreak}>
-              <StatIcon name="fire" /> {stats.currentStreak} {stats.currentStreak === 1 ? "день" : "дней"} подряд
+              <StatIcon name="fire" /> {t("student.home.streakDays", { count: stats.currentStreak })}
             </span>
           ) : null}
         </div>
@@ -108,14 +109,14 @@ export default function StudentHomePage() {
         <div className={styles.mainColumn}>
           <article className={styles.scheduleCard}>
             <div className={styles.cardHead}>
-              <h3 className={styles.sectionTitle}>Расписание на сегодня</h3>
+              <h3 className={styles.sectionTitle}>{t("student.home.scheduleToday")}</h3>
               <span className={styles.lessonCount}>{todayLessons.length}</span>
             </div>
 
             {todayLessonsQuery.loading && !todayLessons.length ? (
               <p className={styles.emptyState}>{t("common.loading")}</p>
             ) : todayLessonsQuery.error ? (
-              <p className={styles.emptyState}>Не удалось загрузить расписание</p>
+              <p className={styles.emptyState}>{t("student.home.scheduleError")}</p>
             ) : todayLessons.length ? (
               <ul className={styles.lessonList}>
                 {todayLessons.map((lesson, i) => (
@@ -128,7 +129,7 @@ export default function StudentHomePage() {
                     <div className={styles.lessonInfo}>
                       <p className={styles.lessonTitle}>{lesson.subjectName}</p>
                       <p className={styles.lessonMeta}>
-                        {lesson.classroom ? `Каб. ${lesson.classroom}` : ""}
+                        {lesson.classroom ? t("student.home.classroomShort", { room: lesson.classroom }) : ""}
                         {lesson.teacherName ? ` • ${lesson.teacherName}` : ""}
                       </p>
                     </div>
@@ -137,15 +138,15 @@ export default function StudentHomePage() {
               </ul>
             ) : (
               <div className={styles.emptyState}>
-                <p style={{ margin: 0, fontSize: 15, color: "var(--text-2)" }}>На сегодня уроков нет 🌴</p>
-                <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}>Самое время заняться домашкой или отдохнуть</p>
+                <p style={{ margin: 0, fontSize: 15, color: "var(--text-2)" }}>{t("student.home.noLessonsTitle")}</p>
+                <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--muted)" }}>{t("student.home.noLessonsHint")}</p>
               </div>
             )}
           </article>
 
           <article className={styles.eventsCard}>
             <div className={styles.cardHead}>
-              <h3 className={styles.sectionTitle}>Важные события</h3>
+              <h3 className={styles.sectionTitle}>{t("student.home.events")}</h3>
               {availableSurveys.length ? <span className={styles.lessonCount}>{availableSurveys.length}</span> : null}
             </div>
 
@@ -155,7 +156,7 @@ export default function StudentHomePage() {
               <ul className={styles.eventList}>
                 {availableSurveys.slice(0, 3).map((s) => (
                   <li key={s.id} className={styles.eventItem}>
-                    <span className={styles.eventBadge}>опрос</span>
+                    <span className={styles.eventBadge}>{t("student.home.surveyBadge")}</span>
                     <div>
                       <p className={styles.eventTitle}>{s.title}</p>
                       {s.description ? <p className={styles.eventDesc}>{s.description}</p> : null}
@@ -164,14 +165,14 @@ export default function StudentHomePage() {
                 ))}
               </ul>
             ) : (
-              <p className={styles.emptyState}>Пока важных событий нет</p>
+              <p className={styles.emptyState}>{t("student.home.eventsEmpty")}</p>
             )}
           </article>
         </div>
 
         <aside className={styles.deadlineCard}>
           <div className={styles.cardHead}>
-            <h3 className={styles.sectionTitle}>Дедлайны</h3>
+            <h3 className={styles.sectionTitle}>{t("student.home.deadlines")}</h3>
             <span className={styles.lessonCount}>{allDeadlines.length}</span>
           </div>
 
@@ -191,7 +192,7 @@ export default function StudentHomePage() {
               })}
             </ul>
           ) : (
-            <p className={styles.emptyState}>Дедлайнов нет 🎉</p>
+            <p className={styles.emptyState}>{t("student.home.deadlinesEmpty")}</p>
           )}
         </aside>
       </section>

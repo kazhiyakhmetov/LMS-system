@@ -4,12 +4,13 @@ import WeeklyScheduleTable from "../../../../shared/ui/WeeklyScheduleTable/Weekl
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { scheduleApi } from "../../../../shared/lib/api";
 import { addDaysISO, formatWeekRange, getMondayISO } from "../../../../shared/lib/utils/date";
+import { useT } from "../../../../shared/lib/i18n";
 
 function emptyGrid() {
   return Object.fromEntries(weekDays.map((d) => [d.key, lessonSlots.map(() => null)]));
 }
 
-function buildSchedule(days) {
+function buildSchedule(days, t) {
   const grid = emptyGrid();
   if (!Array.isArray(days)) return grid;
   days.forEach((day) => {
@@ -20,7 +21,7 @@ function buildSchedule(days) {
       if (idx < 0 || idx >= grid[key].length) return;
       grid[key][idx] = {
         subject: lesson.subjectName || "",
-        metaLine: lesson.classroom ? `${lesson.classroom} каб` : "",
+        metaLine: lesson.classroom ? t("student.home.classroomShort", { room: lesson.classroom }) : "",
         extraLine: lesson.teacherName || "",
       };
     });
@@ -43,6 +44,7 @@ const navBtnStyle = {
 };
 
 export default function StudentSchedulePage() {
+  const { t } = useT();
   const [startDate, setStartDate] = useState(() => getMondayISO());
 
   const { data, loading, error } = useApi(
@@ -50,11 +52,11 @@ export default function StudentSchedulePage() {
     [startDate],
   );
 
-  const schedule = useMemo(() => buildSchedule(data), [data]);
+  const schedule = useMemo(() => buildSchedule(data, t), [data, t]);
   const weekRange = useMemo(() => formatWeekRange(startDate), [startDate]);
 
   if (loading && !data) {
-    return <div style={{ padding: 24, color: "var(--muted)" }}>Загрузка расписания…</div>;
+    return <div style={{ padding: 24, color: "var(--muted)" }}>{t("student.schedule.loading")}</div>;
   }
   if (error) {
     return (
@@ -69,29 +71,29 @@ export default function StudentSchedulePage() {
           fontSize: 13,
         }}
       >
-        Ошибка: {error.message}
+        {t("common.error")}: {error.message}
       </div>
     );
   }
 
   return (
     <WeeklyScheduleTable
-      title="Расписание уроков"
+      title={t("student.schedule.title")}
       weekRange={weekRange}
       weekDays={weekDays}
       slots={lessonSlots}
       schedule={schedule}
-      actionLabel="Расписание экзаменов"
+      actionLabel={t("student.schedule.examsBtn")}
       rightControls={
         <div style={{ display: "flex", gap: 6 }}>
           <button type="button" style={navBtnStyle} onClick={() => setStartDate(addDaysISO(startDate, -7))}>
-            ← неделя
+            {t("student.schedule.prevWeek")}
           </button>
           <button type="button" style={navBtnStyle} onClick={() => setStartDate(getMondayISO())}>
-            Сегодня
+            {t("student.schedule.todayBtn")}
           </button>
           <button type="button" style={navBtnStyle} onClick={() => setStartDate(addDaysISO(startDate, 7))}>
-            неделя →
+            {t("student.schedule.nextWeek")}
           </button>
         </div>
       }

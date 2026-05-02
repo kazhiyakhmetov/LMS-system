@@ -6,6 +6,7 @@ import TeacherHomePage from "./pages/TeacherHomePage";
 import TeacherClassesPage from "./pages/TeacherClassesPage";
 import TeacherSchedulePage from "./pages/TeacherSchedulePage";
 import TeacherAssignmentsPage from "./pages/TeacherAssignmentsPage";
+import TeacherQuizzesPage from "./pages/TeacherQuizzesPage";
 import TeacherSurveyPage from "./pages/TeacherSurveyPage";
 import TeacherChatPage from "./pages/TeacherChatPage";
 import TeacherGradesPage from "./pages/TeacherGradesPage";
@@ -23,6 +24,7 @@ const sections = [
   { path: "/teacher/classes", title: "Классы", component: TeacherClassesPage },
   { path: "/teacher/schedule", title: "Расписание", component: TeacherSchedulePage },
   { path: "/teacher/assignments", title: "Задачи", component: TeacherAssignmentsPage },
+  { path: "/teacher/quizzes", title: "Тесты", component: TeacherQuizzesPage },
   { path: "/teacher/surveys", title: "Опросы", component: TeacherSurveyPage },
   { path: "/teacher/chat", title: "Чат", component: TeacherChatPage },
   { path: "/teacher/grades", title: "Оценки", component: TeacherGradesPage },

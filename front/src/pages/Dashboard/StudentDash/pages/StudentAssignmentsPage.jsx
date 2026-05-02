@@ -6,6 +6,7 @@ import { formatDateTime } from "../../../../shared/lib/utils/date";
 import { useT } from "../../../../shared/lib/i18n";
 
 const PAGE_SIZE = 5;
+const FILTER_KEYS = ["all", "completed", "notCompleted", "urgent", "inProgress", "new"];
 
 function deriveStatus(source, assignment) {
   if (source === "active") return "inProgress";
@@ -16,14 +17,14 @@ function deriveStatus(source, assignment) {
   return "new";
 }
 
-function normalizeAssignment(raw, source) {
+function normalizeAssignment(raw, source, t) {
   const a = raw?.assignment || raw;
   const submission = raw?.assignment ? raw : null;
   const status = submission?.grade != null ? "completed" : deriveStatus(source, a);
   return {
     id: a?.id,
     subject: a?.subjectName || "—",
-    title: a?.title || "Без названия",
+    title: a?.title || t("common.untitled"),
     deadline: a?.deadline || null,
     teacher: a?.teacherName || "",
     description: a?.description || "",
@@ -34,15 +35,6 @@ function normalizeAssignment(raw, source) {
     submittedAt: submission?.submittedAt || null,
     _source: source,
   };
-}
-
-function statusLabel(status) {
-  switch (status) {
-    case "completed": return "Выполнено";
-    case "urgent": return "Срочно";
-    case "inProgress": return "В процессе";
-    default: return "Новое";
-  }
 }
 
 function matchesStatus(item, statusFilter) {
@@ -58,30 +50,25 @@ export default function StudentAssignmentsPage() {
   const overdueQuery = useApi(() => assignmentsApi.studentOverdue(), []);
   const submissionsQuery = useApi(() => submissionsApi.my(), []);
 
-  const filters = [
-    { key: "all", label: t("common.all") },
-    { key: "completed", label: t("admin.classes.active") === "Активный" ? "Выполненные" : "Completed" },
-    { key: "notCompleted", label: "Невыполненные" },
-    { key: "urgent", label: "Срочные" },
-    { key: "inProgress", label: "В процессе" },
-    { key: "new", label: "Новые" },
-  ];
+  function statusLabel(status) {
+    return t(`student.assignments.statusLabels.${status}`);
+  }
 
   const loading = toSubmitQuery.loading || activeQuery.loading || overdueQuery.loading;
   const error = toSubmitQuery.error || activeQuery.error || overdueQuery.error;
 
   const assignments = useMemo(() => {
     const items = [];
-    (toSubmitQuery.data || []).forEach((a) => items.push(normalizeAssignment(a, "to-submit")));
-    (activeQuery.data || []).forEach((a) => items.push(normalizeAssignment(a, "active")));
-    (overdueQuery.data || []).forEach((a) => items.push(normalizeAssignment(a, "overdue")));
+    (toSubmitQuery.data || []).forEach((a) => items.push(normalizeAssignment(a, "to-submit", t)));
+    (activeQuery.data || []).forEach((a) => items.push(normalizeAssignment(a, "active", t)));
+    (overdueQuery.data || []).forEach((a) => items.push(normalizeAssignment(a, "overdue", t)));
     const seen = new Set();
     return items.filter((item) => {
       if (!item.id || seen.has(item.id)) return false;
       seen.add(item.id);
       return true;
     });
-  }, [toSubmitQuery.data, activeQuery.data, overdueQuery.data]);
+  }, [toSubmitQuery.data, activeQuery.data, overdueQuery.data, t]);
 
   const submissions = useMemo(
     () => Array.isArray(submissionsQuery.data) ? submissionsQuery.data : [],
@@ -152,7 +139,7 @@ export default function StudentAssignmentsPage() {
         submissionsQuery.refetch(),
       ]);
     } catch (err) {
-      setSubmitError(err?.message || "Ошибка отправки файла");
+      setSubmitError(err?.message || t("student.assignments.modal.uploadError"));
     } finally {
       setSubmittingId(null);
       event.target.value = "";
@@ -169,8 +156,8 @@ export default function StudentAssignmentsPage() {
   return (
     <div className={styles.page}>
       <section className={styles.header}>
-        <h2 className={styles.title}>Задания</h2>
-        <p className={styles.sub}>Поиск, фильтрация по статусу и предметам, контроль дедлайнов и оценок.</p>
+        <h2 className={styles.title}>{t("student.assignments.title")}</h2>
+        <p className={styles.sub}>{t("student.assignments.sub")}</p>
       </section>
 
       <section className={styles.controls}>
@@ -180,14 +167,14 @@ export default function StudentAssignmentsPage() {
             id="assignment-search"
             className={styles.input}
             type="text"
-            placeholder="Найти задание по названию или предмету..."
+            placeholder={t("student.assignments.searchPlaceholder")}
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
           />
         </div>
 
         <div className={styles.field}>
-          <label className={styles.label} htmlFor="subject-filter">Предмет</label>
+          <label className={styles.label} htmlFor="subject-filter">{t("student.assignments.subjectField")}</label>
           <select
             id="subject-filter"
             className={styles.select}
@@ -196,7 +183,7 @@ export default function StudentAssignmentsPage() {
           >
             {subjectOptions.map((subject) => (
               <option key={subject} value={subject}>
-                {subject === "all" ? "Все предметы" : subject}
+                {subject === "all" ? t("student.assignments.allSubjects") : subject}
               </option>
             ))}
           </select>
@@ -204,20 +191,20 @@ export default function StudentAssignmentsPage() {
       </section>
 
       <section className={styles.filters}>
-        {filters.map((filter) => (
+        {FILTER_KEYS.map((key) => (
           <button
-            key={filter.key}
+            key={key}
             type="button"
-            className={`${styles.filterChip} ${statusFilter === filter.key ? styles.filterChipActive : ""}`}
-            onClick={() => setStatusFilter(filter.key)}
+            className={`${styles.filterChip} ${statusFilter === key ? styles.filterChipActive : ""}`}
+            onClick={() => setStatusFilter(key)}
           >
-            {filter.label}
+            {t(`student.assignments.filters.${key}`)}
           </button>
         ))}
       </section>
 
       <p className={styles.resultMeta}>
-        Показано {startItem}-{endItem} из {filtered.length}
+        {t("student.assignments.paginationInfo", { start: startItem, end: endItem, total: filtered.length })}
       </p>
 
       <section className={styles.list}>
@@ -244,19 +231,17 @@ export default function StudentAssignmentsPage() {
               <p className={styles.taskTitle}>{item.title}</p>
 
               <div className={styles.cardMetaRow}>
-                <p className={styles.meta}>Срок: {item.deadline ? formatDateTime(item.deadline) : "—"}</p>
-                <p className={styles.meta}>Преподаватель: {item.teacher || "—"}</p>
+                <p className={styles.meta}>{t("student.assignments.modal.deadline")}: {item.deadline ? formatDateTime(item.deadline) : "—"}</p>
+                <p className={styles.meta}>{t("student.assignments.modal.teacher")}: {item.teacher || "—"}</p>
               </div>
 
               {item.status === "completed" && item.grade ? (
-                <p className={styles.grade}>Оценка: {item.grade}</p>
+                <p className={styles.grade}>{t("student.assignments.gradeLabel", { grade: item.grade })}</p>
               ) : null}
             </article>
           ))
         ) : (
-          <div className={styles.emptyState}>
-            По текущим параметрам заданий нет. Попробуйте изменить поиск или фильтры.
-          </div>
+          <div className={styles.emptyState}>{t("student.assignments.empty")}</div>
         )}
       </section>
 
@@ -296,7 +281,7 @@ export default function StudentAssignmentsPage() {
                 <article key={s.id} className={styles.submissionCard}>
                   <div>
                     <p className={styles.submissionTitle}>
-                      {s.assignmentTitle || `Задание #${s.assignmentId}`}
+                      {s.assignmentTitle || `#${s.assignmentId}`}
                     </p>
                     <p className={styles.submissionMeta}>
                       {s.fileName || "—"}
@@ -341,46 +326,46 @@ export default function StudentAssignmentsPage() {
             <div className={styles.modalHead}>
               <div>
                 <h3 id="assignment-modal-title" className={styles.modalTitle}>{selected.title}</h3>
-                <p className={styles.modalSub}>Карточка задания</p>
+                <p className={styles.modalSub}>{t("student.assignments.modal.sub")}</p>
               </div>
-              <button type="button" className={styles.closeBtn} aria-label="Закрыть" onClick={() => setSelected(null)}>
+              <button type="button" className={styles.closeBtn} aria-label={t("common.close")} onClick={() => setSelected(null)}>
                 ×
               </button>
             </div>
 
             <div className={styles.modalInfoGrid}>
               <div className={styles.modalInfoItem}>
-                <p className={styles.modalLabel}>Предмет</p>
+                <p className={styles.modalLabel}>{t("student.assignments.modal.subject")}</p>
                 <p className={styles.modalValue}>{selected.subject}</p>
               </div>
               <div className={styles.modalInfoItem}>
-                <p className={styles.modalLabel}>Статус</p>
+                <p className={styles.modalLabel}>{t("student.assignments.modal.statusLabel")}</p>
                 <p className={styles.modalValue}>{statusLabel(selected.status)}</p>
               </div>
               <div className={styles.modalInfoItem}>
-                <p className={styles.modalLabel}>Срок</p>
+                <p className={styles.modalLabel}>{t("student.assignments.modal.deadline")}</p>
                 <p className={styles.modalValue}>{selected.deadline ? formatDateTime(selected.deadline) : "—"}</p>
               </div>
               <div className={styles.modalInfoItem}>
-                <p className={styles.modalLabel}>Преподаватель</p>
+                <p className={styles.modalLabel}>{t("student.assignments.modal.teacher")}</p>
                 <p className={styles.modalValue}>{selected.teacher || "—"}</p>
               </div>
               {selected.grade ? (
                 <div className={styles.modalInfoItem}>
-                  <p className={styles.modalLabel}>Оценка</p>
+                  <p className={styles.modalLabel}>{t("student.assignments.modal.gradeLabel")}</p>
                   <p className={styles.modalValue}>{selected.grade}</p>
                 </div>
               ) : null}
             </div>
 
             <div className={styles.modalSection}>
-              <p className={styles.modalSectionTitle}>Описание</p>
-              <p className={styles.modalText}>{selected.description || "Описание не предоставлено."}</p>
+              <p className={styles.modalSectionTitle}>{t("student.assignments.modal.description")}</p>
+              <p className={styles.modalText}>{selected.description || t("student.assignments.modal.descriptionEmpty")}</p>
             </div>
 
             {selected.status !== "completed" ? (
               <div className={styles.modalSection}>
-                <p className={styles.modalSectionTitle}>Файл на проверку</p>
+                <p className={styles.modalSectionTitle}>{t("student.assignments.modal.fileSection")}</p>
                 <input
                   id="assignment-upload-input"
                   className={styles.fileInput}
@@ -390,12 +375,12 @@ export default function StudentAssignmentsPage() {
                 />
                 <div className={styles.uploadRow}>
                   <label htmlFor="assignment-upload-input" className={styles.uploadBtn}>
-                    {submittingId === selected.id ? "Отправка…" : "Сдать файл"}
+                    {submittingId === selected.id ? t("student.assignments.modal.sending") : t("student.assignments.modal.sendFile")}
                   </label>
                   <p className={styles.fileName}>
                     {uploadedFiles[selected.id]
-                      ? `Отправлено: ${uploadedFiles[selected.id]}`
-                      : "Файл не выбран"}
+                      ? t("student.assignments.modal.sentAs", { name: uploadedFiles[selected.id] })
+                      : t("common.fileNotChosen")}
                   </p>
                 </div>
                 {submitError ? <p className={styles.fileName} style={{ color: "var(--danger)" }}>{submitError}</p> : null}

@@ -4,6 +4,7 @@ import styles from "./TeacherHomePage.module.css";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { assignmentsApi, scheduleApi, statisticsApi } from "../../../../shared/lib/api";
 import { formatDateTime, formatTime, toISODate } from "../../../../shared/lib/utils/date";
+import { useT } from "../../../../shared/lib/i18n";
 
 function lessonStatus(lesson, nowMin) {
   if (!lesson?.startTime || !lesson?.endTime) return "today";
@@ -16,13 +17,8 @@ function lessonStatus(lesson, nowMin) {
   return "today";
 }
 
-function statusLabel(status) {
-  if (status === "now") return "Сейчас";
-  if (status === "next") return "Следующий";
-  return "Сегодня";
-}
-
 export default function TeacherHomePage() {
+  const { t, lang } = useT();
   const { user } = useAuth();
   const today = useMemo(() => toISODate(new Date()), []);
   const nowMin = useMemo(() => {
@@ -34,11 +30,17 @@ export default function TeacherHomePage() {
   const summaryQuery = useApi(() => statisticsApi.teacherSummary(), []);
   const assignmentsQuery = useApi(() => assignmentsApi.teacherMy(), []);
 
-  const teacherName = useMemo(() => (user?.firstName || user?.name || "преподаватель").split(" ")[0], [user]);
+  const teacherName = useMemo(
+    () => (user?.firstName || user?.name || t("teacher.home.defaultName")).split(" ")[0],
+    [user, t],
+  );
 
+  const localeMap = { ru: "ru-RU", kk: "kk-KZ", en: "en-US" };
   const longDate = useMemo(
-    () => new Intl.DateTimeFormat("ru-RU", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date()),
-    [],
+    () => new Intl.DateTimeFormat(localeMap[lang] || "ru-RU", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    }).format(new Date()),
+    [lang],
   );
 
   const todayLessons = Array.isArray(lessonsQuery.data) ? lessonsQuery.data : [];
@@ -48,12 +50,12 @@ export default function TeacherHomePage() {
   const summaryCards = useMemo(() => {
     const studentsTotal = summary.reduce((a, s) => a + (s.totalStudents || 0), 0);
     return [
-      { label: "Мои классы", value: summary.length || 0, meta: "по статистике", tone: "blue" },
-      { label: "Уроков сегодня", value: todayLessons.length, meta: longDate, tone: "teal" },
-      { label: "Учеников всего", value: studentsTotal, meta: "по моим классам", tone: "orange" },
-      { label: "Заданий", value: assignments.length, meta: "созданных мной", tone: "violet" },
+      { label: t("teacher.home.kpiClasses"), value: summary.length || 0, meta: t("teacher.home.kpiClassesHint"), tone: "blue" },
+      { label: t("teacher.home.kpiLessons"), value: todayLessons.length, meta: longDate, tone: "teal" },
+      { label: t("teacher.home.kpiStudents"), value: studentsTotal, meta: t("teacher.home.kpiStudentsHint"), tone: "orange" },
+      { label: t("teacher.home.kpiAssignments"), value: assignments.length, meta: t("teacher.home.kpiAssignmentsHint"), tone: "violet" },
     ];
-  }, [summary, todayLessons, assignments, longDate]);
+  }, [summary, todayLessons, assignments, longDate, t]);
 
   const deadlines = useMemo(
     () => assignments
@@ -67,11 +69,9 @@ export default function TeacherHomePage() {
     <div className={styles.page}>
       <section className={styles.hero}>
         <div>
-          <p className={styles.heroEyebrow}>Teacher Workspace</p>
-          <h2 className={styles.heroTitle}>Добро пожаловать, {teacherName}!</h2>
-          <p className={styles.heroSub}>
-            Расписание, учебная нагрузка и ближайшие дедлайны заданий — в одном месте.
-          </p>
+          <p className={styles.heroEyebrow}>{t("teacher.home.eyebrow")}</p>
+          <h2 className={styles.heroTitle}>{t("teacher.home.welcome", { name: teacherName })}</h2>
+          <p className={styles.heroSub}>{t("teacher.home.sub")}</p>
         </div>
         <div className={styles.heroDate}>{longDate}</div>
       </section>
@@ -90,13 +90,13 @@ export default function TeacherHomePage() {
         <div className={styles.mainColumn}>
           <article className={styles.scheduleCard}>
             <div className={styles.sectionHead}>
-              <h3 className={styles.sectionTitle}>Мое расписание на сегодня</h3>
+              <h3 className={styles.sectionTitle}>{t("teacher.home.todaySchedule")}</h3>
             </div>
 
             {lessonsQuery.loading && !todayLessons.length ? (
-              <p className={styles.emptyState}>Загрузка…</p>
+              <p className={styles.emptyState}>{t("common.loading")}</p>
             ) : lessonsQuery.error ? (
-              <p className={styles.emptyState}>Не удалось загрузить расписание</p>
+              <p className={styles.emptyState}>{t("teacher.home.scheduleError")}</p>
             ) : todayLessons.length ? (
               <ul className={styles.lessonList}>
                 {todayLessons.map((lesson) => {
@@ -111,10 +111,12 @@ export default function TeacherHomePage() {
                           <p className={styles.lessonTitle}>
                             {lesson.subjectName} {lesson.className ? `• ${lesson.className}` : ""}
                           </p>
-                          <span className={`${styles.statusChip} ${styles[status]}`}>{statusLabel(status)}</span>
+                          <span className={`${styles.statusChip} ${styles[status]}`}>
+                            {t(`teacher.home.lessonStatus.${status}`)}
+                          </span>
                         </div>
                         <p className={styles.lessonMeta}>
-                          {lesson.classroom ? `Каб. ${lesson.classroom}` : ""}
+                          {lesson.classroom ? t("student.home.classroomShort", { room: lesson.classroom }) : ""}
                         </p>
                       </div>
                     </li>
@@ -122,19 +124,19 @@ export default function TeacherHomePage() {
                 })}
               </ul>
             ) : (
-              <p className={styles.emptyState}>На сегодня уроков нет</p>
+              <p className={styles.emptyState}>{t("teacher.home.scheduleEmpty")}</p>
             )}
           </article>
         </div>
 
         <aside className={styles.deadlineCard}>
           <div className={styles.deadlineHead}>
-            <h3 className={styles.sectionTitle}>Ближайшие дедлайны заданий</h3>
+            <h3 className={styles.sectionTitle}>{t("teacher.home.deadlines")}</h3>
             <span className={styles.deadlineCount}>{deadlines.length}</span>
           </div>
 
           {assignmentsQuery.loading && !deadlines.length ? (
-            <p className={styles.emptyState}>Загрузка…</p>
+            <p className={styles.emptyState}>{t("common.loading")}</p>
           ) : deadlines.length ? (
             <ul className={styles.deadlineList}>
               {deadlines.map((item) => (
@@ -146,7 +148,7 @@ export default function TeacherHomePage() {
               ))}
             </ul>
           ) : (
-            <p className={styles.emptyState}>Активных заданий нет.</p>
+            <p className={styles.emptyState}>{t("teacher.home.deadlinesEmpty")}</p>
           )}
         </aside>
       </section>

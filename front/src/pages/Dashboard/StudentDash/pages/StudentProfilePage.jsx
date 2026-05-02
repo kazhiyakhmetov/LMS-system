@@ -50,8 +50,8 @@ export default function StudentProfilePage() {
     if (profile.firstName || profile.lastName) {
       return [profile.firstName, profile.lastName].filter(Boolean).join(" ");
     }
-    return user?.name || "Ученик";
-  }, [profile.firstName, profile.lastName, user?.name]);
+    return user?.name || t("student.profile.defaultName");
+  }, [profile.firstName, profile.lastName, user?.name, t]);
 
   const initials = useMemo(() => getInitials(fullName), [fullName]);
   const avatarUrl = useMemo(
@@ -72,7 +72,7 @@ export default function StudentProfilePage() {
       await profileQuery.refetch();
       setBioDraft(null);
     } catch (err) {
-      setBioError(err?.message || "Не удалось сохранить");
+      setBioError(err?.message || t("common.error"));
     } finally {
       setSavingBio(false);
     }
@@ -86,7 +86,7 @@ export default function StudentProfilePage() {
       await profileApi.uploadAvatar(file);
       await profileQuery.refetch();
     } catch (err) {
-      setAvatarError(err?.message || "Ошибка загрузки");
+      setAvatarError(err?.message || t("common.error"));
     } finally {
       event.target.value = "";
     }
@@ -135,7 +135,7 @@ export default function StudentProfilePage() {
             role="button"
             tabIndex={0}
             onKeyDown={(e) => { if (e.key === "Enter") fileRef.current?.click(); }}
-            title="Загрузить аватар"
+            title={t("student.profile.bioPlaceholder")}
           >
             {avatarUrl ? (
               <img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "inherit" }} />
@@ -170,7 +170,7 @@ export default function StudentProfilePage() {
             <p className={styles.metricValue}>{stats.completedAssignments ?? "—"}</p>
           </article>
           <article className={styles.metric}>
-            <p className={styles.metricLabel}>Достижений</p>
+            <p className={styles.metricLabel}>{t("student.gamification.myBadges")}</p>
             <p className={styles.metricValue}>
               {stats.achievementsUnlocked ?? "—"}/{stats.totalAchievements ?? "—"}
             </p>
@@ -180,34 +180,34 @@ export default function StudentProfilePage() {
 
       <section className={styles.grid}>
         <article className={styles.panel}>
-          <h3 className={styles.panelTitle}>Контакты</h3>
+          <h3 className={styles.panelTitle}>{t("teacher.profile.contactInfo")}</h3>
           <ul className={styles.rows}>
             <li className={styles.row}>
               <span className={styles.rowLabel}>Email</span>
               <span className={styles.rowValue}>{profile.email || user?.email || "—"}</span>
             </li>
             <li className={styles.row}>
-              <span className={styles.rowLabel}>Имя</span>
+              <span className={styles.rowLabel}>{t("admin.registration.firstName")}</span>
               <span className={styles.rowValue}>{profile.firstName || "—"}</span>
             </li>
             <li className={styles.row}>
-              <span className={styles.rowLabel}>Фамилия</span>
+              <span className={styles.rowLabel}>{t("admin.registration.lastName")}</span>
               <span className={styles.rowValue}>{profile.lastName || "—"}</span>
             </li>
             <li className={styles.row}>
-              <span className={styles.rowLabel}>Школа</span>
+              <span className={styles.rowLabel}>{t("admin.registration.school")}</span>
               <span className={styles.rowValue}>{user?.schoolName || "—"}</span>
             </li>
           </ul>
         </article>
 
         <article className={styles.panel}>
-          <h3 className={styles.panelTitle}>О себе</h3>
+          <h3 className={styles.panelTitle}>{t("teacher.profile.account")}</h3>
           <textarea
             rows={5}
             value={bio}
             onChange={(e) => setBioDraft(e.target.value)}
-            placeholder="Коротко о себе"
+            placeholder={t("student.profile.bioPlaceholder")}
             style={{ width: "100%", padding: 10, border: "1px solid var(--stroke)", borderRadius: "var(--radius-sm)", resize: "vertical", fontFamily: "inherit", fontSize: 14 }}
           />
           <div style={{ display: "flex", gap: 10, marginTop: 10, alignItems: "center" }}>
