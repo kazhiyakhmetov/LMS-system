@@ -1,9 +1,10 @@
 export const studentMenu = [
-  { href: "/student", label: "Главная", icon: "home", end: true },
-  { href: "/student/gamification", label: "Геймификация", icon: "trophy" },
-  { href: "/student/schedule", label: "Расписание", icon: "calendar" },
-  { href: "/student/assignments", label: "Задания", icon: "clipboard" },
-  { href: "/student/chat", label: "Чат", icon: "chat" },
-  { href: "/student/grades", label: "Оценки", icon: "star" },
-  { href: "/student/surveys", label: "Опросы", icon: "poll" },
+  { href: "/student", labelKey: "nav.student.home", icon: "home", end: true },
+  { href: "/student/gamification", labelKey: "nav.student.gamification", icon: "trophy" },
+  { href: "/student/schedule", labelKey: "nav.student.schedule", icon: "calendar" },
+  { href: "/student/assignments", labelKey: "nav.student.assignments", icon: "clipboard" },
+  { href: "/student/quizzes", labelKey: "nav.student.quizzes", icon: "quiz" },
+  { href: "/student/grades", labelKey: "nav.student.grades", icon: "star" },
+  { href: "/student/surveys", labelKey: "nav.student.surveys", icon: "poll" },
+  { href: "/student/chat", labelKey: "nav.student.chat", icon: "chat" },
 ];

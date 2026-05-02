@@ -18,3 +18,5 @@ export { schoolsApi } from "./schools.api";
 export { chatApi } from "./chat.api";
 export { friendsApi } from "./friends.api";
 export { notificationsApi } from "./notifications.api";
+export { tagsApi } from "./tags.api";
+export { quizzesApi } from "./quizzes.api";

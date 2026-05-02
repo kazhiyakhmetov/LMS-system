@@ -28,6 +28,20 @@ function buildSchedule(days) {
   return grid;
 }
 
+const navBtnStyle = {
+  height: 36,
+  padding: "0 14px",
+  border: "1px solid var(--stroke)",
+  borderRadius: "var(--radius-sm)",
+  background: "var(--panel)",
+  color: "var(--text)",
+  fontSize: 13,
+  fontWeight: 700,
+  cursor: "pointer",
+  fontFamily: "inherit",
+  transition: "background 150ms, border-color 150ms",
+};
+
 export default function StudentSchedulePage() {
   const [startDate, setStartDate] = useState(() => getMondayISO());
 
@@ -40,10 +54,24 @@ export default function StudentSchedulePage() {
   const weekRange = useMemo(() => formatWeekRange(startDate), [startDate]);
 
   if (loading && !data) {
-    return <div style={{ padding: 24 }}>Загрузка расписания…</div>;
+    return <div style={{ padding: 24, color: "var(--muted)" }}>Загрузка расписания…</div>;
   }
   if (error) {
-    return <div style={{ padding: 24, color: "var(--danger)" }}>Ошибка: {error.message}</div>;
+    return (
+      <div
+        style={{
+          margin: 16,
+          padding: 16,
+          border: "1px solid var(--danger)",
+          borderRadius: "var(--radius-sm)",
+          background: "var(--danger-soft)",
+          color: "var(--danger-strong)",
+          fontSize: 13,
+        }}
+      >
+        Ошибка: {error.message}
+      </div>
+    );
   }
 
   return (
@@ -55,12 +83,14 @@ export default function StudentSchedulePage() {
       schedule={schedule}
       actionLabel="Расписание экзаменов"
       rightControls={
-        <div style={{ display: "flex", gap: 8 }}>
-          <button type="button" onClick={() => setStartDate(addDaysISO(startDate, -7))}>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button type="button" style={navBtnStyle} onClick={() => setStartDate(addDaysISO(startDate, -7))}>
             ← неделя
           </button>
-          <button type="button" onClick={() => setStartDate(getMondayISO())}>Сегодня</button>
-          <button type="button" onClick={() => setStartDate(addDaysISO(startDate, 7))}>
+          <button type="button" style={navBtnStyle} onClick={() => setStartDate(getMondayISO())}>
+            Сегодня
+          </button>
+          <button type="button" style={navBtnStyle} onClick={() => setStartDate(addDaysISO(startDate, 7))}>
             неделя →
           </button>
         </div>

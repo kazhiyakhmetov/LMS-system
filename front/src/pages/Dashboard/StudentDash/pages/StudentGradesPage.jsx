@@ -5,8 +5,16 @@ import { average } from "../../../../shared/lib/utils/math";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { journalApi, studentsApi } from "../../../../shared/lib/api";
 import { formatDayMonth, quarterKeyToNumber } from "../../../../shared/lib/utils/date";
+import { DonutChart, BarList, ChartLegend } from "../../../../shared/ui/Chart/Chart";
 
 const ABSENCE_KEYS = ["Н", "П", "Б", "О", "N", "P", "B", "O"];
+
+const MARK_COLORS = {
+  5: "#10b981",
+  4: "#4f46e5",
+  3: "#f59e0b",
+  2: "#ef4444",
+};
 
 function normalizeAbsence(code) {
   if (!code) return null;
@@ -92,6 +100,39 @@ export default function StudentGradesPage() {
     };
   }, [rows]);
 
+  const distribution = useMemo(() => {
+    const buckets = { 5: 0, 4: 0, 3: 0, 2: 0 };
+    rows.forEach((r) => {
+      r.marks.forEach((m) => {
+        if (buckets[m] != null) buckets[m] += 1;
+      });
+    });
+    return [
+      { label: "Отлично (5)", value: buckets[5], color: MARK_COLORS[5] },
+      { label: "Хорошо (4)", value: buckets[4], color: MARK_COLORS[4] },
+      { label: "Удовл. (3)", value: buckets[3], color: MARK_COLORS[3] },
+      { label: "Неуд. (2)", value: buckets[2], color: MARK_COLORS[2] },
+    ];
+  }, [rows]);
+
+  const totalMarks = distribution.reduce((sum, d) => sum + d.value, 0);
+
+  const subjectPerformance = useMemo(() => {
+    return rows
+      .filter((r) => r.progress > 0)
+      .sort((a, b) => b.progress - a.progress)
+      .slice(0, 6)
+      .map((r) => ({
+        label: r.subject,
+        value: r.progress,
+        color: r.progress >= 80
+          ? "linear-gradient(90deg, #10b981, #34d399)"
+          : r.progress >= 60
+            ? "linear-gradient(90deg, var(--accent), var(--accent-alt))"
+            : "linear-gradient(90deg, #f59e0b, #fbbf24)",
+      }));
+  }, [rows]);
+
   const recentRows = useMemo(() => {
     const list = Array.isArray(recentQuery.data) ? recentQuery.data : [];
     return list
@@ -108,11 +149,13 @@ export default function StudentGradesPage() {
   return (
     <div className={styles.page}>
       <section className={styles.header}>
-        <div>
-          <h2 className={styles.title}>Оценки и успеваемость</h2>
-          <p className={styles.sub}>
-            Четвертные оценки, текущая успеваемость, аттенданс и журнал обычных оценок по предметам.
-          </p>
+        <div className={styles.headerTop}>
+          <div>
+            <h2 className={styles.title}>Оценки и успеваемость</h2>
+            <p className={styles.sub}>
+              Четвертные оценки, текущая успеваемость, посещаемость и журнал обычных оценок по предметам.
+            </p>
+          </div>
         </div>
 
         <div className={styles.headerControls}>
@@ -148,28 +191,65 @@ export default function StudentGradesPage() {
       </section>
 
       <section className={styles.cards}>
-        <article className={styles.card}>
+        <article className={`${styles.card} ${styles.tone_indigo}`}>
           <p className={styles.cardLabel}>Средняя за четверть</p>
           <p className={styles.cardValue}>{summary.quarterAverage}</p>
         </article>
-        <article className={styles.card}>
+        <article className={`${styles.card} ${styles.tone_mint}`}>
           <p className={styles.cardLabel}>Успеваемость</p>
           <p className={styles.cardValue}>{summary.progressAverage}</p>
         </article>
-        <article className={styles.card}>
-          <p className={styles.cardLabel}>Аттенданс</p>
+        <article className={`${styles.card} ${styles.tone_gold}`}>
+          <p className={styles.cardLabel}>Посещаемость</p>
           <p className={styles.cardValue}>{summary.attendanceAverage}</p>
         </article>
-        <article className={styles.card}>
+        <article className={`${styles.card} ${styles.tone_rose}`}>
           <p className={styles.cardLabel}>Предметов в риске</p>
           <p className={styles.cardValue}>{summary.riskySubjects}</p>
         </article>
       </section>
 
+      <section className={styles.chartRow}>
+        <article className={styles.chartCard}>
+          <div className={styles.chartHead}>
+            <h3 className={styles.sectionTitle}>Распределение оценок</h3>
+          </div>
+          {totalMarks > 0 ? (
+            <div className={styles.donutLayout}>
+              <DonutChart
+                data={distribution}
+                size={180}
+                strokeWidth={24}
+                centerLabel="оценок"
+                centerValue={totalMarks}
+              />
+              <ChartLegend data={distribution} />
+            </div>
+          ) : (
+            <p className={styles.emptyState}>Оценок ещё нет</p>
+          )}
+        </article>
+
+        <article className={styles.chartCard}>
+          <div className={styles.chartHead}>
+            <h3 className={styles.sectionTitle}>Топ предметы по успеваемости</h3>
+          </div>
+          {subjectPerformance.length ? (
+            <BarList
+              data={subjectPerformance}
+              max={100}
+              valueFormatter={(v) => `${v}%`}
+            />
+          ) : (
+            <p className={styles.emptyState}>Нет данных за выбранный период</p>
+          )}
+        </article>
+      </section>
+
       {journalQuery.loading && !rows.length ? (
-        <p style={{ padding: 16 }}>Загрузка журнала…</p>
+        <p className={styles.emptyState}>Загрузка журнала…</p>
       ) : journalQuery.error ? (
-        <p style={{ padding: 16, color: "var(--danger)" }}>Ошибка: {journalQuery.error.message}</p>
+        <p className={styles.errorState}>Ошибка: {journalQuery.error.message}</p>
       ) : (
         <section className={styles.tableWrap}>
           <table className={styles.table}>
@@ -180,25 +260,36 @@ export default function StudentGradesPage() {
                 <th>Обычные оценки</th>
                 <th>За четверть</th>
                 <th>Успеваемость</th>
-                <th>Аттенданс</th>
+                <th>Посещ.</th>
                 <th>Пропуски</th>
               </tr>
             </thead>
             <tbody>
               {rows.length ? rows.map((row) => (
                 <tr key={row.subject}>
-                  <td>{row.subject}</td>
-                  <td>{row.teacher || "—"}</td>
+                  <td className={styles.subjectCell}>{row.subject}</td>
+                  <td className={styles.teacherCell}>{row.teacher || "—"}</td>
                   <td>
                     <div className={styles.markList}>
                       {row.marks.length ? row.marks.map((mark, index) => (
-                        <span key={`${row.subject}-${mark}-${index}`} className={styles.markChip}>
+                        <span
+                          key={`${row.subject}-${mark}-${index}`}
+                          className={`${styles.markChip} ${styles[`markChip_${mark}`] || ""}`}
+                        >
                           {mark}
                         </span>
                       )) : <span className={styles.empty}>—</span>}
                     </div>
                   </td>
-                  <td>{row.quarterGrade || "—"}</td>
+                  <td>
+                    {row.quarterGrade ? (
+                      <span className={`${styles.quarterMark} ${styles[`quarterMark_${row.quarterGrade}`] || ""}`}>
+                        {row.quarterGrade}
+                      </span>
+                    ) : (
+                      <span className={styles.empty}>—</span>
+                    )}
+                  </td>
                   <td>
                     <div className={styles.progressWrap}>
                       <span className={styles.progressValue}>{row.progress ? `${row.progress}%` : "—"}</span>
@@ -213,7 +304,7 @@ export default function StudentGradesPage() {
                   </td>
                 </tr>
               )) : (
-                <tr><td colSpan={7} style={{ textAlign: "center", padding: 16 }}>Нет данных за выбранный период</td></tr>
+                <tr><td colSpan={7} style={{ textAlign: "center", padding: 18, color: "var(--muted)" }}>Нет данных за выбранный период</td></tr>
               )}
             </tbody>
           </table>
@@ -222,9 +313,11 @@ export default function StudentGradesPage() {
 
       <section className={styles.bottom}>
         <article className={styles.panel}>
-          <h3 className={styles.panelTitle}>Последние оценки</h3>
+          <div className={styles.chartHead}>
+            <h3 className={styles.sectionTitle}>Последние оценки</h3>
+          </div>
           {recentQuery.loading && !recentRows.length ? (
-            <p>Загрузка…</p>
+            <p className={styles.emptyState}>Загрузка…</p>
           ) : (
             <ul className={styles.eventList}>
               {recentRows.length ? recentRows.map((item, idx) => (
@@ -242,12 +335,26 @@ export default function StudentGradesPage() {
         </article>
 
         <article className={styles.panel}>
-          <h3 className={styles.panelTitle}>Коды посещаемости</h3>
+          <div className={styles.chartHead}>
+            <h3 className={styles.sectionTitle}>Коды посещаемости</h3>
+          </div>
           <ul className={styles.codes}>
-            <li><strong>Н</strong> — уважительная причина</li>
-            <li><strong>П</strong> — прогул</li>
-            <li><strong>Б</strong> — болезнь</li>
-            <li><strong>О</strong> — опоздание</li>
+            <li className={styles.codeItem}>
+              <span className={`${styles.codeBadge} ${styles.codeBadge_n}`}>Н</span>
+              <span className={styles.codeLabel}>Уважительная причина</span>
+            </li>
+            <li className={styles.codeItem}>
+              <span className={`${styles.codeBadge} ${styles.codeBadge_p}`}>П</span>
+              <span className={styles.codeLabel}>Прогул</span>
+            </li>
+            <li className={styles.codeItem}>
+              <span className={`${styles.codeBadge} ${styles.codeBadge_b}`}>Б</span>
+              <span className={styles.codeLabel}>Болезнь</span>
+            </li>
+            <li className={styles.codeItem}>
+              <span className={`${styles.codeBadge} ${styles.codeBadge_o}`}>О</span>
+              <span className={styles.codeLabel}>Опоздание</span>
+            </li>
           </ul>
         </article>
       </section>

@@ -3,17 +3,9 @@ import styles from "./StudentAssignmentsPage.module.css";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { assignmentsApi, filesApi, submissionsApi } from "../../../../shared/lib/api";
 import { formatDateTime } from "../../../../shared/lib/utils/date";
+import { useT } from "../../../../shared/lib/i18n";
 
 const PAGE_SIZE = 5;
-
-const filters = [
-  { key: "all", label: "Все" },
-  { key: "completed", label: "Выполненные" },
-  { key: "notCompleted", label: "Невыполненные" },
-  { key: "urgent", label: "Срочные" },
-  { key: "inProgress", label: "В процессе" },
-  { key: "new", label: "Новые" },
-];
 
 function deriveStatus(source, assignment) {
   if (source === "active") return "inProgress";
@@ -60,9 +52,20 @@ function matchesStatus(item, statusFilter) {
 }
 
 export default function StudentAssignmentsPage() {
+  const { t } = useT();
   const toSubmitQuery = useApi(() => assignmentsApi.studentToSubmit(), []);
   const activeQuery = useApi(() => assignmentsApi.studentActive(), []);
   const overdueQuery = useApi(() => assignmentsApi.studentOverdue(), []);
+  const submissionsQuery = useApi(() => submissionsApi.my(), []);
+
+  const filters = [
+    { key: "all", label: t("common.all") },
+    { key: "completed", label: t("admin.classes.active") === "Активный" ? "Выполненные" : "Completed" },
+    { key: "notCompleted", label: "Невыполненные" },
+    { key: "urgent", label: "Срочные" },
+    { key: "inProgress", label: "В процессе" },
+    { key: "new", label: "Новые" },
+  ];
 
   const loading = toSubmitQuery.loading || activeQuery.loading || overdueQuery.loading;
   const error = toSubmitQuery.error || activeQuery.error || overdueQuery.error;
@@ -79,6 +82,11 @@ export default function StudentAssignmentsPage() {
       return true;
     });
   }, [toSubmitQuery.data, activeQuery.data, overdueQuery.data]);
+
+  const submissions = useMemo(
+    () => Array.isArray(submissionsQuery.data) ? submissionsQuery.data : [],
+    [submissionsQuery.data],
+  );
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -141,6 +149,7 @@ export default function StudentAssignmentsPage() {
       await Promise.all([
         toSubmitQuery.refetch(),
         activeQuery.refetch(),
+        submissionsQuery.refetch(),
       ]);
     } catch (err) {
       setSubmitError(err?.message || "Ошибка отправки файла");
@@ -151,10 +160,10 @@ export default function StudentAssignmentsPage() {
   }
 
   if (loading && !assignments.length) {
-    return <div className={styles.page}><p>Загрузка заданий…</p></div>;
+    return <div className={styles.page}><p>{t("common.loading")}</p></div>;
   }
   if (error && !assignments.length) {
-    return <div className={styles.page}><p>Ошибка: {error.message}</p></div>;
+    return <div className={styles.page}><p>{t("common.error")}: {error.message}</p></div>;
   }
 
   return (
@@ -166,7 +175,7 @@ export default function StudentAssignmentsPage() {
 
       <section className={styles.controls}>
         <div className={styles.field}>
-          <label className={styles.label} htmlFor="assignment-search">Поиск</label>
+          <label className={styles.label} htmlFor="assignment-search">{t("common.search")}</label>
           <input
             id="assignment-search"
             className={styles.input}
@@ -258,11 +267,11 @@ export default function StudentAssignmentsPage() {
           onClick={() => setCurrentPage((value) => Math.max(1, value - 1))}
           disabled={currentPage === 1}
         >
-          Назад
+          {t("common.back")}
         </button>
 
         <p className={styles.pageInfo}>
-          Страница {currentPage} из {totalPages}
+          {currentPage} / {totalPages}
         </p>
 
         <button
@@ -271,8 +280,55 @@ export default function StudentAssignmentsPage() {
           onClick={() => setCurrentPage((value) => Math.min(totalPages, value + 1))}
           disabled={currentPage === totalPages}
         >
-          Вперед
+          {t("common.next")}
         </button>
+      </section>
+
+      <section className={styles.submissionsSection}>
+        <h3 className={styles.submissionsTitle}>{t("student.assignments.submissionsTitle")}</h3>
+        {submissionsQuery.loading && !submissions.length ? (
+          <p className={styles.emptyState}>{t("common.loading")}</p>
+        ) : submissions.length ? (
+          <div className={styles.submissionsList}>
+            {submissions.map((s) => {
+              const isGraded = s.grade != null;
+              return (
+                <article key={s.id} className={styles.submissionCard}>
+                  <div>
+                    <p className={styles.submissionTitle}>
+                      {s.assignmentTitle || `Задание #${s.assignmentId}`}
+                    </p>
+                    <p className={styles.submissionMeta}>
+                      {s.fileName || "—"}
+                      {s.submittedAt ? ` • ${t("student.assignments.submittedAt")}: ${formatDateTime(s.submittedAt)}` : ""}
+                    </p>
+                    {s.teacherComment ? (
+                      <p className={styles.submissionComment}>
+                        {t("student.assignments.teacherComment")}: {s.teacherComment}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className={styles.submissionGradeWrap}>
+                    {isGraded ? (
+                      <>
+                        <p className={styles.submissionGrade}>{s.grade}</p>
+                        <p className={styles.submissionGradeLabel}>
+                          {t("student.assignments.status.graded")}
+                        </p>
+                      </>
+                    ) : (
+                      <span className={styles.submissionPending}>
+                        {t("student.assignments.status.pending")}
+                      </span>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <p className={styles.emptyState}>{t("student.assignments.submissionsEmpty")}</p>
+        )}
       </section>
 
       {selected ? (

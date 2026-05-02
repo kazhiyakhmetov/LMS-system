@@ -181,6 +181,18 @@ public class UserService {
             parentStudentRepository.save(ps);
         }
 
+        // Назначаем родителю школу первого ребёнка, чтобы потом работали проверки в structure-сервисе.
+        if (savedUser.getSchool() == null) {
+            Student firstWithSchool = students.stream()
+                    .filter(st -> st.getUser() != null && st.getUser().getSchool() != null)
+                    .findFirst()
+                    .orElse(null);
+            if (firstWithSchool != null) {
+                savedUser.setSchool(firstWithSchool.getUser().getSchool());
+                userRepository.save(savedUser);
+            }
+        }
+
         return convertToDTO(savedUser);
     }
 

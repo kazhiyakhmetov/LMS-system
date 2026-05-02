@@ -6,6 +6,7 @@ import StudentHomePage from "./pages/StudentHomePage";
 import StudentGamificationPage from "./pages/StudentGamificationPage";
 import StudentSchedulePage from "./pages/StudentSchedulePage";
 import StudentAssignmentsPage from "./pages/StudentAssignmentsPage";
+import StudentQuizPage from "./pages/StudentQuizPage";
 import StudentChatPage from "./pages/StudentChatPage";
 import StudentGradesPage from "./pages/StudentGradesPage";
 import StudentSurveyPage from "./pages/StudentSurveyPage";
@@ -22,6 +23,7 @@ const sections = [
   { path: "/student/gamification", title: "Геймификация", component: StudentGamificationPage },
   { path: "/student/schedule", title: "Расписание", component: StudentSchedulePage },
   { path: "/student/assignments", title: "Задания", component: StudentAssignmentsPage },
+  { path: "/student/quizzes", title: "Квизы", component: StudentQuizPage },
   { path: "/student/chat", title: "Чат", component: StudentChatPage },
   { path: "/student/grades", title: "Оценки", component: StudentGradesPage },
   { path: "/student/surveys", title: "Опросы", component: StudentSurveyPage },

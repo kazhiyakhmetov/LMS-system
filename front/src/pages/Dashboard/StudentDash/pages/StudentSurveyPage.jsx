@@ -105,19 +105,21 @@ export default function StudentSurveyPage() {
     <div className={styles.page}>
       <section className={styles.header}>
         <h2 className={styles.title}>Опросы</h2>
-        <p className={styles.sub}>Доступные опросы, проходите их и отслеживайте статус заполнения.</p>
+        <p className={styles.sub}>
+          Доступные опросы. Проходите их и отслеживайте статус заполнения.
+        </p>
       </section>
 
       <section className={styles.stats}>
-        <article className={styles.statCard}>
+        <article className={`${styles.statCard} ${styles.tone_indigo}`}>
           <p className={styles.statLabel}>Активные</p>
           <p className={styles.statValue}>{stats.active}</p>
         </article>
-        <article className={styles.statCard}>
+        <article className={`${styles.statCard} ${styles.tone_mint}`}>
           <p className={styles.statLabel}>Завершенные</p>
           <p className={styles.statValue}>{stats.completed}</p>
         </article>
-        <article className={styles.statCard}>
+        <article className={`${styles.statCard} ${styles.tone_gold}`}>
           <p className={styles.statLabel}>Всего</p>
           <p className={styles.statValue}>{stats.total}</p>
         </article>
@@ -145,9 +147,11 @@ export default function StudentSurveyPage() {
       </section>
 
       {listQuery.loading && !normalized.length ? (
-        <p style={{ padding: 16 }}>Загрузка опросов…</p>
+        <p className={styles.emptyState}>Загрузка опросов…</p>
       ) : listQuery.error ? (
-        <p style={{ padding: 16, color: "var(--danger)" }}>Ошибка: {listQuery.error.message}</p>
+        <p className={styles.emptyState} style={{ color: "var(--danger-strong)", borderColor: "var(--danger)", background: "var(--danger-soft)" }}>
+          Ошибка: {listQuery.error.message}
+        </p>
       ) : (
         <section className={styles.list}>
           {filtered.length ? filtered.map((survey) => (
@@ -160,10 +164,10 @@ export default function StudentSurveyPage() {
               </div>
 
               <p className={styles.cardTitle}>{survey.title}</p>
-              <p className={styles.cardDesc}>{survey.description}</p>
+              {survey.description ? <p className={styles.cardDesc}>{survey.description}</p> : null}
 
               <div className={styles.metaRow}>
-                <span>{survey.questionsCount} вопросов</span>
+                <span>{survey.questionsCount} {survey.questionsCount === 1 ? "вопрос" : "вопросов"}</span>
               </div>
 
               <button
@@ -172,7 +176,7 @@ export default function StudentSurveyPage() {
                 onClick={() => setSelectedSurvey(survey)}
                 disabled={survey.done}
               >
-                {survey.done ? "Пройден" : "Пройти"}
+                {survey.done ? "Пройден ✓" : "Пройти опрос"}
               </button>
             </article>
           )) : (
@@ -183,39 +187,44 @@ export default function StudentSurveyPage() {
 
       {selectedSurvey ? (
         <div
-          className={styles.modalOverlay ?? styles.overlay}
+          className={styles.modalOverlay}
           role="presentation"
-          style={{ position: "fixed", inset: 0, background: "rgba(21, 36, 58, 0.4)", display: "grid", placeItems: "center", zIndex: 20 }}
           onClick={(event) => { if (event.target === event.currentTarget) setSelectedSurvey(null); }}
         >
-          <section
-            role="dialog"
-            aria-modal="true"
-            style={{ background: "var(--panel)", borderRadius: "var(--radius-lg)", padding: 24, maxWidth: 560, width: "92%", maxHeight: "80vh", overflow: "auto", boxShadow: "var(--shadow)" }}
-          >
-            <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <h3 style={{ margin: 0 }}>{selectedSurvey.title}</h3>
-              <button type="button" onClick={() => setSelectedSurvey(null)} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer" }}>×</button>
+          <section className={styles.modal} role="dialog" aria-modal="true">
+            <header className={styles.modalHead}>
+              <h3 className={styles.modalTitle}>{selectedSurvey.title}</h3>
+              <button
+                type="button"
+                className={styles.modalClose}
+                onClick={() => setSelectedSurvey(null)}
+                aria-label="Закрыть"
+              >
+                ×
+              </button>
             </header>
 
             {detailsLoading ? (
-              <p>Загрузка опроса…</p>
+              <p className={styles.modalDesc}>Загрузка опроса…</p>
             ) : details ? (
               <form onSubmit={onSubmit}>
-                <p style={{ color: "var(--muted)", marginBottom: 16 }}>{details.description}</p>
+                {details.description ? (
+                  <p className={styles.modalDesc}>{details.description}</p>
+                ) : null}
                 {(details.questions || []).map((q, index) => (
-                  <div key={q.id} style={{ marginBottom: 14 }}>
-                    <p style={{ fontWeight: 600, margin: "0 0 6px" }}>{index + 1}. {q.text}</p>
+                  <div key={q.id} className={styles.question}>
+                    <p className={styles.questionText}>{index + 1}. {q.text}</p>
                     {q.type === "TEXT" ? (
                       <textarea
+                        className={styles.questionTextarea}
                         rows={3}
                         value={answers[q.id] || ""}
                         onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
-                        style={{ width: "100%", padding: 8, border: "1px solid var(--stroke)", borderRadius: "var(--radius-sm)", resize: "vertical" }}
+                        placeholder="Ваш ответ..."
                       />
                     ) : (
                       (q.options || []).map((opt) => (
-                        <label key={opt.id} style={{ display: "flex", gap: 8, marginBottom: 4, cursor: "pointer" }}>
+                        <label key={opt.id} className={styles.optionLabel}>
                           <input
                             type="radio"
                             name={`q-${q.id}`}
@@ -230,17 +239,19 @@ export default function StudentSurveyPage() {
                   </div>
                 ))}
 
-                {submitError ? <p style={{ color: "var(--danger)" }}>{submitError}</p> : null}
+                {submitError ? <p className={styles.errorBanner}>{submitError}</p> : null}
 
-                <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16 }}>
-                  <button type="button" onClick={() => setSelectedSurvey(null)}>Отмена</button>
-                  <button type="submit" disabled={submitting}>
+                <div className={styles.modalActions}>
+                  <button type="button" className={styles.btnSecondary} onClick={() => setSelectedSurvey(null)}>
+                    Отмена
+                  </button>
+                  <button type="submit" className={styles.btnPrimary} disabled={submitting}>
                     {submitting ? "Отправка…" : "Отправить"}
                   </button>
                 </div>
               </form>
             ) : (
-              <p style={{ color: "var(--danger)" }}>{submitError || "Не удалось загрузить вопросы"}</p>
+              <p className={styles.errorBanner}>{submitError || "Не удалось загрузить вопросы"}</p>
             )}
           </section>
         </div>

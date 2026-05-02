@@ -13,10 +13,13 @@ RUN ./gradlew --no-daemon clean bootJar -x test
 FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-RUN useradd --system --create-home --shell /bin/false spring
+RUN useradd --system --create-home --shell /bin/false spring \
+ && mkdir -p /app/uploads/profiles /app/uploads/assignments /app/uploads/materials \
+ && chown -R spring:spring /app
+
 USER spring
 
-COPY --from=build /app/build/libs/*.jar app.jar
+COPY --from=build --chown=spring:spring /app/build/libs/*.jar app.jar
 
 ENV JAVA_OPTS=""
 EXPOSE 8080

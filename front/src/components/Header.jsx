@@ -2,10 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useT } from "../shared/lib/i18n";
+import { useApi } from "../shared/lib/hooks/useApi";
+import { notificationsApi } from "../shared/lib/api";
 import { roleSectionPath } from "../shared/lib/auth/roleRedirect";
 import styles from "./Header.module.css";
 
 const ROLES_WITH_PROFILE = new Set(["STUDENT", "TEACHER"]);
+const NOTIF_POLL_MS = 60_000;
 
 function useClickOutside(refs, onOutside) {
   const refsRef = useRef(refs);
@@ -28,6 +31,44 @@ function useClickOutside(refs, onOutside) {
       document.removeEventListener("touchstart", handleOutsideClick);
     };
   }, []);
+}
+
+function timeAgo(iso, t) {
+  if (!iso) return "";
+  const ms = Date.now() - new Date(iso).getTime();
+  if (Number.isNaN(ms)) return "";
+  const min = Math.round(ms / 60000);
+  if (min < 1) return t("header.notif.justNow");
+  if (min < 60) return `${min} ${t("header.notif.minAbbr")}`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `${h} ${t("header.notif.hAbbr")}`;
+  const d = Math.round(h / 24);
+  return `${d} ${t("header.notif.dAbbr")}`;
+}
+
+function notifIconType(type) {
+  if (!type) return "info";
+  if (type.includes("assignment")) return "assignment";
+  if (type.includes("grade")) return "grade";
+  if (type.includes("survey")) return "survey";
+  if (type.includes("message") || type.includes("chat")) return "message";
+  return "info";
+}
+
+function NotifTypeIcon({ type }) {
+  const c = { width: 16, height: 16, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round", strokeLinejoin: "round" };
+  switch (notifIconType(type)) {
+    case "assignment":
+      return <svg {...c}><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5h6v3H9z"/><path d="M8 12h8M8 16h5"/></svg>;
+    case "grade":
+      return <svg {...c}><path d="M12 3l2.6 5.6 6.1.9-4.4 4.3 1 6.1L12 17.8 6.7 20 7.7 13.8 3.3 9.5l6.1-.9L12 3Z"/></svg>;
+    case "survey":
+      return <svg {...c}><path d="M8 7h11M8 12h11M8 17h11"/><circle cx="5" cy="7" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="5" cy="17" r="1"/></svg>;
+    case "message":
+      return <svg {...c}><path d="M20 14a3 3 0 0 1-3 3H9l-4 3v-3H4a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h13a3 3 0 0 1 3 3v8Z"/></svg>;
+    default:
+      return <svg {...c}><circle cx="12" cy="12" r="10"/><path d="M12 8v.01"/><path d="M12 12v4"/></svg>;
+  }
 }
 
 function Icon({ name }) {
@@ -78,6 +119,13 @@ function Icon({ name }) {
           <path d="M5 12l5 5L20 7" />
         </svg>
       );
+    case "checkAll":
+      return (
+        <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M2 12l5 5L17 7" />
+          <path d="M9 17l1 1 11-11" />
+        </svg>
+      );
     default:
       return null;
   }
@@ -89,10 +137,12 @@ export default function Header() {
 
   const [userOpen, setUserOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
 
   const userButtonRef = useRef(null);
   const userMenuRef = useRef(null);
   const langContainerRef = useRef(null);
+  const notifContainerRef = useRef(null);
 
   const hasProfile = ROLES_WITH_PROFILE.has(user?.role);
   const profilePath = roleSectionPath(user?.role, "profile");
@@ -100,15 +150,107 @@ export default function Header() {
 
   const activeLanguage = languages.find((l) => l.code === lang) ?? languages[0];
 
+  const countQuery = useApi(() => notificationsApi.unreadCount(), []);
+  const listQuery = useApi(
+    () => (notifOpen ? notificationsApi.all() : Promise.resolve(null)),
+    [notifOpen],
+    { immediate: false },
+  );
+
+  useEffect(() => {
+    if (notifOpen) listQuery.refetch().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notifOpen]);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      countQuery.refetch().catch(() => {});
+    }, NOTIF_POLL_MS);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const unreadCount = countQuery.data?.count ?? countQuery.data?.unreadCount ?? 0;
+  const notifications = Array.isArray(listQuery.data) ? listQuery.data : [];
+
   useClickOutside([userButtonRef, userMenuRef], () => setUserOpen(false));
   useClickOutside([langContainerRef], () => setLangOpen(false));
+  useClickOutside([notifContainerRef], () => setNotifOpen(false));
+
+  async function markRead(id) {
+    try {
+      await notificationsApi.markRead(id);
+      await Promise.all([countQuery.refetch(), listQuery.refetch()]);
+    } catch { /* ignore */ }
+  }
+
+  async function markAllRead() {
+    try {
+      await notificationsApi.markAllRead();
+      await Promise.all([countQuery.refetch(), listQuery.refetch()]);
+    } catch { /* ignore */ }
+  }
 
   return (
     <header className={styles.header}>
       <div className={styles.right}>
-        <button className={styles.iconBtn} aria-label={t("header.notifications")} title={t("header.notifications")}>
-          <Icon name="bell" />
-        </button>
+        <div className={styles.dropdown} ref={notifContainerRef}>
+          <button
+            className={styles.iconBtn}
+            aria-label={t("header.notifications")}
+            title={t("header.notifications")}
+            onClick={() => setNotifOpen((v) => !v)}
+            aria-expanded={notifOpen}
+          >
+            <Icon name="bell" />
+            {unreadCount > 0 ? (
+              <span className={styles.badge}>{unreadCount > 99 ? "99+" : unreadCount}</span>
+            ) : null}
+          </button>
+
+          {notifOpen ? (
+            <div className={`${styles.menu} ${styles.notifMenu}`} role="menu">
+              <div className={styles.notifHead}>
+                <span className={styles.notifTitle}>{t("header.notifications")}</span>
+                {unreadCount > 0 ? (
+                  <button type="button" className={styles.notifMarkAll} onClick={markAllRead} title={t("header.notif.markAll")}>
+                    <Icon name="checkAll" />
+                    <span>{t("header.notif.markAll")}</span>
+                  </button>
+                ) : null}
+              </div>
+
+              {listQuery.loading && !notifications.length ? (
+                <div className={styles.notifEmpty}>{t("common.loading")}</div>
+              ) : notifications.length ? (
+                <ul className={styles.notifList}>
+                  {notifications.slice(0, 12).map((n) => (
+                    <li key={n.id} className={`${styles.notifItem} ${!n.read ? styles.notifItemUnread : ""}`}>
+                      <span className={styles.notifIco}><NotifTypeIcon type={n.type} /></span>
+                      <div className={styles.notifBody}>
+                        <p className={styles.notifMsg}>{n.message}</p>
+                        <p className={styles.notifMeta}>{timeAgo(n.createdAt, t)}</p>
+                      </div>
+                      {!n.read ? (
+                        <button
+                          type="button"
+                          className={styles.notifReadBtn}
+                          onClick={() => markRead(n.id)}
+                          title={t("header.notif.markRead")}
+                          aria-label={t("header.notif.markRead")}
+                        >
+                          <Icon name="check" />
+                        </button>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className={styles.notifEmpty}>{t("header.notif.empty")}</div>
+              )}
+            </div>
+          ) : null}
+        </div>
 
         <div className={styles.dropdown} ref={langContainerRef}>
           <button

@@ -1,28 +1,33 @@
 .page {
   display: grid;
-  gap: 14px;
+  gap: 16px;
+  padding: 4px 4px 24px;
 }
 
 .toolbar {
-  border: 1px solid rgba(41, 101, 184, 0.14);
-  border-radius: 14px;
-  background: linear-gradient(180deg, #eef4ff 0%, #f7faff 100%);
-  padding: 14px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--stroke-accent);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(420px 200px at 100% 0%, rgba(99, 102, 241, 0.18), transparent 64%),
+    linear-gradient(135deg, var(--panel-glass-strong) 0%, var(--panel) 60%, var(--panel-2) 100%);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-2);
+  padding: 18px 22px;
   display: grid;
   grid-template-columns: minmax(220px, 1fr) auto auto;
-  gap: 12px;
+  gap: 16px;
   align-items: center;
 }
 
 .title {
   margin: 0;
-  font-size: 28px;
+  font-size: 24px;
   line-height: 1.2;
-  color: #10233d;
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-decoration-color: #1d63e6;
-  text-underline-offset: 4px;
+  color: var(--text);
+  font-weight: 800;
+  letter-spacing: -0.01em;
 }
 
 .weekControls {
@@ -30,30 +35,40 @@
   align-items: center;
   gap: 8px;
   justify-self: center;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  border: 1px solid var(--stroke);
 }
 
 .arrowBtn {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  border: 1px solid rgba(29, 99, 230, 0.52);
-  background: #ffffff;
-  color: #123469;
-  font-size: 16px;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-pill);
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  display: grid;
+  place-items: center;
 }
 
 .arrowBtn:hover {
-  background: #edf4ff;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 .weekRange {
   margin: 0;
   white-space: nowrap;
-  font-size: 22px;
+  font-size: 14px;
   font-weight: 700;
-  color: #132a46;
+  color: var(--text);
+  padding: 0 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .rightBlock {
@@ -64,31 +79,40 @@
 }
 
 .actionBtn {
-  height: 42px;
+  height: 36px;
   border: 0;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   padding: 0 16px;
-  background: linear-gradient(120deg, #1d63e6 0%, #2f8cff 100%);
+  background: linear-gradient(135deg, var(--accent), var(--accent-alt));
   color: #ffffff;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
+  font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .actionBtn:hover {
-  filter: brightness(1.05);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
 }
 
 .tableCard {
-  border: 1px solid rgba(41, 101, 184, 0.14);
-  border-radius: 14px;
-  background: #f4f7fc;
-  padding: 10px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(280px 140px at 100% 0%, rgba(99, 102, 241, 0.05), transparent 70%),
+    var(--panel);
+  box-shadow: var(--shadow-1);
+  padding: 6px;
+  overflow: hidden;
 }
 
 .tableWrap {
   overflow: auto;
+  border-radius: calc(var(--radius-lg) - 6px);
 }
 
 .table {
@@ -99,12 +123,15 @@
 }
 
 .table thead th {
-  padding: 12px 10px;
+  padding: 14px 12px;
   text-align: center;
-  font-size: 16px;
-  font-weight: 700;
-  color: #0f2743;
-  border-bottom: 1px solid rgba(19, 42, 70, 0.28);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--stroke);
 }
 
 .slotHead {
@@ -113,68 +140,95 @@
 
 .table tbody th,
 .table tbody td {
-  padding: 12px 10px;
+  padding: 14px 12px;
   text-align: center;
   vertical-align: middle;
-  border-right: 1px solid rgba(19, 42, 70, 0.2);
+  background: var(--panel);
+  transition: background var(--transition-fast);
 }
 
-.table tbody th:last-child,
-.table tbody td:last-child {
-  border-right: 0;
+.table tbody tr:hover td {
+  background: var(--accent-soft);
+}
+
+.table tbody tr:hover th {
+  background: var(--accent-soft);
 }
 
 .table tbody tr:not(:last-child) th,
 .table tbody tr:not(:last-child) td {
-  border-bottom: 1px dashed rgba(19, 42, 70, 0.26);
+  border-bottom: 1px solid var(--stroke);
 }
 
 .slotCell {
   display: grid;
   gap: 4px;
   justify-items: center;
+  background: var(--panel-2) !important;
+  border-right: 1px solid var(--stroke);
 }
 
 .slotNumber {
-  font-size: 15px;
-  font-weight: 700;
-  color: #152c47;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, var(--accent), var(--accent-alt));
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 .slotTime {
-  font-size: 13px;
-  font-weight: 600;
-  color: #3c5673;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .lesson {
   display: grid;
-  gap: 2px;
+  gap: 3px;
+  text-align: center;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.table tbody tr:hover .lesson {
+  border-color: var(--stroke-accent);
+  background: var(--panel);
 }
 
 .lessonSubject {
   margin: 0;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
-  color: #102843;
+  color: var(--text);
+  line-height: 1.3;
 }
 
 .lessonMeta,
 .lessonExtra {
   margin: 0;
-  font-size: 13px;
-  color: #395777;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.3;
 }
 
 .lessonExtra {
   font-weight: 600;
-  color: #4d6785;
 }
 
 .empty {
-  color: #8ea1b7;
+  color: var(--muted);
   font-size: 13px;
   font-weight: 600;
+  opacity: 0.4;
 }
 
 @media (max-width: 1200px) {
@@ -200,10 +254,10 @@
 
 @media (max-width: 640px) {
   .title {
-    font-size: 22px;
+    font-size: 20px;
   }
 
   .weekRange {
-    font-size: 18px;
+    font-size: 13px;
   }
 }

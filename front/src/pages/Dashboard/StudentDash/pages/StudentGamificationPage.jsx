@@ -3,8 +3,11 @@ import styles from "./StudentGamificationPage.module.css";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { gamificationApi } from "../../../../shared/lib/api";
+import { getAvatarUrl, getInitials } from "../../../../shared/lib/utils/avatar";
+import { useT } from "../../../../shared/lib/i18n";
 
 export default function StudentGamificationPage() {
+  const { t } = useT();
   const { user } = useAuth();
 
   const statsQuery = useApi(() => gamificationApi.studentStats(), []);
@@ -15,10 +18,10 @@ export default function StudentGamificationPage() {
   const achievements = Array.isArray(achievementsQuery.data) ? achievementsQuery.data : [];
   const leaderboard = Array.isArray(leaderboardQuery.data) ? leaderboardQuery.data : [];
 
-  const currentXp = stats.currentLevelXp ?? 0;
-  const nextXp = stats.nextLevelXp ?? 0;
-  const percent = nextXp > 0 ? Math.min(100, Math.round((currentXp / nextXp) * 100)) : 0;
-  const toNext = Math.max(0, nextXp - currentXp);
+  const safeCurrentXp = Math.max(0, stats.currentLevelXp ?? 0);
+  const safeNextXp = Math.max(1, stats.nextLevelXp ?? 1);
+  const percent = Math.min(100, Math.round((safeCurrentXp / safeNextXp) * 100));
+  const toNext = Math.max(0, safeNextXp - safeCurrentXp);
 
   const earnedBadges = useMemo(
     () => achievements.filter((a) => a.unlocked).slice(0, 6),
@@ -27,23 +30,57 @@ export default function StudentGamificationPage() {
 
   return (
     <div className={styles.page}>
-      {statsQuery.loading && !stats.level ? (
-        <p style={{ padding: 16 }}>Загрузка статистики…</p>
+      {statsQuery.loading && stats.level == null ? (
+        <p style={{ padding: 16 }}>{t("common.loading")}</p>
       ) : (
         <section className={styles.levelCard}>
-          <div>
+          <div style={{ position: "relative", zIndex: 1 }}>
             <h2 className={styles.title}>
-              Уровень {stats.level ?? "—"}
+              {t("student.gamification.currentLevel", { level: stats.level ?? "—" })}
             </h2>
             <p className={styles.sub}>
               {toNext > 0
-                ? `До следующего уровня осталось ${toNext} XP`
-                : "Продолжай активность в заданиях и опросах"}
+                ? `${t("student.gamification.nextLevelXp")}: ${toNext} XP`
+                : "🎉 Максимальный уровень достигнут!"}
             </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 14, marginTop: 18 }}>
+              <div style={{ padding: "10px 12px", background: "var(--panel)", border: "1px solid var(--stroke)", borderRadius: "var(--radius-sm)" }}>
+                <p style={{ margin: 0, fontSize: 10, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 800 }}>
+                  {t("student.gamification.totalEarned")}
+                </p>
+                <p style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 800, color: "var(--accent-strong)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
+                  {stats.totalXp ?? 0}
+                </p>
+              </div>
+              <div style={{ padding: "10px 12px", background: "var(--panel)", border: "1px solid var(--stroke)", borderRadius: "var(--radius-sm)" }}>
+                <p style={{ margin: 0, fontSize: 10, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 800 }}>
+                  {t("student.gamification.rank")}
+                </p>
+                <p style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 800, color: "#d97706", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
+                  #{stats.rank ?? "—"}
+                </p>
+              </div>
+              <div style={{ padding: "10px 12px", background: "var(--panel)", border: "1px solid var(--stroke)", borderRadius: "var(--radius-sm)" }}>
+                <p style={{ margin: 0, fontSize: 10, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 800 }}>
+                  {t("student.gamification.streak")}
+                </p>
+                <p style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 800, color: "var(--text)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
+                  {stats.currentStreak ?? 0} 🔥
+                </p>
+              </div>
+              <div style={{ padding: "10px 12px", background: "var(--panel)", border: "1px solid var(--stroke)", borderRadius: "var(--radius-sm)" }}>
+                <p style={{ margin: 0, fontSize: 10, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 800 }}>
+                  {t("student.gamification.completedAssignments")}
+                </p>
+                <p style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 800, color: "#10b981", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
+                  {stats.completedAssignments ?? 0}
+                </p>
+              </div>
+            </div>
           </div>
           <div className={styles.progressWrap}>
             <div className={styles.progressHead}>
-              <span>{currentXp} / {nextXp} XP</span>
+              <span>{safeCurrentXp} / {safeNextXp} XP</span>
               <span>{percent}%</span>
             </div>
             <div className={styles.progressTrack}>
@@ -57,7 +94,7 @@ export default function StudentGamificationPage() {
         <article className={styles.panel}>
           <h3 className={styles.panelTitle}>Твои бейджи</h3>
           {achievementsQuery.loading && !earnedBadges.length ? (
-            <p>Загрузка…</p>
+            <p>{t("common.loading")}</p>
           ) : earnedBadges.length ? (
             <div className={styles.badges}>
               {earnedBadges.map((badge) => (
@@ -75,19 +112,93 @@ export default function StudentGamificationPage() {
         <article className={styles.panel}>
           <h3 className={styles.panelTitle}>Лидерборд класса</h3>
           {leaderboardQuery.loading && !leaderboard.length ? (
-            <p>Загрузка…</p>
+            <p>{t("common.loading")}</p>
           ) : leaderboard.length ? (
             <ul className={styles.leaderboard}>
               {leaderboard.map((row) => {
                 const isMe = user?.id != null && String(row.studentId) === String(user.id);
+                const avatarUrl = getAvatarUrl(row.profilePhotoPath);
                 return (
-                  <li key={row.studentId} className={styles.row}>
-                    <span className={styles.rank}>#{row.rank ?? "—"}</span>
-                    <span className={styles.name}>
-                      {isMe ? "Ты" : row.studentName}
-                      {row.className ? ` · ${row.className}` : ""}
+                  <li
+                    key={row.studentId}
+                    className={styles.row}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "12px 14px",
+                      borderRadius: "var(--radius-sm)",
+                      background: isMe ? "var(--accent-soft-2)" : "var(--panel-2)",
+                      border: isMe ? "1px solid var(--accent)" : "1px solid var(--stroke-soft)",
+                      marginBottom: 6,
+                      transition: "all 200ms",
+                    }}
+                  >
+                    <span
+                      className={styles.rank}
+                      style={{
+                        minWidth: 36,
+                        height: 36,
+                        borderRadius: "var(--radius-pill)",
+                        background: row.rank === 1 ? "linear-gradient(135deg, #fbbf24, #f59e0b)"
+                                  : row.rank === 2 ? "linear-gradient(135deg, #cbd5e1, #94a3b8)"
+                                  : row.rank === 3 ? "linear-gradient(135deg, #f59e0b, #b45309)"
+                                  : "var(--accent-soft)",
+                        color: row.rank <= 3 ? "#ffffff" : "var(--accent-strong)",
+                        display: "grid",
+                        placeItems: "center",
+                        fontWeight: 800,
+                        fontSize: 13,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {row.rank ?? "—"}
                     </span>
-                    <span className={styles.xp}>{row.totalXp ?? 0} XP</span>
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt=""
+                        style={{ width: 36, height: 36, borderRadius: "var(--radius-pill)", objectFit: "cover", flexShrink: 0 }}
+                      />
+                    ) : (
+                      <span
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: "var(--radius-pill)",
+                          background: "linear-gradient(135deg, var(--accent), var(--accent-alt))",
+                          color: "#ffffff",
+                          display: "grid",
+                          placeItems: "center",
+                          fontWeight: 800,
+                          fontSize: 12,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {getInitials(row.studentName)}
+                      </span>
+                    )}
+                    <span
+                      className={styles.name}
+                      style={{
+                        flex: 1,
+                        fontWeight: isMe ? 800 : 600,
+                        color: isMe ? "var(--accent-strong)" : "var(--text)",
+                      }}
+                    >
+                      {isMe ? "Вы" : row.studentName}
+                      {row.className ? <span style={{ marginLeft: 6, color: "var(--muted)", fontWeight: 500, fontSize: 12 }}>· {row.className}</span> : null}
+                    </span>
+                    <span
+                      className={styles.xp}
+                      style={{
+                        fontWeight: 800,
+                        color: "var(--accent-strong)",
+                        fontVariantNumeric: "tabular-nums",
+                      }}
+                    >
+                      {row.totalXp ?? 0} XP
+                    </span>
                   </li>
                 );
               })}

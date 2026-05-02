@@ -247,15 +247,19 @@ public class AdminSchoolStructureService {
         Student student = studentRepository.findById(dto.getStudentId())
                 .orElseThrow(() -> new RuntimeException("Student not found"));
 
-        if (parent.getUser() == null || parent.getUser().getSchool() == null) {
-            throw new RuntimeException("Parent school is not defined");
+        if (parent.getUser() == null) {
+            throw new RuntimeException("Parent user is not defined");
         }
 
         if (student.getUser() == null || student.getUser().getSchool() == null) {
             throw new RuntimeException("Student school is not defined");
         }
 
-        if (!Objects.equals(parent.getUser().getSchool().getId(), student.getUser().getSchool().getId())) {
+        // Если у родителя ещё нет школы — наследуем её от ребёнка (естественная связь).
+        // JPA dirty-check внутри @Transactional сохранит изменение user.school автоматически.
+        if (parent.getUser().getSchool() == null) {
+            parent.getUser().setSchool(student.getUser().getSchool());
+        } else if (!Objects.equals(parent.getUser().getSchool().getId(), student.getUser().getSchool().getId())) {
             throw new RuntimeException("Parent and student must belong to the same school");
         }
 
