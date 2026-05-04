@@ -29,20 +29,6 @@ function buildSchedule(days, t) {
   return grid;
 }
 
-const navBtnStyle = {
-  height: 36,
-  padding: "0 14px",
-  border: "1px solid var(--stroke)",
-  borderRadius: "var(--radius-sm)",
-  background: "var(--panel)",
-  color: "var(--text)",
-  fontSize: 13,
-  fontWeight: 700,
-  cursor: "pointer",
-  fontFamily: "inherit",
-  transition: "background 150ms, border-color 150ms",
-};
-
 export default function StudentSchedulePage() {
   const { t } = useT();
   const [startDate, setStartDate] = useState(() => getMondayISO());
@@ -84,19 +70,10 @@ export default function StudentSchedulePage() {
       slots={lessonSlots}
       schedule={schedule}
       actionLabel={t("student.schedule.examsBtn")}
-      rightControls={
-        <div style={{ display: "flex", gap: 6 }}>
-          <button type="button" style={navBtnStyle} onClick={() => setStartDate(addDaysISO(startDate, -7))}>
-            {t("student.schedule.prevWeek")}
-          </button>
-          <button type="button" style={navBtnStyle} onClick={() => setStartDate(getMondayISO())}>
-            {t("student.schedule.todayBtn")}
-          </button>
-          <button type="button" style={navBtnStyle} onClick={() => setStartDate(addDaysISO(startDate, 7))}>
-            {t("student.schedule.nextWeek")}
-          </button>
-        </div>
-      }
+      onPrevWeek={() => setStartDate(addDaysISO(startDate, -7))}
+      onNextWeek={() => setStartDate(addDaysISO(startDate, 7))}
+      onToday={() => setStartDate(getMondayISO())}
+      todayLabel={t("student.schedule.todayBtn")}
     />
   );
 }

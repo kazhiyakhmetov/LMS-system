@@ -51,13 +51,10 @@ export default function TeacherSchedulePage() {
       schedule={schedule}
       actionLabel={t("teacher.schedule.examsBtn")}
       emptyLabel="—"
-      rightControls={
-        <div style={{ display: "flex", gap: 8 }}>
-          <button type="button" onClick={() => setStartDate(addDaysISO(startDate, -7))}>{t("teacher.schedule.prevWeek")}</button>
-          <button type="button" onClick={() => setStartDate(getMondayISO())}>{t("teacher.schedule.todayBtn")}</button>
-          <button type="button" onClick={() => setStartDate(addDaysISO(startDate, 7))}>{t("teacher.schedule.nextWeek")}</button>
-        </div>
-      }
+      onPrevWeek={() => setStartDate(addDaysISO(startDate, -7))}
+      onNextWeek={() => setStartDate(addDaysISO(startDate, 7))}
+      onToday={() => setStartDate(getMondayISO())}
+      todayLabel={t("teacher.schedule.todayBtn")}
     />
   );
 }

@@ -418,10 +418,15 @@ export default function TeacherAssignmentsPage() {
                             value={g.comment}
                             onChange={(e) => setGrading((prev) => ({ ...prev, [s.id]: { ...prev[s.id], comment: e.target.value } }))}
                           />
-                          <button type="button" onClick={() => gradeSubmission(s.id)} disabled={g.saving || g.grade === ""}>
+                          <button
+                            type="button"
+                            className={styles.gradeSaveBtn}
+                            onClick={() => gradeSubmission(s.id)}
+                            disabled={g.saving || g.grade === ""}
+                          >
                             {g.saving ? "…" : t("teacher.assignments.modal.gradeSave")}
                           </button>
-                          {g.error ? <span style={{ color: "var(--danger)", fontSize: 12 }}>{g.error}</span> : null}
+                          {g.error ? <p className={styles.gradeError}>{g.error}</p> : null}
                         </div>
                       </li>
                     );

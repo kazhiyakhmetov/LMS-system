@@ -111,6 +111,7 @@ export const kk = {
       surveys: "Сауалнамалар",
       chat: "Чат",
       grades: "Бағалар",
+      wiki: "Білім қоры",
       stats: "Статистика",
     },
   },

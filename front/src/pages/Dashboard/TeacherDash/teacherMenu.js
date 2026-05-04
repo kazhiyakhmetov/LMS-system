@@ -7,5 +7,6 @@ export const teacherMenu = [
   { href: "/teacher/surveys", labelKey: "nav.teacher.surveys", icon: "poll" },
   { href: "/teacher/chat", labelKey: "nav.teacher.chat", icon: "chat" },
   { href: "/teacher/grades", labelKey: "nav.teacher.grades", icon: "star" },
+  { href: "/teacher/wiki", labelKey: "nav.teacher.wiki", icon: "book" },
   { href: "/teacher/stats", labelKey: "nav.teacher.stats", icon: "chart" },
 ];

@@ -10,6 +10,10 @@ export default function WeeklyScheduleTable({
   emptyLabel = "—",
   rightControls = null,
   actionLabel = null,
+  onPrevWeek = null,
+  onNextWeek = null,
+  onToday = null,
+  todayLabel = "Сегодня",
 }) {
   return (
     <div className={styles.page}>
@@ -17,11 +21,28 @@ export default function WeeklyScheduleTable({
         <h2 className={styles.title}>{title}</h2>
 
         <div className={styles.weekControls}>
-          <button type="button" className={styles.arrowBtn} aria-label="Предыдущая неделя">
+          <button
+            type="button"
+            className={styles.arrowBtn}
+            onClick={onPrevWeek || undefined}
+            disabled={!onPrevWeek}
+            aria-label="Предыдущая неделя"
+          >
             ◀
           </button>
+          {onToday ? (
+            <button type="button" className={styles.todayBtn} onClick={onToday}>
+              {todayLabel}
+            </button>
+          ) : null}
           <p className={styles.weekRange}>{weekRange}</p>
-          <button type="button" className={styles.arrowBtn} aria-label="Следующая неделя">
+          <button
+            type="button"
+            className={styles.arrowBtn}
+            onClick={onNextWeek || undefined}
+            disabled={!onNextWeek}
+            aria-label="Следующая неделя"
+          >
             ▶
           </button>
         </div>

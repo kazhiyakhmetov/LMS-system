@@ -111,6 +111,7 @@ export const en = {
       surveys: "Surveys",
       chat: "Chat",
       grades: "Grades",
+      wiki: "Knowledge base",
       stats: "Stats",
     },
   },

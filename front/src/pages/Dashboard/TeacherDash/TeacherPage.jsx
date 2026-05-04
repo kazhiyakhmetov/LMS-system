@@ -11,6 +11,7 @@ import TeacherSurveyPage from "./pages/TeacherSurveyPage";
 import TeacherChatPage from "./pages/TeacherChatPage";
 import TeacherGradesPage from "./pages/TeacherGradesPage";
 import TeacherStatsPage from "./pages/TeacherStatsPage";
+import TeacherWikiPage from "./pages/TeacherWikiPage";
 import TeacherProfilePage from "./pages/TeacherProfilePage";
 import TeacherSettingsPage from "./pages/TeacherSettingsPage";
 import { resolveDashboardSection } from "../shared/resolveDashboardSection";
@@ -28,6 +29,7 @@ const sections = [
   { path: "/teacher/surveys", title: "Опросы", component: TeacherSurveyPage },
   { path: "/teacher/chat", title: "Чат", component: TeacherChatPage },
   { path: "/teacher/grades", title: "Оценки", component: TeacherGradesPage },
+  { path: "/teacher/wiki", title: "База знаний", component: TeacherWikiPage },
   { path: "/teacher/stats", title: "Статистика", component: TeacherStatsPage },
   { path: "/teacher/profile", title: "Профиль", component: TeacherProfilePage },
   { path: "/teacher/settings", title: "Настройки", component: TeacherSettingsPage },

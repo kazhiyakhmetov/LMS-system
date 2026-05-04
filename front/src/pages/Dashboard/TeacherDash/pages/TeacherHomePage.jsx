@@ -102,9 +102,9 @@ export default function TeacherHomePage() {
                 {todayLessons.map((lesson) => {
                   const status = lessonStatus(lesson, nowMin);
                   return (
-                    <li key={lesson.id} className={styles.lessonItem}>
-                      <p className={styles.lessonTime}>
-                        {formatTime(lesson.startTime)} - {formatTime(lesson.endTime)}
+                    <li key={lesson.id} className={`${styles.lessonItem} ${status === "now" ? styles.now : status === "next" ? styles.next : ""}`}>
+                      <p className={styles.lessonTime} data-end={formatTime(lesson.endTime)}>
+                        {formatTime(lesson.startTime)}
                       </p>
                       <div className={styles.lessonInfo}>
                         <div className={styles.lessonTop}>

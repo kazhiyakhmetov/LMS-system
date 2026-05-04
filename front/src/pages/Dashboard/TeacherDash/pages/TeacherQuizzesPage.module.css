@@ -11,9 +11,9 @@
   border: 1px solid var(--stroke-accent);
   border-radius: var(--radius-xl);
   background:
-    radial-gradient(420px 200px at 100% 0%, rgba(99, 102, 241, 0.18), transparent 64%),
+    radial-gradient(420px 200px at 100% 0%, rgba(5, 150, 105, 0.10), transparent 64%),
     linear-gradient(135deg, var(--panel-glass-strong) 0%, var(--panel) 60%, var(--panel-2) 100%);
-  backdrop-filter: blur(10px);
+  
   box-shadow: var(--shadow-2);
   padding: 22px 24px;
   display: flex;
@@ -51,12 +51,12 @@
   cursor: pointer;
   flex-shrink: 0;
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.10);
 }
 
 .createBtn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.10);
 }
 
 /* === Tabs === */
@@ -92,7 +92,7 @@
 .tabActive {
   background: linear-gradient(135deg, var(--accent), var(--accent-alt));
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.10);
 }
 
 .tabCount {
@@ -128,7 +128,7 @@
   border: 1px solid var(--stroke);
   border-radius: var(--radius-lg);
   background:
-    radial-gradient(280px 140px at 100% 0%, rgba(99, 102, 241, 0.06), transparent 70%),
+    radial-gradient(280px 140px at 100% 0%, rgba(5, 150, 105, 0.10), transparent 70%),
     var(--panel);
   box-shadow: var(--shadow-1);
   padding: 20px;
@@ -245,12 +245,12 @@
   font-family: inherit;
   cursor: pointer;
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.10);
 }
 
 .btnPrimary:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.10);
 }
 
 .btnPrimary:disabled {
@@ -292,7 +292,7 @@
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(4px);
+  
   display: grid;
   place-items: center;
   z-index: 50;
@@ -403,7 +403,7 @@
 .input:hover { border-color: var(--stroke-accent); }
 .input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.10);
 }
 
 .textarea {

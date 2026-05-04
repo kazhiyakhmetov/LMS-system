@@ -5,20 +5,6 @@ import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { parentApi } from "../../../../shared/lib/api";
 import { addDaysISO, formatWeekRange, getMondayISO } from "../../../../shared/lib/utils/date";
 
-const navBtnStyle = {
-  height: 36,
-  padding: "0 14px",
-  border: "1px solid var(--stroke)",
-  borderRadius: "var(--radius-sm)",
-  background: "var(--panel)",
-  color: "var(--text)",
-  fontSize: 13,
-  fontWeight: 700,
-  cursor: "pointer",
-  fontFamily: "inherit",
-  transition: "background 150ms, border-color 150ms",
-};
-
 const childSelectStyle = {
   height: 36,
   borderRadius: "var(--radius-sm)",
@@ -95,17 +81,16 @@ export default function ParentSchedulePage() {
       slots={lessonSlots}
       schedule={schedule}
       actionLabel=""
+      onPrevWeek={() => setStartDate(addDaysISO(startDate, -7))}
+      onNextWeek={() => setStartDate(addDaysISO(startDate, 7))}
+      onToday={() => setStartDate(getMondayISO())}
+      todayLabel="Сегодня"
       rightControls={
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <select style={childSelectStyle} value={childId ?? ""} onChange={(e) => setChildId(e.target.value)}>
-            {children.map((c) => (
-              <option key={c.id} value={c.id}>{c.fio} {c.className ? `(${c.className})` : ""}</option>
-            ))}
-          </select>
-          <button type="button" style={navBtnStyle} onClick={() => setStartDate(addDaysISO(startDate, -7))}>← неделя</button>
-          <button type="button" style={navBtnStyle} onClick={() => setStartDate(getMondayISO())}>Сегодня</button>
-          <button type="button" style={navBtnStyle} onClick={() => setStartDate(addDaysISO(startDate, 7))}>неделя →</button>
-        </div>
+        <select style={childSelectStyle} value={childId ?? ""} onChange={(e) => setChildId(e.target.value)}>
+          {children.map((c) => (
+            <option key={c.id} value={c.id}>{c.fio} {c.className ? `(${c.className})` : ""}</option>
+          ))}
+        </select>
       }
     />
   );

@@ -127,9 +127,27 @@ export default function LoginPage() {
             <img className={styles.welcomeLogoImg} src={logo} alt="" />
             <div className={styles.welcome}>StudIX</div>
           </div>
-          <div className={styles.welcomeH1}>Добро пожаловать!</div>
-          <div className={styles.welcomeSub}>
-            Пожалуйста, войдите в свою учетную запись и пользуйтесь всеми преимуществами StudIX.
+
+          <div className={styles.welcomeBody}>
+            <h1 className={styles.welcomeH1}>Добро пожаловать!</h1>
+            <p className={styles.welcomeSub}>
+              Войдите в свою учётную запись и пользуйтесь всеми возможностями школьной платформы.
+            </p>
+          </div>
+
+          <div className={styles.welcomeFooter}>
+            <div className={styles.welcomeFeature}>
+              <span className={styles.welcomeFeatureDot}>📅</span>
+              Расписание, журнал и оценки в одном окне
+            </div>
+            <div className={styles.welcomeFeature}>
+              <span className={styles.welcomeFeatureDot}>📝</span>
+              Домашние задания и тесты онлайн
+            </div>
+            <div className={styles.welcomeFeature}>
+              <span className={styles.welcomeFeatureDot}>💬</span>
+              Чаты учеников, родителей и учителей
+            </div>
           </div>
         </section>
 

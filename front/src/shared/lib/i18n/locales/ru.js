@@ -111,6 +111,7 @@ export const ru = {
       surveys: "Опросы",
       chat: "Чат",
       grades: "Оценки",
+      wiki: "База знаний",
       stats: "Статистика",
     },
   },
