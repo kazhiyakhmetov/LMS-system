@@ -10,4 +10,5 @@ import java.util.List;
 public interface QuizRepository extends JpaRepository<Quiz, Long> {
     List<Quiz> findByTeacherIdOrderByCreatedAtDesc(Long teacherId);
     List<Quiz> findByTeacherIdAndActiveTrueOrderByCreatedAtDesc(Long teacherId);
+    List<Quiz> findByCreatorStudentUser_IdOrderByCreatedAtDesc(Long creatorStudentUserId);
 }

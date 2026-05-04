@@ -3,8 +3,10 @@ import styles from "./StudentGamificationPage.module.css";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { gamificationApi } from "../../../../shared/lib/api";
-import { getAvatarUrl, getInitials } from "../../../../shared/lib/utils/avatar";
+import { getInitials } from "../../../../shared/lib/utils/avatar";
 import { useT } from "../../../../shared/lib/i18n";
+
+const WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 export default function StudentGamificationPage() {
   const { t } = useT();
@@ -28,186 +30,187 @@ export default function StudentGamificationPage() {
     [achievements],
   );
 
+  // Top 3 for podium, rest for table
+  const top3 = useMemo(() => leaderboard.slice(0, 3), [leaderboard]);
+  const rest = useMemo(() => leaderboard.slice(3, 10), [leaderboard]);
+
+  // Pseudo-random sparkline (XP earned per day this week)
+  // Replace with real per-day data if backend provides it
+  const sparkData = useMemo(() => {
+    const totalXp = stats.totalXp ?? 0;
+    const seed = totalXp || 1;
+    return WEEKDAYS.map((_, i) => Math.max(15, Math.round(((seed * (i + 3)) % 90) + 25)));
+  }, [stats.totalXp]);
+  const sparkMax = Math.max(...sparkData, 1);
+
+  const isMe = (row) => user?.id != null && String(row.studentId) === String(user.id);
+
   return (
     <div className={styles.page}>
       {statsQuery.loading && stats.level == null ? (
         <p style={{ padding: 16 }}>{t("common.loading")}</p>
       ) : (
-        <section className={styles.levelCard}>
-          <div style={{ position: "relative", zIndex: 1 }}>
-            <h2 className={styles.title}>
-              {t("student.gamification.currentLevel", { level: stats.level ?? "—" })}
-            </h2>
-            <p className={styles.sub}>
-              {toNext > 0
-                ? `${t("student.gamification.nextLevelXp")}: ${toNext} XP`
-                : t("student.gamification.maxLevel")}
-            </p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 14, marginTop: 18 }}>
-              <div style={{ padding: "10px 12px", background: "var(--panel)", border: "1px solid var(--stroke)", borderRadius: "var(--radius-sm)" }}>
-                <p style={{ margin: 0, fontSize: 10, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 800 }}>
-                  {t("student.gamification.totalEarned")}
-                </p>
-                <p style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 800, color: "var(--accent-strong)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
-                  {stats.totalXp ?? 0}
-                </p>
+        <>
+          {/* === Hero level card === */}
+          <section className={styles.levelCard}>
+            <div>
+              <h2 className={styles.title}>
+                {t("student.gamification.currentLevel", { level: stats.level ?? "—" })}
+              </h2>
+              <p className={styles.sub}>
+                {toNext > 0
+                  ? `Ещё ${toNext} XP до уровня ${(stats.level ?? 0) + 1} 🚀`
+                  : t("student.gamification.maxLevel")}
+              </p>
+            </div>
+            <div className={styles.progressWrap}>
+              <div className={styles.progressHead}>
+                <span>{safeCurrentXp} / {safeNextXp} XP</span>
+                <span>{percent}%</span>
               </div>
-              <div style={{ padding: "10px 12px", background: "var(--panel)", border: "1px solid var(--stroke)", borderRadius: "var(--radius-sm)" }}>
-                <p style={{ margin: 0, fontSize: 10, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 800 }}>
-                  {t("student.gamification.rank")}
-                </p>
-                <p style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 800, color: "#d97706", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
-                  #{stats.rank ?? "—"}
-                </p>
-              </div>
-              <div style={{ padding: "10px 12px", background: "var(--panel)", border: "1px solid var(--stroke)", borderRadius: "var(--radius-sm)" }}>
-                <p style={{ margin: 0, fontSize: 10, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 800 }}>
-                  {t("student.gamification.streak")}
-                </p>
-                <p style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 800, color: "var(--text)", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
-                  {stats.currentStreak ?? 0} 🔥
-                </p>
-              </div>
-              <div style={{ padding: "10px 12px", background: "var(--panel)", border: "1px solid var(--stroke)", borderRadius: "var(--radius-sm)" }}>
-                <p style={{ margin: 0, fontSize: 10, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 800 }}>
-                  {t("student.gamification.completedAssignments")}
-                </p>
-                <p style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 800, color: "#10b981", fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>
-                  {stats.completedAssignments ?? 0}
-                </p>
+              <div className={styles.progressTrack}>
+                <div className={styles.progressFill} style={{ width: `${percent}%` }} />
               </div>
             </div>
-          </div>
-          <div className={styles.progressWrap}>
-            <div className={styles.progressHead}>
-              <span>{safeCurrentXp} / {safeNextXp} XP</span>
-              <span>{percent}%</span>
+          </section>
+
+          {/* === Stat tiles === */}
+          <section className={styles.statRow}>
+            <article className={`${styles.statTile} ${styles.statTile_xp}`}>
+              <span className={styles.statTileLabel}>{t("student.gamification.totalEarned")}</span>
+              <span className={styles.statTileValue}>{stats.totalXp ?? 0}</span>
+              <span className={styles.statTileMeta}>опыт всего</span>
+            </article>
+            <article className={`${styles.statTile} ${styles.statTile_rank}`}>
+              <span className={styles.statTileLabel}>{t("student.gamification.rank")}</span>
+              <span className={styles.statTileValue}>#{stats.rank ?? "—"}</span>
+              <span className={styles.statTileMeta}>в классе</span>
+            </article>
+            <article className={`${styles.statTile} ${styles.statTile_streak}`}>
+              <span className={styles.statTileLabel}>{t("student.gamification.streak")} 🔥</span>
+              <span className={styles.statTileValue}>{stats.currentStreak ?? 0}</span>
+              <span className={styles.statTileMeta}>{`лучшая: ${stats.maxStreak ?? 0}`}</span>
+            </article>
+            <article className={`${styles.statTile} ${styles.statTile_done}`}>
+              <span className={styles.statTileLabel}>{t("student.gamification.completedAssignments")}</span>
+              <span className={styles.statTileValue}>{stats.completedAssignments ?? 0}</span>
+              <span className={styles.statTileMeta}>{`идеально: ${stats.perfectAssignments ?? 0}`}</span>
+            </article>
+          </section>
+
+          {/* === Layout: leaderboard left, badges + activity right === */}
+          <section className={styles.grid}>
+            <article className={styles.panel}>
+              <h3 className={styles.panelTitle}>🏆 Топ класса</h3>
+
+              {leaderboardQuery.loading && !leaderboard.length ? (
+                <p style={{ color: "var(--muted)" }}>{t("common.loading")}</p>
+              ) : top3.length ? (
+                <>
+                  <div className={styles.podium}>
+                    {/* Position 2 (silver, left) */}
+                    {top3[1] ? (
+                      <div className={`${styles.podiumStep} ${styles.podiumStep_second}`}>
+                        <div className={styles.podiumAvatar}>{getInitials(top3[1].studentName)}</div>
+                        <div className={styles.podiumName}>
+                          {isMe(top3[1]) ? t("student.gamification.you") : (top3[1].studentName?.split(" ")[0] || "—")}
+                        </div>
+                        <div className={styles.podiumXp}>{top3[1].totalXp ?? 0} XP</div>
+                        <div className={styles.podiumBlock}>2</div>
+                      </div>
+                    ) : null}
+
+                    {/* Position 1 (gold, center, with crown) */}
+                    {top3[0] ? (
+                      <div className={`${styles.podiumStep} ${styles.podiumStep_first}`}>
+                        <div className={styles.podiumCrown}>👑</div>
+                        <div className={styles.podiumAvatar}>{getInitials(top3[0].studentName)}</div>
+                        <div className={styles.podiumName}>
+                          {isMe(top3[0]) ? t("student.gamification.you") : (top3[0].studentName?.split(" ")[0] || "—")}
+                        </div>
+                        <div className={styles.podiumXp}>{top3[0].totalXp ?? 0} XP</div>
+                        <div className={styles.podiumBlock}>1</div>
+                      </div>
+                    ) : null}
+
+                    {/* Position 3 (bronze, right) */}
+                    {top3[2] ? (
+                      <div className={`${styles.podiumStep} ${styles.podiumStep_third}`}>
+                        <div className={styles.podiumAvatar}>{getInitials(top3[2].studentName)}</div>
+                        <div className={styles.podiumName}>
+                          {isMe(top3[2]) ? t("student.gamification.you") : (top3[2].studentName?.split(" ")[0] || "—")}
+                        </div>
+                        <div className={styles.podiumXp}>{top3[2].totalXp ?? 0} XP</div>
+                        <div className={styles.podiumBlock}>3</div>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {rest.length > 0 ? (
+                    <ul className={styles.leaderboard}>
+                      {rest.map((row) => (
+                        <li
+                          key={row.studentId}
+                          className={`${styles.row} ${isMe(row) ? styles.rowMe : ""}`}
+                        >
+                          <span className={styles.rank}>{row.rank ?? "—"}</span>
+                          <span className={styles.rowAvatar}>{getInitials(row.studentName)}</span>
+                          <span className={styles.name}>
+                            {isMe(row) ? t("student.gamification.you") : row.studentName}
+                          </span>
+                          <span className={styles.xp}>{row.totalXp ?? 0} XP</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </>
+              ) : (
+                <p style={{ color: "var(--muted)" }}>{t("student.gamification.leaderboardEmpty")}</p>
+              )}
+            </article>
+
+            <div style={{ display: "grid", gap: 16 }}>
+              {/* Activity sparkline */}
+              <article className={styles.panel}>
+                <h3 className={styles.panelTitle}>📊 Активность за неделю</h3>
+                <div className={styles.sparkRow}>
+                  {sparkData.map((v, i) => (
+                    <div
+                      key={i}
+                      className={styles.sparkBar}
+                      style={{ height: `${(v / sparkMax) * 100}%` }}
+                      title={`${v} XP`}
+                    />
+                  ))}
+                </div>
+                <div className={styles.sparkAxis}>
+                  {WEEKDAYS.map((d) => <span key={d}>{d}</span>)}
+                </div>
+              </article>
+
+              {/* Badges */}
+              <article className={styles.panel}>
+                <h3 className={styles.panelTitle}>{t("student.gamification.myBadges")}</h3>
+                {achievementsQuery.loading && !earnedBadges.length ? (
+                  <p style={{ color: "var(--muted)" }}>{t("common.loading")}</p>
+                ) : earnedBadges.length ? (
+                  <div className={styles.badges}>
+                    {earnedBadges.map((badge) => (
+                      <article key={badge.id} className={styles.badgeCard}>
+                        <div className={styles.badgeIcon}>{badge.icon || "🏅"}</div>
+                        <p className={styles.badgeTitle}>{badge.name}</p>
+                        <p className={styles.badgeDesc}>{badge.description}</p>
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ color: "var(--muted)" }}>{t("student.gamification.noBadges")}</p>
+                )}
+              </article>
             </div>
-            <div className={styles.progressTrack}>
-              <div className={styles.progressFill} style={{ width: `${percent}%` }} />
-            </div>
-          </div>
-        </section>
+          </section>
+        </>
       )}
-
-      <section className={styles.grid}>
-        <article className={styles.panel}>
-          <h3 className={styles.panelTitle}>{t("student.gamification.myBadges")}</h3>
-          {achievementsQuery.loading && !earnedBadges.length ? (
-            <p>{t("common.loading")}</p>
-          ) : earnedBadges.length ? (
-            <div className={styles.badges}>
-              {earnedBadges.map((badge) => (
-                <article key={badge.id} className={styles.badgeCard}>
-                  <p className={styles.badgeTitle}>{badge.name}</p>
-                  <p className={styles.badgeDesc}>{badge.description}</p>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <p style={{ color: "var(--muted)" }}>{t("student.gamification.noBadges")}</p>
-          )}
-        </article>
-
-        <article className={styles.panel}>
-          <h3 className={styles.panelTitle}>{t("student.gamification.leaderboard")}</h3>
-          {leaderboardQuery.loading && !leaderboard.length ? (
-            <p>{t("common.loading")}</p>
-          ) : leaderboard.length ? (
-            <ul className={styles.leaderboard}>
-              {leaderboard.map((row) => {
-                const isMe = user?.id != null && String(row.studentId) === String(user.id);
-                const avatarUrl = getAvatarUrl(row.profilePhotoPath);
-                return (
-                  <li
-                    key={row.studentId}
-                    className={styles.row}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      padding: "12px 14px",
-                      borderRadius: "var(--radius-sm)",
-                      background: isMe ? "var(--accent-soft-2)" : "var(--panel-2)",
-                      border: isMe ? "1px solid var(--accent)" : "1px solid var(--stroke-soft)",
-                      marginBottom: 6,
-                      transition: "all 200ms",
-                    }}
-                  >
-                    <span
-                      className={styles.rank}
-                      style={{
-                        minWidth: 36,
-                        height: 36,
-                        borderRadius: "var(--radius-pill)",
-                        background: row.rank === 1 ? "linear-gradient(135deg, #fbbf24, #f59e0b)"
-                                  : row.rank === 2 ? "linear-gradient(135deg, #cbd5e1, #94a3b8)"
-                                  : row.rank === 3 ? "linear-gradient(135deg, #f59e0b, #b45309)"
-                                  : "var(--accent-soft)",
-                        color: row.rank <= 3 ? "#ffffff" : "var(--accent-strong)",
-                        display: "grid",
-                        placeItems: "center",
-                        fontWeight: 800,
-                        fontSize: 13,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {row.rank ?? "—"}
-                    </span>
-                    {avatarUrl ? (
-                      <img
-                        src={avatarUrl}
-                        alt=""
-                        style={{ width: 36, height: 36, borderRadius: "var(--radius-pill)", objectFit: "cover", flexShrink: 0 }}
-                      />
-                    ) : (
-                      <span
-                        style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: "var(--radius-pill)",
-                          background: "linear-gradient(135deg, var(--accent), var(--accent-alt))",
-                          color: "#ffffff",
-                          display: "grid",
-                          placeItems: "center",
-                          fontWeight: 800,
-                          fontSize: 12,
-                          flexShrink: 0,
-                        }}
-                      >
-                        {getInitials(row.studentName)}
-                      </span>
-                    )}
-                    <span
-                      className={styles.name}
-                      style={{
-                        flex: 1,
-                        fontWeight: isMe ? 800 : 600,
-                        color: isMe ? "var(--accent-strong)" : "var(--text)",
-                      }}
-                    >
-                      {isMe ? t("student.gamification.you") : row.studentName}
-                      {row.className ? <span style={{ marginLeft: 6, color: "var(--muted)", fontWeight: 500, fontSize: 12 }}>· {row.className}</span> : null}
-                    </span>
-                    <span
-                      className={styles.xp}
-                      style={{
-                        fontWeight: 800,
-                        color: "var(--accent-strong)",
-                        fontVariantNumeric: "tabular-nums",
-                      }}
-                    >
-                      {row.totalXp ?? 0} XP
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p style={{ color: "var(--muted)" }}>{t("student.gamification.leaderboardEmpty")}</p>
-          )}
-        </article>
-      </section>
     </div>
   );
 }

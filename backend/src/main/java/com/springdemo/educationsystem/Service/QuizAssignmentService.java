@@ -38,6 +38,51 @@ public class QuizAssignmentService {
     }
 
     @Transactional
+    public QuizAssignment createStudentAssignment(Long studentUserId, CreateQuizAssignmentDTO dto) {
+        if (dto.getQuizId() == null) throw new RuntimeException("quizId is required");
+        if (dto.getStartTime() == null || dto.getEndTime() == null)
+            throw new RuntimeException("startTime and endTime are required");
+        if (!dto.getStartTime().isBefore(dto.getEndTime()))
+            throw new RuntimeException("startTime must be before endTime");
+
+        Student creator = studentRepository.findById(studentUserId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        Quiz quiz = quizRepository.findById(dto.getQuizId())
+                .orElseThrow(() -> new RuntimeException("Quiz not found"));
+
+        if (quiz.getCreatorStudent() == null
+                || !quiz.getCreatorStudent().getUser().getId().equals(studentUserId)) {
+            throw new RuntimeException("You can share only your own quizzes");
+        }
+
+        SchoolClass classroom = creator.getSchoolClass();
+        if (classroom == null) {
+            throw new RuntimeException("Student is not assigned to a class");
+        }
+
+        QuizAssignment assignment = new QuizAssignment();
+        assignment.setQuiz(quiz);
+        assignment.setCreatorStudent(creator);
+        assignment.setSchoolClass(classroom);
+        assignment.setStartTime(dto.getStartTime());
+        assignment.setEndTime(dto.getEndTime());
+        assignment.setTimeLimitMinutes(dto.getTimeLimitMinutes());
+        assignment.setActive(true);
+
+        return quizAssignmentRepository.save(assignment);
+    }
+
+    @Transactional(readOnly = true)
+    public List<QuizAssignment> getStudentCreatedAssignments(Long studentUserId) {
+        return quizAssignmentRepository.findAll().stream()
+                .filter(a -> a.getCreatorStudent() != null
+                        && a.getCreatorStudent().getUser().getId().equals(studentUserId))
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .toList();
+    }
+
+    @Transactional
     public QuizAssignment createAssignment(Long teacherId, CreateQuizAssignmentDTO dto) {
         if (dto.getQuizId() == null) {
             throw new RuntimeException("quizId is required");

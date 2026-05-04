@@ -13,7 +13,7 @@
   border-radius: var(--radius-xl);
   border: 1px solid var(--stroke-accent);
   background:
-    radial-gradient(420px 220px at 100% 0%, rgba(99, 102, 241, 0.16), transparent 64%),
+    radial-gradient(420px 220px at 100% 0%, rgba(5, 150, 105, 0.10), transparent 64%),
     linear-gradient(135deg, var(--panel-glass-strong) 0%, var(--panel) 60%, var(--panel-2) 100%);
   box-shadow: var(--shadow-3);
 }
@@ -167,7 +167,7 @@
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(6px);
+  
   display: grid;
   place-items: center;
   z-index: 100;

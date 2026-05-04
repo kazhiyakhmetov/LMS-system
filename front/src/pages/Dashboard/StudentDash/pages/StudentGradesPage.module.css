@@ -11,9 +11,9 @@
   border: 1px solid var(--stroke-accent);
   border-radius: var(--radius-xl);
   background:
-    radial-gradient(420px 200px at 100% 0%, rgba(99, 102, 241, 0.18), transparent 64%),
+    radial-gradient(420px 200px at 100% 0%, rgba(5, 150, 105, 0.10), transparent 64%),
     linear-gradient(135deg, var(--panel-glass-strong) 0%, var(--panel) 60%, var(--panel-2) 100%);
-  backdrop-filter: blur(10px);
+  
   box-shadow: var(--shadow-2);
   padding: 22px 24px;
   display: grid;
@@ -80,7 +80,7 @@
 .tabBtnActive {
   background: linear-gradient(135deg, var(--accent), var(--accent-alt));
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.10);
 }
 
 .actions {
@@ -162,7 +162,7 @@
   border-color: var(--stroke-accent);
 }
 
-.tone_indigo { --tone: #4f46e5; }
+.tone_indigo { --tone: #059669; }
 .tone_mint   { --tone: #10b981; }
 .tone_gold   { --tone: #f59e0b; }
 .tone_rose   { --tone: #ec4899; }
@@ -197,7 +197,7 @@
   border: 1px solid var(--stroke);
   border-radius: var(--radius-lg);
   background:
-    radial-gradient(280px 140px at 100% 0%, rgba(99, 102, 241, 0.06), transparent 70%),
+    radial-gradient(280px 140px at 100% 0%, rgba(5, 150, 105, 0.10), transparent 70%),
     var(--panel);
   box-shadow: var(--shadow-1);
   padding: 20px;
@@ -285,7 +285,25 @@
 .markList {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.markCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 32px;
+}
+
+.markDate {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
 .markChip {
@@ -305,7 +323,7 @@
 }
 
 .markChip_5 { background: rgba(16, 185, 129, 0.12); color: #059669; border-color: rgba(16, 185, 129, 0.3); }
-.markChip_4 { background: rgba(99, 102, 241, 0.10); color: var(--accent-strong); border-color: rgba(99, 102, 241, 0.3); }
+.markChip_4 { background: rgba(5, 150, 105, 0.10); color: var(--accent-strong); border-color: rgba(5, 150, 105, 0.10); }
 .markChip_3 { background: rgba(245, 158, 11, 0.12); color: #d97706; border-color: rgba(245, 158, 11, 0.3); }
 .markChip_2 { background: rgba(239, 68, 68, 0.12); color: #dc2626; border-color: rgba(239, 68, 68, 0.3); }
 
@@ -326,7 +344,7 @@
 }
 
 .quarterMark_5 { background: rgba(16, 185, 129, 0.15); color: #059669; border-color: rgba(16, 185, 129, 0.35); }
-.quarterMark_4 { background: rgba(99, 102, 241, 0.12); color: var(--accent-strong); border-color: rgba(99, 102, 241, 0.35); }
+.quarterMark_4 { background: rgba(5, 150, 105, 0.10); color: var(--accent-strong); border-color: rgba(5, 150, 105, 0.10); }
 .quarterMark_3 { background: rgba(245, 158, 11, 0.15); color: #d97706; border-color: rgba(245, 158, 11, 0.35); }
 .quarterMark_2 { background: rgba(239, 68, 68, 0.15); color: #dc2626; border-color: rgba(239, 68, 68, 0.35); }
 
@@ -380,7 +398,7 @@
   border: 1px solid var(--stroke);
   border-radius: var(--radius-lg);
   background:
-    radial-gradient(260px 130px at 100% 0%, rgba(99, 102, 241, 0.05), transparent 70%),
+    radial-gradient(260px 130px at 100% 0%, rgba(5, 150, 105, 0.10), transparent 70%),
     var(--panel);
   box-shadow: var(--shadow-1);
   padding: 20px;
@@ -449,7 +467,7 @@
   font-size: 14px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.10);
 }
 
 .eventEmpty {
@@ -497,7 +515,7 @@
   flex-shrink: 0;
 }
 
-.codeBadge_n { background: rgba(99, 102, 241, 0.12); color: var(--accent-strong); }
+.codeBadge_n { background: rgba(5, 150, 105, 0.10); color: var(--accent-strong); }
 .codeBadge_p { background: rgba(239, 68, 68, 0.12); color: #dc2626; }
 .codeBadge_b { background: rgba(245, 158, 11, 0.12); color: #d97706; }
 .codeBadge_o { background: rgba(16, 185, 129, 0.12); color: #059669; }

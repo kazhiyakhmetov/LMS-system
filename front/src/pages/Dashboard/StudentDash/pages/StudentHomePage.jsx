@@ -119,13 +119,12 @@ export default function StudentHomePage() {
               <p className={styles.emptyState}>{t("student.home.scheduleError")}</p>
             ) : todayLessons.length ? (
               <ul className={styles.lessonList}>
-                {todayLessons.map((lesson, i) => (
+                {todayLessons.map((lesson) => (
                   <li key={lesson.id} className={styles.lessonItem}>
-                    <span className={styles.lessonNumber}>{lesson.lessonNumber ?? i + 1}</span>
-                    <div className={styles.lessonTimes}>
+                    <span className={styles.lessonNumber}>
                       <span className={styles.lessonStart}>{formatTime(lesson.startTime)}</span>
                       <span className={styles.lessonEnd}>{formatTime(lesson.endTime)}</span>
-                    </div>
+                    </span>
                     <div className={styles.lessonInfo}>
                       <p className={styles.lessonTitle}>{lesson.subjectName}</p>
                       <p className={styles.lessonMeta}>

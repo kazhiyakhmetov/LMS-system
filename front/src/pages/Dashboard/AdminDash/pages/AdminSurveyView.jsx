@@ -176,7 +176,7 @@ export default function AdminSurveyView() {
           {listQuery.loading && !surveys.length ? (
             <p className={styles.emptyState}>{t("common.loading")}</p>
           ) : surveys.length ? (
-            <ul className={styles.noteList}>
+            <ul className={`${styles.noteList} ${styles.scrollList}`}>
               {surveys.map((poll) => (
                 <li key={poll.id} className={styles.noteItem}>
                   <span className={styles.noteAvatar} style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-alt))", fontSize: 13 }}>

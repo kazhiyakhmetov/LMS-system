@@ -10,6 +10,13 @@ export const quizzesApi = {
   studentAttempt: (attemptId) => http.get(`/student/quiz/attempt/${attemptId}`),
   studentResult: (attemptId) => http.get(`/student/quiz/result/${attemptId}`),
 
+  // === Student peer-quiz creation ===
+  studentCreate: (body) => http.post("/student/quiz/create", body),
+  studentAddQuestion: (quizId, body) => http.post(`/student/quiz/${quizId}/question`, body),
+  studentMyCreated: () => http.get("/student/quiz/my-created"),
+  studentShare: (body) => http.post("/student/quiz/share", body),
+  studentMyShared: () => http.get("/student/quiz/my-shared"),
+
   // === Teacher ===
   teacherMy: () => http.get("/teacher/quiz/my"),
   teacherCreate: (body) => http.post("/teacher/quiz/create", body),

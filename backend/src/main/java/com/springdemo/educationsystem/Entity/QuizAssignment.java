@@ -35,9 +35,14 @@ public class QuizAssignment {
     private Quiz quiz;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "teacher_id", nullable = false)
+    @JoinColumn(name = "teacher_id")
     @JsonIgnore
     private Teacher teacher;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_student_id")
+    @JsonIgnore
+    private Student creatorStudent;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id")
@@ -131,6 +136,14 @@ public class QuizAssignment {
 
     public void setTeacher(Teacher teacher) {
         this.teacher = teacher;
+    }
+
+    public Student getCreatorStudent() {
+        return creatorStudent;
+    }
+
+    public void setCreatorStudent(Student creatorStudent) {
+        this.creatorStudent = creatorStudent;
     }
 
     public void setSchoolClass(SchoolClass schoolClass) {

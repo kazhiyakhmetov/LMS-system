@@ -98,6 +98,7 @@ export const ru = {
       assignments: "Задания",
       quizzes: "Квизы",
       grades: "Оценки",
+      wiki: "База знаний",
       surveys: "Опросы",
       chat: "Чат",
     },

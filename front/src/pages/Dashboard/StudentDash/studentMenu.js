@@ -5,6 +5,7 @@ export const studentMenu = [
   { href: "/student/assignments", labelKey: "nav.student.assignments", icon: "clipboard" },
   { href: "/student/quizzes", labelKey: "nav.student.quizzes", icon: "quiz" },
   { href: "/student/grades", labelKey: "nav.student.grades", icon: "star" },
+  { href: "/student/wiki", labelKey: "nav.student.wiki", icon: "book" },
   { href: "/student/surveys", labelKey: "nav.student.surveys", icon: "poll" },
   { href: "/student/chat", labelKey: "nav.student.chat", icon: "chat" },
 ];

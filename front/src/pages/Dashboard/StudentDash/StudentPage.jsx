@@ -10,6 +10,7 @@ import StudentQuizPage from "./pages/StudentQuizPage";
 import StudentChatPage from "./pages/StudentChatPage";
 import StudentGradesPage from "./pages/StudentGradesPage";
 import StudentSurveyPage from "./pages/StudentSurveyPage";
+import StudentWikiPage from "./pages/StudentWikiPage";
 import StudentProfilePage from "./pages/StudentProfilePage";
 import StudentSettingsPage from "./pages/StudentSettingsPage";
 import { resolveDashboardSection } from "../shared/resolveDashboardSection";
@@ -26,6 +27,7 @@ const sections = [
   { path: "/student/quizzes", title: "Квизы", component: StudentQuizPage },
   { path: "/student/chat", title: "Чат", component: StudentChatPage },
   { path: "/student/grades", title: "Оценки", component: StudentGradesPage },
+  { path: "/student/wiki", title: "База знаний", component: StudentWikiPage },
   { path: "/student/surveys", title: "Опросы", component: StudentSurveyPage },
   { path: "/student/profile", title: "Профиль", component: StudentProfilePage },
   { path: "/student/settings", title: "Настройки", component: StudentSettingsPage },

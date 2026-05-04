@@ -11,9 +11,9 @@
   border: 1px solid var(--stroke-accent);
   border-radius: var(--radius-xl);
   background:
-    radial-gradient(420px 200px at 100% 0%, rgba(99, 102, 241, 0.18), transparent 64%),
+    radial-gradient(420px 200px at 100% 0%, rgba(5, 150, 105, 0.10), transparent 64%),
     linear-gradient(135deg, var(--panel-glass-strong) 0%, var(--panel) 60%, var(--panel-2) 100%);
-  backdrop-filter: blur(10px);
+  
   box-shadow: var(--shadow-2);
   padding: 22px 24px;
 }
@@ -40,7 +40,7 @@
   border: 1px solid var(--stroke);
   border-radius: var(--radius-lg);
   background:
-    radial-gradient(280px 140px at 100% 0%, rgba(99, 102, 241, 0.05), transparent 70%),
+    radial-gradient(280px 140px at 100% 0%, rgba(5, 150, 105, 0.10), transparent 70%),
     var(--panel);
   box-shadow: var(--shadow-1);
   padding: 22px;
@@ -129,7 +129,7 @@
 
 .switch input:checked + .slider {
   background: linear-gradient(135deg, var(--accent), var(--accent-alt));
-  box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 0 12px rgba(5, 150, 105, 0.10);
 }
 
 .switch input:checked + .slider::before {
@@ -162,12 +162,12 @@
   border: 0;
   background: linear-gradient(135deg, var(--accent), var(--accent-alt));
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.10);
 }
 
 .primaryBtn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.10);
 }
 
 .ghostBtn {

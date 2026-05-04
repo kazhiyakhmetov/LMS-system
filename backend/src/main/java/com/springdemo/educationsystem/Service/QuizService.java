@@ -6,11 +6,13 @@ import com.springdemo.educationsystem.DTO.CreateQuizDTO;
 import com.springdemo.educationsystem.Entity.Quiz;
 import com.springdemo.educationsystem.Entity.QuizOption;
 import com.springdemo.educationsystem.Entity.QuizQuestion;
+import com.springdemo.educationsystem.Entity.Student;
 import com.springdemo.educationsystem.Entity.Subject;
 import com.springdemo.educationsystem.Entity.Teacher;
 import com.springdemo.educationsystem.Repository.QuizOptionRepository;
 import com.springdemo.educationsystem.Repository.QuizQuestionRepository;
 import com.springdemo.educationsystem.Repository.QuizRepository;
+import com.springdemo.educationsystem.Repository.StudentRepository;
 import com.springdemo.educationsystem.Repository.SubjectRepository;
 import com.springdemo.educationsystem.Repository.TeacherRepository;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,7 @@ public class QuizService {
     private final QuizOptionRepository optionRepository;
     private final SubjectRepository subjectRepository;
     private final TeacherRepository teacherRepository;
+    private final StudentRepository studentRepository;
     private final TeacherClassSubjectService teacherClassSubjectService;
 
     public QuizService(QuizRepository quizRepository,
@@ -33,13 +36,82 @@ public class QuizService {
                        QuizOptionRepository optionRepository,
                        SubjectRepository subjectRepository,
                        TeacherRepository teacherRepository,
+                       StudentRepository studentRepository,
                        TeacherClassSubjectService teacherClassSubjectService) {
         this.quizRepository = quizRepository;
         this.questionRepository = questionRepository;
         this.optionRepository = optionRepository;
         this.subjectRepository = subjectRepository;
         this.teacherRepository = teacherRepository;
+        this.studentRepository = studentRepository;
         this.teacherClassSubjectService = teacherClassSubjectService;
+    }
+
+    @Transactional
+    public Quiz createStudentQuiz(CreateQuizDTO dto, Long studentUserId) {
+        Student student = studentRepository.findById(studentUserId)
+                .orElseThrow(() -> new RuntimeException("Student not found with id: " + studentUserId));
+
+        Quiz quiz = new Quiz();
+        quiz.setTitle(dto.getTitle());
+        quiz.setDescription(dto.getDescription());
+        quiz.setCreatorStudent(student);
+        quiz.setActive(true);
+
+        if (dto.getSubjectId() != null) {
+            Subject subject = subjectRepository.findById(dto.getSubjectId())
+                    .orElseThrow(() -> new RuntimeException("Subject not found with id: " + dto.getSubjectId()));
+            quiz.setSubject(subject);
+        }
+
+        return quizRepository.save(quiz);
+    }
+
+    @Transactional
+    public QuizQuestion addQuestionAsStudent(Long quizId, CreateQuestionDTO dto, Long studentUserId) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new RuntimeException("Quiz not found with id: " + quizId));
+
+        if (quiz.getCreatorStudent() == null
+                || !quiz.getCreatorStudent().getUser().getId().equals(studentUserId)) {
+            throw new RuntimeException("You can edit only your own quizzes");
+        }
+
+        QuizQuestion question = new QuizQuestion();
+        question.setQuiz(quiz);
+        question.setQuestionText(dto.getQuestionText());
+        question.setQuestionType(dto.getQuestionType());
+        question.setPoints(dto.getPoints() != null ? dto.getPoints() : 1);
+        question.setOrderIndex(dto.getOrderIndex() != null ? dto.getOrderIndex() : 0);
+        question.setRequired(true);
+
+        if (dto.getQuestionType() != null
+                && dto.getQuestionType().name().equals("TEXT_ANSWER")
+                && dto.getOptions() != null
+                && !dto.getOptions().isEmpty()
+                && dto.getOptions().get(0).getOptionText() != null) {
+            question.setCorrectTextAnswer(dto.getOptions().get(0).getOptionText());
+        }
+
+        QuizQuestion savedQuestion = questionRepository.save(question);
+
+        if (dto.getOptions() != null && !dto.getOptions().isEmpty()) {
+            for (CreateOptionDTO optionDTO : dto.getOptions()) {
+                QuizOption option = new QuizOption();
+                option.setQuestion(savedQuestion);
+                option.setOptionText(optionDTO.getOptionText());
+                option.setIsCorrect(optionDTO.getIsCorrect() != null ? optionDTO.getIsCorrect() : false);
+                option.setOrderIndex(optionDTO.getOrderIndex() != null ? optionDTO.getOrderIndex() : 0);
+                optionRepository.save(option);
+            }
+        }
+
+        return savedQuestion;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Quiz> getStudentCreatedQuizzes(Long studentUserId) {
+        return quizRepository.findByCreatorStudentUser_IdOrderByCreatedAtDesc(studentUserId);
     }
 
     @Transactional

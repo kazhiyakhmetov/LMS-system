@@ -20,3 +20,4 @@ export { friendsApi } from "./friends.api";
 export { notificationsApi } from "./notifications.api";
 export { tagsApi } from "./tags.api";
 export { quizzesApi } from "./quizzes.api";
+export { wikipediaApi } from "./wikipedia.api";

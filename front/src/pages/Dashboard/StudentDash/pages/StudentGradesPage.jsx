@@ -40,7 +40,11 @@ function buildRow(subjectDto) {
     }
     (cell.entries || []).forEach((entry) => {
       if (entry?.numericValue != null) {
-        marks.push(Math.round(entry.numericValue));
+        marks.push({
+          value: Math.round(entry.numericValue),
+          date: cell.date || null,
+          type: entry.type || null,
+        });
       }
     });
   });
@@ -48,7 +52,8 @@ function buildRow(subjectDto) {
   const quarterGrade = subjectDto.finalGrade?.quarterGrade
     ?? subjectDto.finalGrade?.calculatedQuarterGrade
     ?? null;
-  const marksAverage = marks.length ? average(marks) : 0;
+  const marksValues = marks.map((m) => m.value);
+  const marksAverage = marksValues.length ? average(marksValues) : 0;
   const progress = marks.length ? Math.round((marksAverage / 5) * 100) : 0;
   const attendancePercent = total > 0 ? Math.round(((total - absent) / total) * 100) : 0;
 
@@ -106,7 +111,8 @@ export default function StudentGradesPage() {
     const buckets = { 5: 0, 4: 0, 3: 0, 2: 0 };
     rows.forEach((r) => {
       r.marks.forEach((m) => {
-        if (buckets[m] != null) buckets[m] += 1;
+        const v = typeof m === "object" ? m.value : m;
+        if (buckets[v] != null) buckets[v] += 1;
       });
     });
     return [
@@ -271,14 +277,26 @@ export default function StudentGradesPage() {
                   <td className={styles.teacherCell}>{row.teacher || "—"}</td>
                   <td>
                     <div className={styles.markList}>
-                      {row.marks.length ? row.marks.map((mark, index) => (
-                        <span
-                          key={`${row.subject}-${mark}-${index}`}
-                          className={`${styles.markChip} ${styles[`markChip_${mark}`] || ""}`}
-                        >
-                          {mark}
-                        </span>
-                      )) : <span className={styles.empty}>—</span>}
+                      {row.marks.length ? row.marks.map((mark, index) => {
+                        const value = typeof mark === "object" ? mark.value : mark;
+                        const date = typeof mark === "object" ? mark.date : null;
+                        return (
+                          <div
+                            key={`${row.subject}-${index}`}
+                            className={styles.markCell}
+                            title={date || ""}
+                          >
+                            <span className={`${styles.markChip} ${styles[`markChip_${value}`] || ""}`}>
+                              {value}
+                            </span>
+                            {date ? (
+                              <span className={styles.markDate}>
+                                {new Date(date).toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" })}
+                              </span>
+                            ) : null}
+                          </div>
+                        );
+                      }) : <span className={styles.empty}>—</span>}
                     </div>
                   </td>
                   <td>

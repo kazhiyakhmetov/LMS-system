@@ -1,85 +1,100 @@
 :root {
-  /* === Background layers === */
-  --bg: #f6f7fb;
-  --bg-soft: #eef1f9;
-  --bg-muted: #edf3fa;
-  --bg-mute: #e8ecf5;
+  /* === Background — warm cream like notebook paper === */
+  --bg: #fafaf6;
+  --bg-soft: #f5f5ef;
+  --bg-muted: #efefe7;
+  --bg-mute: #ebebe2;
 
   /* === Surfaces === */
   --panel: #ffffff;
-  --panel-2: #fafbff;
-  --panel-glass: rgba(255, 255, 255, 0.75);
-  --panel-glass-strong: rgba(255, 255, 255, 0.92);
+  --panel-2: #fafaf6;
+  --panel-3: #f5f5ef;
+  --panel-glass: rgba(255, 255, 255, 0.92);
+  --panel-glass-strong: #ffffff;
 
-  /* === Strokes === */
-  --stroke: rgba(15, 23, 42, 0.08);
-  --stroke-strong: rgba(15, 23, 42, 0.14);
-  --stroke-soft: rgba(15, 23, 42, 0.04);
-  --stroke-accent: rgba(99, 102, 241, 0.22);
+  /* === Strokes — hairline only === */
+  --stroke: rgba(15, 23, 20, 0.06);
+  --stroke-strong: rgba(15, 23, 20, 0.10);
+  --stroke-soft: rgba(15, 23, 20, 0.03);
+  --stroke-accent: rgba(5, 150, 105, 0.20);
 
-  /* === Text === */
-  --text: #0f172a;
-  --text-2: #1e293b;
-  --muted: #475569;
-  --muted-soft: #94a3b8;
+  /* === Text — rich charcoal === */
+  --text: #0a0e0c;
+  --text-2: #232b27;
+  --muted: #6b7280;
+  --muted-soft: #9ca3af;
 
-  /* === Accent (modern indigo) === */
-  --accent: #4f46e5;
-  --accent-strong: #4338ca;
-  --accent-deep: #3730a3;
-  --accent-alt: #818cf8;
-  --accent-soft: rgba(99, 102, 241, 0.10);
-  --accent-soft-2: rgba(99, 102, 241, 0.18);
-  --accent-glow: rgba(99, 102, 241, 0.30);
+  /* === Brand: emerald (school growth + knowledge) === */
+  --accent: #059669;
+  --accent-strong: #047857;
+  --accent-deep: #065f46;
+  --accent-alt: #34d399;
+  --accent-soft: rgba(5, 150, 105, 0.08);
+  --accent-soft-2: rgba(5, 150, 105, 0.16);
+  --accent-glow: rgba(5, 150, 105, 0.24);
+
+  /* === Tone palette — schoolyard colors === */
+  --tone-emerald: #059669;   /* primary, journal, growth */
+  --tone-amber: #f59e0b;     /* achievements, gold star, XP */
+  --tone-sky: #0284c7;       /* attendance, info, schedule */
+  --tone-rose: #e11d48;      /* alerts, missing, urgent */
+  --tone-violet: #7c3aed;    /* special, gamification */
+  --tone-coral: #fb7185;     /* charts variety */
+  --tone-teal: #0d9488;      /* secondary metrics */
+  --tone-orange: #ea580c;    /* warnings */
 
   /* === Semantic === */
-  --success: #10b981;
-  --success-soft: rgba(16, 185, 129, 0.12);
-  --success-strong: #059669;
+  --success: #059669;
+  --success-soft: rgba(5, 150, 105, 0.10);
+  --success-strong: #047857;
   --warning: #f59e0b;
-  --warning-soft: rgba(245, 158, 11, 0.14);
+  --warning-soft: rgba(245, 158, 11, 0.10);
   --warning-strong: #d97706;
-  --danger: #ef4444;
-  --danger-soft: rgba(239, 68, 68, 0.12);
-  --danger-strong: #dc2626;
-  --info: #06b6d4;
-  --info-soft: rgba(6, 182, 212, 0.12);
+  --danger: #e11d48;
+  --danger-soft: rgba(225, 29, 72, 0.10);
+  --danger-strong: #be123c;
+  --info: #0284c7;
+  --info-soft: rgba(2, 132, 199, 0.10);
 
-  /* === Sidebar (deep indigo) === */
-  --sidebar-bg: linear-gradient(180deg, #0f1f47 0%, #0a1735 100%);
-  --sidebar-bg-open: linear-gradient(180deg, #0f1f47 0%, #0a1735 100%);
-  --sidebar-text: #c7d2fe;
-  --sidebar-active: #6366f1;
-  --sidebar-divider: rgba(165, 180, 252, 0.18);
+  /* === Sidebar — vibrant emerald (school brand, bright & colorful) === */
+  --sidebar-bg: #047857;
+  --sidebar-bg-open: #047857;
+  --sidebar-text: rgba(255, 255, 255, 0.72);
+  --sidebar-text-strong: #ffffff;
+  --sidebar-active: #ffffff;
+  --sidebar-active-bg: rgba(255, 255, 255, 0.16);
+  --sidebar-divider: rgba(255, 255, 255, 0.10);
+  --sidebar-accent: #fde047;
 
-  /* === Radii === */
-  --radius-xs: 8px;
+  /* === Radii — modern but not too round === */
+  --radius-xs: 6px;
   --radius-sm: 10px;
   --radius: 14px;
   --radius-lg: 18px;
   --radius-xl: 24px;
   --radius-pill: 999px;
 
-  /* === Elevation (4-step) === */
-  --shadow-1: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.05);
-  --shadow-2: 0 4px 12px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.04);
-  --shadow-3: 0 12px 32px rgba(15, 23, 42, 0.10), 0 4px 12px rgba(15, 23, 42, 0.06);
-  --shadow-4: 0 24px 60px rgba(15, 23, 42, 0.16), 0 8px 24px rgba(15, 23, 42, 0.08);
-  --shadow-glow: 0 8px 28px rgba(79, 70, 229, 0.22);
-  --shadow-glow-soft: 0 6px 18px rgba(79, 70, 229, 0.14);
+  /* === Elevation — flat & subtle === */
+  --shadow-1: 0 1px 2px rgba(15, 23, 20, 0.04);
+  --shadow-2: 0 2px 6px rgba(15, 23, 20, 0.04), 0 1px 2px rgba(15, 23, 20, 0.03);
+  --shadow-3: 0 8px 24px rgba(15, 23, 20, 0.06), 0 2px 6px rgba(15, 23, 20, 0.04);
+  --shadow-4: 0 20px 48px rgba(15, 23, 20, 0.10), 0 6px 18px rgba(15, 23, 20, 0.05);
+  --shadow-glow: 0 6px 20px rgba(5, 150, 105, 0.18);
+  --shadow-glow-soft: 0 4px 12px rgba(5, 150, 105, 0.10);
 
-  /* Legacy aliases — поддерживают старые компоненты */
-  --shadow: var(--shadow-3);
-  --shadow2: var(--shadow-2);
+  /* Legacy aliases */
+  --shadow: var(--shadow-2);
+  --shadow2: var(--shadow-1);
 
   /* === Motion === */
-  --transition-fast: 150ms ease;
-  --transition: 200ms ease;
-  --transition-slow: 320ms ease;
+  --transition-fast: 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 280ms cubic-bezier(0.4, 0, 0.2, 1);
 
   /* === Layout === */
   --container: 100%;
   --font-sans: "Manrope", "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-display: "Manrope", "Inter", system-ui, sans-serif;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -31,9 +31,14 @@ public class Quiz {
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "teacher_id", nullable = false)
+    @JoinColumn(name = "teacher_id")
     @JsonIgnore
     private Teacher teacher;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_student_id")
+    @JsonIgnore
+    private Student creatorStudent;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
@@ -111,6 +116,14 @@ public class Quiz {
 
     public void setTeacher(Teacher teacher) {
         this.teacher = teacher;
+    }
+
+    public Student getCreatorStudent() {
+        return creatorStudent;
+    }
+
+    public void setCreatorStudent(Student creatorStudent) {
+        this.creatorStudent = creatorStudent;
     }
 
     public Subject getSubject() {

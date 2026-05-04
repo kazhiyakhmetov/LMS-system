@@ -98,6 +98,7 @@ export const en = {
       assignments: "Assignments",
       quizzes: "Quizzes",
       grades: "Grades",
+      wiki: "Knowledge base",
       surveys: "Surveys",
       chat: "Chat",
     },

@@ -1,9 +1,6 @@
 .page {
   min-height: 100vh;
-  background:
-    radial-gradient(920px 440px at 16% -8%, rgba(47, 125, 218, 0.12), transparent 64%),
-    radial-gradient(840px 500px at 92% 6%, rgba(105, 161, 216, 0.1), transparent 62%),
-    var(--bg);
+  background: var(--bg);
 }
 
 .shell {
@@ -14,32 +11,17 @@
 }
 
 .main {
-  padding: 20px;
+  padding: 24px 28px 40px;
 }
 
 .contentCard {
   position: relative;
-  overflow: hidden;
-  background: linear-gradient(180deg, #ffffff 0%, #fafdff 100%);
-  border: 1px solid rgba(47, 125, 218, 0.14);
-  border-radius: 16px;
-  box-shadow:
-    0 18px 32px rgba(47, 125, 218, 0.08),
-    0 1px 0 rgba(255, 255, 255, 0.74) inset;
-  padding: 22px;
-  min-height: calc(100vh - 72px - 36px);
-}
-
-.contentCard::before {
-  content: "";
-  position: absolute;
-  top: -70px;
-  right: -90px;
-  width: 240px;
-  height: 240px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(47, 125, 218, 0.13) 0%, transparent 72%);
-  pointer-events: none;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  min-height: calc(100vh - 72px - 64px);
 }
 
 @media (max-width: 900px) {
@@ -48,10 +30,6 @@
   }
 
   .main {
-    padding: 14px;
-  }
-
-  .contentCard {
     padding: 16px;
   }
 }

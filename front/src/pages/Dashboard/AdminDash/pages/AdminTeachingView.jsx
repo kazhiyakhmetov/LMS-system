@@ -192,7 +192,7 @@ export default function AdminTeachingView() {
           {assignmentsQuery.loading && !assignments.length ? (
             <p className={styles.emptyState}>{t("common.loading")}</p>
           ) : assignments.length ? (
-            <div className={styles.tableWrap} style={{ borderRadius: "var(--radius-sm)" }}>
+            <div className={`${styles.tableWrap} ${styles.scrollList}`} style={{ borderRadius: "var(--radius-sm)" }}>
               <table className={styles.teachingTable}>
                 <thead>
                   <tr>

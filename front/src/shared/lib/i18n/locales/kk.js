@@ -98,6 +98,7 @@ export const kk = {
       assignments: "Тапсырмалар",
       quizzes: "Квиздер",
       grades: "Бағалар",
+      wiki: "Білім қоры",
       surveys: "Сауалнамалар",
       chat: "Чат",
     },

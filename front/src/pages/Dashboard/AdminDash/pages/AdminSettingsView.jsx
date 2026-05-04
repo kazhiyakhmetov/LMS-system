@@ -69,7 +69,7 @@ function Icon({ name }) {
 
 export default function AdminSettingsView() {
   const { user, logout } = useAuth();
-  const { t, lang, setLang, languages } = useT();
+  const { t } = useT();
 
   const initials = useMemo(() => {
     const name = user?.name || user?.email || "A";
@@ -122,36 +122,6 @@ export default function AdminSettingsView() {
               <span className={styles.settingsRowValue}>{user?.schoolName || "—"}</span>
             </li>
           </ul>
-        </article>
-
-        {/* Language card */}
-        <article className={styles.settingsCard}>
-          <header className={styles.settingsCardHead}>
-            <div className={styles.settingsIcon}><Icon name="globe" /></div>
-            <div>
-              <h3 className={styles.settingsCardTitle}>{t("admin.settings.language")}</h3>
-              <p className={styles.settingsCardSub}>{t("admin.settings.languageSub")}</p>
-            </div>
-          </header>
-
-          <div className={styles.langChoices}>
-            {languages.map((option) => {
-              const active = option.code === lang;
-              return (
-                <button
-                  key={option.code}
-                  type="button"
-                  className={`${styles.langChoice} ${active ? styles.langChoiceActive : ""}`}
-                  onClick={() => setLang(option.code)}
-                  aria-pressed={active}
-                >
-                  <span className={styles.langChoiceShort}>{option.short}</span>
-                  <span className={styles.langChoiceLabel}>{option.label}</span>
-                  {active ? <span className={styles.langChoiceCheck}><Icon name="check" /></span> : null}
-                </button>
-              );
-            })}
-          </div>
         </article>
 
         {/* Theme card */}

@@ -111,10 +111,19 @@ public class StatisticsService {
             averageGrade = Math.round((sum / grades.size()) * 100.0) / 100.0;
         }
 
-        String studentName = student.getUser().getLastName() + " " +
-                student.getUser().getFirstName().charAt(0) + "." +
-                (student.getUser().getPatronymic() != null ?
-                        student.getUser().getPatronymic().charAt(0) + "." : "");
+        String firstName = student.getUser().getFirstName();
+        String lastName = student.getUser().getLastName();
+        String patronymic = student.getUser().getPatronymic();
+        StringBuilder nameBuilder = new StringBuilder();
+        if (lastName != null && !lastName.isBlank()) nameBuilder.append(lastName);
+        if (firstName != null && !firstName.isBlank()) {
+            if (nameBuilder.length() > 0) nameBuilder.append(' ');
+            nameBuilder.append(firstName.charAt(0)).append('.');
+        }
+        if (patronymic != null && !patronymic.isBlank()) {
+            nameBuilder.append(patronymic.charAt(0)).append('.');
+        }
+        String studentName = nameBuilder.length() > 0 ? nameBuilder.toString() : "—";
 
         return new StudentStatsDTO(
                 student.getId(),
