@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styles from "./StudentGradesPage.module.css";
 import { quarterOptions } from "../../../../shared/constants/academic";
 import { average } from "../../../../shared/lib/utils/math";
@@ -9,6 +9,21 @@ import { DonutChart, BarList, ChartLegend } from "../../../../shared/ui/Chart/Ch
 import { useT } from "../../../../shared/lib/i18n";
 
 const ABSENCE_KEYS = ["Н", "П", "Б", "О", "N", "P", "B", "O"];
+const PAGE_SIZE = 10;
+
+function pageNumbers(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const set = new Set([1, 2, total - 1, total, current - 1, current, current + 1]);
+  const sorted = Array.from(set).filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+  const result = [];
+  let prev = 0;
+  for (const n of sorted) {
+    if (n - prev > 1) result.push("…");
+    result.push(n);
+    prev = n;
+  }
+  return result;
+}
 
 const MARK_COLORS = {
   5: "#10b981",
@@ -145,7 +160,6 @@ export default function StudentGradesPage() {
     const list = Array.isArray(recentQuery.data) ? recentQuery.data : [];
     return list
       .filter((item) => subjectFilter === "all" || item.subjectName === subjectFilter)
-      .slice(0, 6)
       .map((item) => ({
         date: item.gradedAt ? formatDayMonth(item.gradedAt) : "—",
         subject: item.subjectName || "—",
@@ -153,6 +167,15 @@ export default function StudentGradesPage() {
         mark: item.grade,
       }));
   }, [recentQuery.data, subjectFilter]);
+
+  const [recentPage, setRecentPage] = useState(1);
+  const recentTotalPages = Math.max(1, Math.ceil(recentRows.length / PAGE_SIZE));
+  const recentSafePage = Math.min(recentPage, recentTotalPages);
+  const recentSliceStart = (recentSafePage - 1) * PAGE_SIZE;
+  const recentPaged = recentRows.slice(recentSliceStart, recentSliceStart + PAGE_SIZE);
+  const recentPageNums = pageNumbers(recentSafePage, recentTotalPages);
+
+  useEffect(() => { setRecentPage(1); }, [subjectFilter, quarterKey]);
 
   return (
     <div className={styles.page}>
@@ -337,18 +360,64 @@ export default function StudentGradesPage() {
           {recentQuery.loading && !recentRows.length ? (
             <p className={styles.emptyState}>{t("common.loading")}</p>
           ) : (
-            <ul className={styles.eventList}>
-              {recentRows.length ? recentRows.map((item, idx) => (
-                <li key={`${item.date}-${item.subject}-${idx}`} className={styles.eventItem}>
-                  <span className={styles.eventDate}>{item.date}</span>
-                  <span className={styles.eventSubject}>{item.subject}</span>
-                  <span className={styles.eventType}>{item.title}</span>
-                  <span className={styles.eventMark}>{item.mark ?? "—"}</span>
-                </li>
-              )) : (
-                <li className={styles.eventEmpty}>{t("student.grades.recentEmpty")}</li>
-              )}
-            </ul>
+            <>
+              <ul className={styles.eventList}>
+                {recentRows.length ? recentPaged.map((item, idx) => (
+                  <li key={`${item.date}-${item.subject}-${idx}`} className={styles.eventItem}>
+                    <span className={styles.eventDate}>{item.date}</span>
+                    <span className={styles.eventSubject}>{item.subject}</span>
+                    <span className={styles.eventType}>{item.title}</span>
+                    <span className={styles.eventMark}>{item.mark ?? "—"}</span>
+                  </li>
+                )) : (
+                  <li className={styles.eventEmpty}>{t("student.grades.recentEmpty")}</li>
+                )}
+              </ul>
+
+              {recentTotalPages > 1 ? (
+                <nav className={styles.pagination} aria-label="Pagination">
+                  <span className={styles.pageInfo}>
+                    {t("student.grades.paginationInfo", {
+                      start: recentSliceStart + 1,
+                      end: Math.min(recentSliceStart + PAGE_SIZE, recentRows.length),
+                      total: recentRows.length,
+                    })}
+                  </span>
+                  <div className={styles.pageBtns}>
+                    <button
+                      type="button"
+                      className={styles.pageBtn}
+                      onClick={() => setRecentPage((p) => Math.max(1, p - 1))}
+                      disabled={recentSafePage <= 1}
+                    >
+                      {t("common.back")}
+                    </button>
+                    {recentPageNums.map((n, i) => (
+                      n === "…" ? (
+                        <span key={`dots-${i}`} className={styles.pageDots}>…</span>
+                      ) : (
+                        <button
+                          key={n}
+                          type="button"
+                          className={`${styles.pageBtn} ${n === recentSafePage ? styles.pageBtnActive : ""}`}
+                          onClick={() => setRecentPage(n)}
+                        >
+                          {n}
+                        </button>
+                      )
+                    ))}
+                    <button
+                      type="button"
+                      className={styles.pageBtn}
+                      onClick={() => setRecentPage((p) => Math.min(recentTotalPages, p + 1))}
+                      disabled={recentSafePage >= recentTotalPages}
+                    >
+                      {t("common.next")}
+                    </button>
+                  </div>
+                </nav>
+              ) : null}
+            </>
           )}
         </article>
 

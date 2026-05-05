@@ -10,6 +10,21 @@ import { useT } from "../../../../shared/lib/i18n";
 const ABSENCE_LETTERS = { Н: 0, П: 0, Б: 0, О: 0 };
 const ATTENDANCE_KEYS = ["", "N", "P", "B", "O"];
 const ATTENDANCE_VALUES = { N: "Н", P: "П", B: "Б", O: "О" };
+const PAGE_SIZE = 10;
+
+function pageNumbers(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const set = new Set([1, 2, total - 1, total, current - 1, current, current + 1]);
+  const sorted = Array.from(set).filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+  const result = [];
+  let prev = 0;
+  for (const n of sorted) {
+    if (n - prev > 1) result.push("…");
+    result.push(n);
+    prev = n;
+  }
+  return result;
+}
 
 function normalizeAbsenceCode(code) {
   if (!code) return null;
@@ -73,6 +88,7 @@ export default function TeacherGradesPage() {
   const { t, lang } = useT();
   const [quarter, setQuarter] = useState("q3");
   const [pairKey, setPairKey] = useState("");
+  const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(null);
   const [editAttendance, setEditAttendance] = useState("");
   const [editGrade, setEditGrade] = useState("");
@@ -113,6 +129,18 @@ export default function TeacherGradesPage() {
   const dates = Array.isArray(journal.dates) ? journal.dates : [];
   const students = Array.isArray(journal.students) ? journal.students : [];
   const rows = useMemo(() => students.map((s) => buildStudentRow(s, t)), [students, t]);
+
+  // Reset to first page when class/subject pair or quarter changes
+  useEffect(() => { setPage(1); }, [pairKey, quarter]);
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const sliceStart = (safePage - 1) * PAGE_SIZE;
+  const pagedRows = useMemo(
+    () => rows.slice(sliceStart, sliceStart + PAGE_SIZE),
+    [rows, sliceStart],
+  );
+  const pageNums = pageNumbers(safePage, totalPages);
 
   const summary = useMemo(() => {
     const grades = rows.map((r) => r.quarterGrade).filter((v) => v > 0);
@@ -292,7 +320,7 @@ export default function TeacherGradesPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.length ? rows.map((row) => (
+                {pagedRows.length ? pagedRows.map((row) => (
                   <tr key={row.studentId}>
                     <td style={{ position: "sticky", left: 0, background: "var(--panel)", fontWeight: 700 }}>
                       {row.student}
@@ -343,6 +371,50 @@ export default function TeacherGradesPage() {
             </table>
           </section>
 
+          {totalPages > 1 ? (
+            <nav className={styles.pagination} aria-label="Pagination">
+              <span className={styles.pageInfo}>
+                {t("parent.assignments.pagination.info", {
+                  start: sliceStart + 1,
+                  end: Math.min(sliceStart + PAGE_SIZE, rows.length),
+                  total: rows.length,
+                })}
+              </span>
+              <div className={styles.pageBtns}>
+                <button
+                  type="button"
+                  className={styles.pageBtn}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={safePage <= 1}
+                >
+                  {t("parent.assignments.pagination.prev")}
+                </button>
+                {pageNums.map((n, i) => (
+                  n === "…" ? (
+                    <span key={`dots-${i}`} className={styles.pageDots}>…</span>
+                  ) : (
+                    <button
+                      key={n}
+                      type="button"
+                      className={`${styles.pageBtn} ${n === safePage ? styles.pageBtnActive : ""}`}
+                      onClick={() => setPage(n)}
+                    >
+                      {n}
+                    </button>
+                  )
+                ))}
+                <button
+                  type="button"
+                  className={styles.pageBtn}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safePage >= totalPages}
+                >
+                  {t("parent.assignments.pagination.next")}
+                </button>
+              </div>
+            </nav>
+          ) : null}
+
           <section className={styles.bottom}>
             <article className={styles.panel}>
               <h3 className={styles.panelTitle}>{t("teacher.grades.summary")}</h3>
@@ -358,7 +430,7 @@ export default function TeacherGradesPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((row) => (
+                    {pagedRows.map((row) => (
                       <tr key={`sum-${row.studentId}`}>
                         <td style={{ fontWeight: 600 }}>{row.student}</td>
                         <td>

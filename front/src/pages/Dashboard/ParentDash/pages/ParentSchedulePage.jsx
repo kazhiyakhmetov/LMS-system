@@ -4,6 +4,7 @@ import WeeklyScheduleTable from "../../../../shared/ui/WeeklyScheduleTable/Weekl
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { parentApi } from "../../../../shared/lib/api";
 import { addDaysISO, formatWeekRange, getMondayISO } from "../../../../shared/lib/utils/date";
+import { useT } from "../../../../shared/lib/i18n";
 
 const childSelectStyle = {
   height: 36,
@@ -27,7 +28,7 @@ function dayOfWeekFromISO(iso) {
   return map[d.getDay()];
 }
 
-function buildScheduleFromMap(scheduleMap) {
+function buildScheduleFromMap(scheduleMap, t) {
   const grid = emptyGrid();
   if (!scheduleMap || typeof scheduleMap !== "object") return grid;
   Object.entries(scheduleMap).forEach(([dateStr, lessons]) => {
@@ -38,7 +39,7 @@ function buildScheduleFromMap(scheduleMap) {
       if (idx < 0 || idx >= grid[dayKey].length) return;
       grid[dayKey][idx] = {
         subject: lesson.subjectName || "",
-        metaLine: lesson.classroom ? `${lesson.classroom} каб` : "",
+        metaLine: lesson.classroom ? t("parent.common.classroomShort", { room: lesson.classroom }) : "",
         extraLine: lesson.teacherName || "",
       };
     });
@@ -47,6 +48,7 @@ function buildScheduleFromMap(scheduleMap) {
 }
 
 export default function ParentSchedulePage() {
+  const { t } = useT();
   const [startDate, setStartDate] = useState(() => getMondayISO());
 
   const childrenQuery = useApi(() => parentApi.children(), []);
@@ -63,19 +65,19 @@ export default function ParentSchedulePage() {
     { immediate: Boolean(childId) },
   );
 
-  const schedule = useMemo(() => buildScheduleFromMap(scheduleQuery.data), [scheduleQuery.data]);
+  const schedule = useMemo(() => buildScheduleFromMap(scheduleQuery.data, t), [scheduleQuery.data, t]);
   const weekRange = useMemo(() => formatWeekRange(startDate), [startDate]);
 
   if (childrenQuery.loading && !children.length) {
-    return <div style={{ padding: 24, color: "var(--muted)" }}>Загрузка…</div>;
+    return <div style={{ padding: 24, color: "var(--muted)" }}>{t("parent.common.loading")}</div>;
   }
   if (!children.length) {
-    return <div style={{ padding: 24, color: "var(--muted)" }}>К вашему аккаунту не привязаны дети.</div>;
+    return <div style={{ padding: 24, color: "var(--muted)" }}>{t("parent.common.noChildren")}</div>;
   }
 
   return (
     <WeeklyScheduleTable
-      title="Расписание ребенка"
+      title={t("parent.schedule.title")}
       weekRange={weekRange}
       weekDays={weekDays}
       slots={lessonSlots}
@@ -84,7 +86,7 @@ export default function ParentSchedulePage() {
       onPrevWeek={() => setStartDate(addDaysISO(startDate, -7))}
       onNextWeek={() => setStartDate(addDaysISO(startDate, 7))}
       onToday={() => setStartDate(getMondayISO())}
-      todayLabel="Сегодня"
+      todayLabel={t("parent.schedule.todayBtn")}
       rightControls={
         <select style={childSelectStyle} value={childId ?? ""} onChange={(e) => setChildId(e.target.value)}>
           {children.map((c) => (

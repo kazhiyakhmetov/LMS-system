@@ -5,9 +5,23 @@ import { assignmentsApi, submissionsApi, teachingApi } from "../../../../shared/
 import { formatDateTime } from "../../../../shared/lib/utils/date";
 import { useT } from "../../../../shared/lib/i18n";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 
 const ASSIGNMENT_TYPE_KEYS = ["homework", "test", "sor", "soch", "quiz"];
+
+function pageNumbers(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const set = new Set([1, 2, total - 1, total, current - 1, current, current + 1]);
+  const sorted = Array.from(set).filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+  const result = [];
+  let prev = 0;
+  for (const n of sorted) {
+    if (n - prev > 1) result.push("…");
+    result.push(n);
+    prev = n;
+  }
+  return result;
+}
 
 function statusOf(deadline) {
   if (!deadline) return "new";
@@ -136,14 +150,16 @@ export default function TeacherAssignmentsPage() {
   }, [tasks, searchQuery, statusFilter, classFilter, subjectFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredTasks.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const sliceStart = (safePage - 1) * PAGE_SIZE;
+  const pageNums = pageNumbers(safePage, totalPages);
 
   useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, classFilter, subjectFilter]);
   useEffect(() => { if (currentPage > totalPages) setCurrentPage(totalPages); }, [currentPage, totalPages]);
 
   const paginatedTasks = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return filteredTasks.slice(start, start + PAGE_SIZE);
-  }, [filteredTasks, currentPage]);
+    return filteredTasks.slice(sliceStart, sliceStart + PAGE_SIZE);
+  }, [filteredTasks, sliceStart]);
 
   const selectedTask = useMemo(() => tasks.find((tk) => tk.id === selectedTaskId) ?? null, [tasks, selectedTaskId]);
 
@@ -313,15 +329,49 @@ export default function TeacherAssignmentsPage() {
         )}
       </section>
 
-      <section className={styles.pagination}>
-        <button type="button" className={styles.pageBtn} onClick={() => setCurrentPage((v) => Math.max(1, v - 1))} disabled={currentPage === 1}>
-          {t("common.back")}
-        </button>
-        <p className={styles.pageInfo}>{t("teacher.assignments.pageInfo", { current: currentPage, total: totalPages })}</p>
-        <button type="button" className={styles.pageBtn} onClick={() => setCurrentPage((v) => Math.min(totalPages, v + 1))} disabled={currentPage === totalPages}>
-          {t("common.next")}
-        </button>
-      </section>
+      {totalPages > 1 ? (
+        <nav className={styles.pagination} aria-label="Pagination">
+          <span className={styles.pageInfo}>
+            {t("parent.assignments.pagination.info", {
+              start: sliceStart + 1,
+              end: Math.min(sliceStart + PAGE_SIZE, filteredTasks.length),
+              total: filteredTasks.length,
+            })}
+          </span>
+          <div className={styles.pageBtns}>
+            <button
+              type="button"
+              className={styles.pageBtn}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={safePage <= 1}
+            >
+              {t("parent.assignments.pagination.prev")}
+            </button>
+            {pageNums.map((n, i) => (
+              n === "…" ? (
+                <span key={`dots-${i}`} className={styles.pageDots}>…</span>
+              ) : (
+                <button
+                  key={n}
+                  type="button"
+                  className={`${styles.pageBtn} ${n === safePage ? styles.pageBtnActive : ""}`}
+                  onClick={() => setCurrentPage(n)}
+                >
+                  {n}
+                </button>
+              )
+            ))}
+            <button
+              type="button"
+              className={styles.pageBtn}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={safePage >= totalPages}
+            >
+              {t("parent.assignments.pagination.next")}
+            </button>
+          </div>
+        </nav>
+      ) : null}
 
       {selectedTask ? (
         <div

@@ -267,79 +267,137 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* === Lessons === */
+/* === Lessons (timeline view) === */
 .lessonList {
   margin: 0;
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 8px;
+  gap: 0;
+  position: relative;
 }
 
 .lessonItem {
   display: grid;
-  grid-template-columns: 32px 84px 1fr;
-  gap: 12px;
-  align-items: center;
-  padding: 12px;
-  border: 1px solid var(--stroke);
-  border-radius: var(--radius-sm);
-  background: var(--panel-2);
-  transition: border-color var(--transition-fast), background var(--transition-fast);
+  grid-template-columns: 64px 1fr;
+  gap: 16px;
+  align-items: stretch;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  position: relative;
+  min-height: 72px;
 }
 
-.lessonItem:hover {
-  border-color: var(--stroke-accent);
-  background: var(--accent-soft);
+/* Timeline stem connecting all lessons */
+.lessonItem::before {
+  content: "";
+  position: absolute;
+  left: 75px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--stroke-strong);
+}
+
+.lessonItem:last-child::before {
+  bottom: 50%;
 }
 
 .lessonNumber {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-pill);
-  background: linear-gradient(135deg, var(--accent), var(--accent-alt));
-  color: #ffffff;
-  display: grid;
-  place-items: center;
-  font-weight: 800;
-  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  background: transparent;
+  border-radius: 0;
+  width: auto;
+  height: auto;
+  color: var(--text);
   flex-shrink: 0;
+  padding: 12px 0;
+  position: relative;
+  font-size: 14px;
+  font-weight: 800;
 }
 
-.lessonTimes {
-  display: grid;
-  gap: 2px;
-  font-variant-numeric: tabular-nums;
+.lessonNumber::after {
+  content: "";
+  position: absolute;
+  right: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 2px solid var(--stroke-strong);
+  z-index: 1;
 }
+
+.lessonItem:hover .lessonNumber::after {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.lessonTimes { display: none; }
 
 .lessonStart {
   font-size: 14px;
   font-weight: 800;
   color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 
 .lessonEnd {
   font-size: 11px;
   color: var(--muted);
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
 }
 
-.lessonInfo { min-width: 0; }
+.lessonNumber .lessonStart,
+.lessonNumber .lessonEnd { display: block; }
+
+.lessonInfo {
+  min-width: 0;
+  padding: 12px 16px;
+  margin-left: 8px;
+  background: var(--bg-soft);
+  border-radius: 12px;
+  border: 1px solid var(--stroke);
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.lessonItem:hover .lessonInfo {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  transform: translateX(2px);
+}
 
 .lessonTitle {
   margin: 0;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.005em;
 }
 
 .lessonMeta {
-  margin: 3px 0 0;
+  margin: 4px 0 0;
   font-size: 12px;
   color: var(--muted);
+  font-weight: 500;
 }
 
 /* === Grades list === */
@@ -494,6 +552,7 @@
 
 @media (max-width: 540px) {
   .kpiRow { grid-template-columns: 1fr; }
-  .lessonItem { grid-template-columns: 32px 1fr; }
-  .lessonTimes { display: none; }
+  .lessonItem { grid-template-columns: 56px 1fr; }
+  .lessonItem::before { left: 67px; }
+  .lessonNumber::after { right: -14px; }
 }

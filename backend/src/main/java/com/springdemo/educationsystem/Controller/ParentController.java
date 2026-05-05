@@ -1,8 +1,11 @@
 package com.springdemo.educationsystem.Controller;
 
+import com.springdemo.educationsystem.DTO.LessonDTO;
 import com.springdemo.educationsystem.Entity.Assignment;
+import com.springdemo.educationsystem.Entity.Lesson;
 import com.springdemo.educationsystem.Entity.Parent;
 import com.springdemo.educationsystem.Entity.ParentStudent;
+import com.springdemo.educationsystem.Entity.SchoolClass;
 import com.springdemo.educationsystem.Entity.Student;
 import com.springdemo.educationsystem.Entity.Submission;
 import com.springdemo.educationsystem.Entity.User;
@@ -17,6 +20,7 @@ import com.springdemo.educationsystem.Service.AuthService;
 import com.springdemo.educationsystem.Service.LessonService;
 import com.springdemo.educationsystem.Service.TeacherJournalService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -392,6 +396,53 @@ public class ParentController {
     // ==================================================================
     //  Schedule
     // ==================================================================
+    private LessonDTO toLessonDTO(Lesson lesson) {
+        LessonDTO dto = new LessonDTO();
+        dto.setId(lesson.getId());
+        dto.setLessonNumber(lesson.getLessonNumber());
+        dto.setStartTime(lesson.getStartTime());
+        dto.setEndTime(lesson.getEndTime());
+        dto.setClassroom(lesson.getClassroom());
+
+        if (lesson.getSubject() != null) {
+            dto.setSubjectId(lesson.getSubject().getId());
+            dto.setSubjectName(lesson.getSubject().getName());
+        }
+        if (lesson.getTeacher() != null) {
+            dto.setTeacherId(lesson.getTeacher().getId());
+            if (lesson.getTeacher().getUser() != null) {
+                dto.setTeacherName(fioOf(lesson.getTeacher().getUser()));
+            }
+        }
+        if (lesson.getDay() != null) {
+            dto.setDayId(lesson.getDay().getId());
+            dto.setDate(lesson.getDay().getDate());
+            if (lesson.getDay().getDayOfWeek() != null) {
+                dto.setDayOfWeek(lesson.getDay().getDayOfWeek().name());
+            }
+            if (lesson.getDay().getTemplate() != null && lesson.getDay().getTemplate().getSchoolClass() != null) {
+                dto.setClassName(lesson.getDay().getTemplate().getSchoolClass().getName());
+            }
+        }
+        return dto;
+    }
+
+    private List<LessonDTO> dayLessons(SchoolClass schoolClass, LocalDate d) {
+        // Dedup by (lessonNumber, subjectId, teacherId, classroom) — keeps legitimate group splits,
+        // collapses true duplicates from past schedule imports.
+        Map<String, LessonDTO> unique = new LinkedHashMap<>();
+        for (Lesson lesson : lessonService.getLessonsByClassAndDate(schoolClass, d)) {
+            LessonDTO dto = toLessonDTO(lesson);
+            String key = dto.getLessonNumber() + "|" +
+                    (dto.getSubjectId() != null ? dto.getSubjectId() : "") + "|" +
+                    (dto.getTeacherId() != null ? dto.getTeacherId() : "") + "|" +
+                    (dto.getClassroom() != null ? dto.getClassroom() : "");
+            unique.putIfAbsent(key, dto);
+        }
+        return new ArrayList<>(unique.values());
+    }
+
+    @Transactional(readOnly = true)
     @GetMapping("/children/{studentId}/schedule")
     public ResponseEntity<?> getChildSchedule(
             @PathVariable Long studentId,
@@ -409,9 +460,7 @@ public class ParentController {
 
             if (date != null && !date.isBlank()) {
                 LocalDate d = LocalDate.parse(date);
-                return ResponseEntity.ok(
-                        lessonService.getLessonsByClassAndDate(student.getSchoolClass(), d)
-                );
+                return ResponseEntity.ok(dayLessons(student.getSchoolClass(), d));
             }
 
             if (weekStart != null && !weekStart.isBlank()) {
@@ -420,19 +469,14 @@ public class ParentController {
 
                 for (int i = 0; i < 7; i++) {
                     LocalDate current = monday.plusDays(i);
-                    result.put(
-                            current.toString(),
-                            lessonService.getLessonsByClassAndDate(student.getSchoolClass(), current)
-                    );
+                    result.put(current.toString(), dayLessons(student.getSchoolClass(), current));
                 }
 
                 return ResponseEntity.ok(result);
             }
 
             LocalDate today = LocalDate.now();
-            return ResponseEntity.ok(
-                    lessonService.getLessonsByClassAndDate(student.getSchoolClass(), today)
-            );
+            return ResponseEntity.ok(dayLessons(student.getSchoolClass(), today));
 
         } catch (RuntimeException e) {
             if ("Authentication required".equals(e.getMessage())) {

@@ -5,11 +5,27 @@ import { surveysApi } from "../../../../shared/lib/api";
 import { useT } from "../../../../shared/lib/i18n";
 
 const FILTER_KEYS = ["all", "active", "done"];
+const PAGE_SIZE = 10;
+
+function pageNumbers(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const set = new Set([1, 2, total - 1, total, current - 1, current, current + 1]);
+  const sorted = Array.from(set).filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+  const result = [];
+  let prev = 0;
+  for (const n of sorted) {
+    if (n - prev > 1) result.push("…");
+    result.push(n);
+    prev = n;
+  }
+  return result;
+}
 
 export default function StudentSurveyPage() {
   const { t } = useT();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
   const [answeredIds, setAnsweredIds] = useState(() => new Set());
   const [selectedSurvey, setSelectedSurvey] = useState(null);
   const [details, setDetails] = useState(null);
@@ -48,6 +64,14 @@ export default function StudentSurveyPage() {
     completed: normalized.filter((s) => s.done).length,
     total: normalized.length,
   }), [normalized]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const sliceStart = (safePage - 1) * PAGE_SIZE;
+  const pagedSurveys = filtered.slice(sliceStart, sliceStart + PAGE_SIZE);
+  const pageNums = pageNumbers(safePage, totalPages);
+
+  useEffect(() => { setPage(1); }, [search, statusFilter]);
 
   useEffect(() => {
     if (!selectedSurvey) return;
@@ -150,7 +174,7 @@ export default function StudentSurveyPage() {
         </p>
       ) : (
         <section className={styles.list}>
-          {filtered.length ? filtered.map((survey) => (
+          {filtered.length ? pagedSurveys.map((survey) => (
             <article key={survey.id} className={styles.card}>
               <div className={styles.cardTop}>
                 <span className={styles.subject}>{t("student.surveys.surveyBadge")}</span>
@@ -184,6 +208,50 @@ export default function StudentSurveyPage() {
           )}
         </section>
       )}
+
+      {filtered.length > 0 && totalPages > 1 ? (
+        <nav className={styles.pagination} aria-label="Pagination">
+          <span className={styles.pageInfo}>
+            {t("student.surveys.paginationInfo", {
+              start: sliceStart + 1,
+              end: Math.min(sliceStart + PAGE_SIZE, filtered.length),
+              total: filtered.length,
+            })}
+          </span>
+          <div className={styles.pageBtns}>
+            <button
+              type="button"
+              className={styles.pageBtn}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={safePage <= 1}
+            >
+              {t("common.back")}
+            </button>
+            {pageNums.map((n, i) => (
+              n === "…" ? (
+                <span key={`dots-${i}`} className={styles.pageDots}>…</span>
+              ) : (
+                <button
+                  key={n}
+                  type="button"
+                  className={`${styles.pageBtn} ${n === safePage ? styles.pageBtnActive : ""}`}
+                  onClick={() => setPage(n)}
+                >
+                  {n}
+                </button>
+              )
+            ))}
+            <button
+              type="button"
+              className={styles.pageBtn}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={safePage >= totalPages}
+            >
+              {t("common.next")}
+            </button>
+          </div>
+        </nav>
+      ) : null}
 
       {selectedSurvey ? (
         <div

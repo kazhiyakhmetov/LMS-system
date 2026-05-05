@@ -1,9 +1,9 @@
 export const parentMenu = [
-  { href: "/parent", label: "Главная", icon: "home", end: true },
-  { href: "/parent/children", label: "Мои дети", icon: "users" },
-  { href: "/parent/schedule", label: "Расписание", icon: "calendar" },
-  { href: "/parent/grades", label: "Оценки", icon: "star" },
-  { href: "/parent/journal", label: "Журнал", icon: "book" },
-  { href: "/parent/assignments", label: "Задания", icon: "clipboard" },
-  { href: "/parent/chat", label: "Чат", icon: "chat" },
+  { href: "/parent", labelKey: "nav.parent.home", icon: "home", end: true },
+  { href: "/parent/children", labelKey: "nav.parent.children", icon: "users" },
+  { href: "/parent/schedule", labelKey: "nav.parent.schedule", icon: "calendar" },
+  { href: "/parent/grades", labelKey: "nav.parent.grades", icon: "star" },
+  { href: "/parent/journal", labelKey: "nav.parent.journal", icon: "book" },
+  { href: "/parent/assignments", labelKey: "nav.parent.assignments", icon: "clipboard" },
+  { href: "/parent/chat", labelKey: "nav.parent.chat", icon: "chat" },
 ];

@@ -4,8 +4,25 @@ import styles from "./ParentChildrenPage.module.css";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { parentApi } from "../../../../shared/lib/api";
 import { getAvatarUrl, getInitials } from "../../../../shared/lib/utils/avatar";
+import { useT } from "../../../../shared/lib/i18n";
 
-function ChildCard({ child }) {
+const TEACHERS_PAGE_SIZE = 8;
+
+function pageNumbers(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const set = new Set([1, 2, total - 1, total, current - 1, current, current + 1]);
+  const sorted = Array.from(set).filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+  const result = [];
+  let prev = 0;
+  for (const n of sorted) {
+    if (n - prev > 1) result.push("…");
+    result.push(n);
+    prev = n;
+  }
+  return result;
+}
+
+function ChildCard({ child, t }) {
   const statsQuery = useApi(() => parentApi.childStats(child.id), [child.id]);
   const infoQuery = useApi(() => parentApi.childInfo(child.id), [child.id]);
 
@@ -44,19 +61,19 @@ function ChildCard({ child }) {
 
       <div className={styles.metricsRow}>
         <div className={styles.metric}>
-          <p className={styles.metricLabel}>Средний балл</p>
+          <p className={styles.metricLabel}>{t("parent.children.avgGrade")}</p>
           <p className={styles.metricValue}>{stats.avgGrade ?? "—"}</p>
         </div>
         <div className={styles.metric}>
-          <p className={styles.metricLabel}>Оценок</p>
+          <p className={styles.metricLabel}>{t("parent.children.gradesCount")}</p>
           <p className={styles.metricValue}>{stats.totalGrades ?? "—"}</p>
         </div>
         <div className={styles.metric}>
-          <p className={styles.metricLabel}>Активные</p>
+          <p className={styles.metricLabel}>{t("parent.children.pending")}</p>
           <p className={styles.metricValue}>{stats.pending ?? "—"}</p>
         </div>
         <div className={styles.metric}>
-          <p className={styles.metricLabel}>Просрочено</p>
+          <p className={styles.metricLabel}>{t("parent.children.overdue")}</p>
           <p className={styles.metricValue}>{stats.overdue ?? "—"}</p>
         </div>
       </div>
@@ -64,51 +81,117 @@ function ChildCard({ child }) {
       {info.bio ? <div className={styles.bio}>{info.bio}</div> : null}
 
       <div className={styles.actions}>
-        <Link to="/parent/grades" className={`${styles.actionLink} ${styles.primaryAction}`}>Оценки</Link>
-        <Link to="/parent/journal" className={styles.actionLink}>Журнал</Link>
-        <Link to="/parent/schedule" className={styles.actionLink}>Расписание</Link>
-        <Link to="/parent/assignments" className={styles.actionLink}>Задания</Link>
+        <Link to="/parent/grades" className={`${styles.actionLink} ${styles.primaryAction}`}>{t("parent.children.gradesBtn")}</Link>
+        <Link to="/parent/journal" className={styles.actionLink}>{t("parent.children.journalBtn")}</Link>
+        <Link to="/parent/schedule" className={styles.actionLink}>{t("parent.children.scheduleBtn")}</Link>
+        <Link to="/parent/assignments" className={styles.actionLink}>{t("parent.children.assignmentsBtn")}</Link>
       </div>
     </article>
   );
 }
 
-function TeachersBlock({ childId }) {
+function TeachersBlock({ childId, t }) {
   const teachersQuery = useApi(
     () => (childId ? parentApi.childTeachers(childId) : Promise.resolve([])),
     [childId],
     { immediate: Boolean(childId) },
   );
 
-  const teachers = Array.isArray(teachersQuery.data) ? teachersQuery.data : [];
+  const allTeachers = Array.isArray(teachersQuery.data) ? teachersQuery.data : [];
+
+  // Dedup just in case backend returns duplicates (different rows for same teacher+subject pair)
+  const teachers = useMemo(() => {
+    const map = new Map();
+    allTeachers.forEach((row) => {
+      const key = `${row.teacherId}-${row.subjectId}`;
+      if (!map.has(key)) map.set(key, row);
+    });
+    return Array.from(map.values());
+  }, [allTeachers]);
+
+  const [page, setPage] = useState(1);
+  useEffect(() => { setPage(1); }, [childId]);
+
+  const totalPages = Math.max(1, Math.ceil(teachers.length / TEACHERS_PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const sliceStart = (safePage - 1) * TEACHERS_PAGE_SIZE;
+  const pageItems = teachers.slice(sliceStart, sliceStart + TEACHERS_PAGE_SIZE);
+  const pageNums = pageNumbers(safePage, totalPages);
 
   if (!childId) return null;
 
   return (
     <article className={styles.teachersCard}>
-      <h3 className={styles.teachersTitle}>Учителя ребёнка</h3>
+      <h3 className={styles.teachersTitle}>{t("parent.children.teachersTitle")}</h3>
       {teachersQuery.loading && !teachers.length ? (
-        <p style={{ color: "var(--muted)", margin: 0 }}>Загрузка…</p>
+        <p style={{ color: "var(--muted)", margin: 0 }}>{t("parent.common.loading")}</p>
       ) : teachers.length ? (
-        <ul className={styles.teachersList}>
-          {teachers.map((t, idx) => (
-            <li key={`${t.teacherId}-${t.subjectId}-${idx}`} className={styles.teacherItem}>
-              <div>
-                <p className={styles.teacherName}>{t.teacherName || "—"}</p>
-                <p className={styles.teacherMeta}>{t.teacherEmail || ""}</p>
+        <>
+          <ul className={styles.teachersList}>
+            {pageItems.map((row, idx) => (
+              <li key={`${row.teacherId}-${row.subjectId}-${idx}`} className={styles.teacherItem}>
+                <div>
+                  <p className={styles.teacherName}>{row.teacherName || "—"}</p>
+                  <p className={styles.teacherMeta}>{row.teacherEmail || ""}</p>
+                </div>
+                <span className={styles.subjectBadge}>{row.subjectName || "—"}</span>
+              </li>
+            ))}
+          </ul>
+
+          {totalPages > 1 ? (
+            <nav className={styles.teachersPagination} aria-label="Teachers pagination">
+              <span className={styles.teachersPageInfo}>
+                {t("parent.assignments.pagination.info", {
+                  start: sliceStart + 1,
+                  end: Math.min(sliceStart + TEACHERS_PAGE_SIZE, teachers.length),
+                  total: teachers.length,
+                })}
+              </span>
+              <div className={styles.teachersPageBtns}>
+                <button
+                  type="button"
+                  className={styles.teachersPageBtn}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={safePage <= 1}
+                >
+                  {t("parent.assignments.pagination.prev")}
+                </button>
+                {pageNums.map((n, i) => (
+                  n === "…" ? (
+                    <span key={`dots-${i}`} className={styles.teachersPageDots}>…</span>
+                  ) : (
+                    <button
+                      key={n}
+                      type="button"
+                      className={`${styles.teachersPageBtn} ${n === safePage ? styles.teachersPageBtnActive : ""}`}
+                      onClick={() => setPage(n)}
+                    >
+                      {n}
+                    </button>
+                  )
+                ))}
+                <button
+                  type="button"
+                  className={styles.teachersPageBtn}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safePage >= totalPages}
+                >
+                  {t("parent.assignments.pagination.next")}
+                </button>
               </div>
-              <span className={styles.subjectBadge}>{t.subjectName || "—"}</span>
-            </li>
-          ))}
-        </ul>
+            </nav>
+          ) : null}
+        </>
       ) : (
-        <p style={{ color: "var(--muted)", margin: 0 }}>Учителя пока не назначены.</p>
+        <p style={{ color: "var(--muted)", margin: 0 }}>{t("parent.children.teachersEmpty")}</p>
       )}
     </article>
   );
 }
 
 export default function ParentChildrenPage() {
+  const { t } = useT();
   const childrenQuery = useApi(() => parentApi.children(), []);
   const children = useMemo(
     () => Array.isArray(childrenQuery.data) ? childrenQuery.data : [],
@@ -121,16 +204,14 @@ export default function ParentChildrenPage() {
   }, [children, selectedChildId]);
 
   if (childrenQuery.loading && !children.length) {
-    return <div style={{ padding: 24, color: "var(--muted)" }}>Загрузка детей…</div>;
+    return <div style={{ padding: 24, color: "var(--muted)" }}>{t("parent.common.loadingChildren")}</div>;
   }
 
   return (
     <div className={styles.page}>
       <section className={styles.header}>
-        <h2 className={styles.title}>Мои дети</h2>
-        <p className={styles.sub}>
-          Профиль каждого ребёнка с учебной статистикой, средними оценками и быстрым доступом к разделам.
-        </p>
+        <h2 className={styles.title}>{t("parent.children.title")}</h2>
+        <p className={styles.sub}>{t("parent.children.sub")}</p>
       </section>
 
       {children.length ? (
@@ -138,17 +219,15 @@ export default function ParentChildrenPage() {
           <section className={styles.grid}>
             {children.map((child) => (
               <div key={child.id} onClick={() => setSelectedChildId(child.id)} style={{ cursor: "pointer" }}>
-                <ChildCard child={child} />
+                <ChildCard child={child} t={t} />
               </div>
             ))}
           </section>
 
-          <TeachersBlock childId={selectedChildId} />
+          <TeachersBlock childId={selectedChildId} t={t} />
         </>
       ) : (
-        <p className={styles.empty}>
-          К вашему аккаунту не привязаны дети. Свяжитесь с администратором школы для добавления детей.
-        </p>
+        <p className={styles.empty}>{t("parent.common.noChildren")}</p>
       )}
     </div>
   );

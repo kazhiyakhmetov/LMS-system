@@ -1,29 +1,32 @@
 import styles from "./ParentSettingsPage.module.css";
+import { useT } from "../../../../shared/lib/i18n";
 
-const preferences = [
-  { title: "Push-уведомления о новых оценках", hint: "Уведомлять, когда учитель выставляет оценку ребёнку", enabled: true },
-  { title: "Email-сводка по успеваемости", hint: "Еженедельный отчёт о среднем балле и пропусках", enabled: true },
-  { title: "Уведомления о домашних заданиях", hint: "Получать уведомления о новых заданиях ребёнка", enabled: true },
-  { title: "Уведомления о пропусках", hint: "Напоминание, если ребёнок отсутствовал на уроке", enabled: false },
-  { title: "Темный режим", hint: "Экспериментальная тема интерфейса", enabled: false },
+const PREF_KEYS = [
+  { key: "grades", enabled: true },
+  { key: "email", enabled: true },
+  { key: "assignments", enabled: true },
+  { key: "absence", enabled: false },
+  { key: "dark", enabled: false },
 ];
 
 export default function ParentSettingsPage() {
+  const { t } = useT();
+
   return (
     <div className={styles.page}>
       <section className={styles.header}>
-        <h2 className={styles.title}>Настройки</h2>
-        <p className={styles.sub}>Параметры уведомлений, безопасности аккаунта и предпочтения интерфейса.</p>
+        <h2 className={styles.title}>{t("parent.settings.title")}</h2>
+        <p className={styles.sub}>{t("parent.settings.sub")}</p>
       </section>
 
       <section className={styles.settingsCard}>
-        <h3 className={styles.blockTitle}>Уведомления</h3>
+        <h3 className={styles.blockTitle}>{t("parent.settings.preferencesTitle")}</h3>
         <ul className={styles.list}>
-          {preferences.map((item) => (
-            <li key={item.title} className={styles.row}>
+          {PREF_KEYS.map((item) => (
+            <li key={item.key} className={styles.row}>
               <div>
-                <p className={styles.rowTitle}>{item.title}</p>
-                <p className={styles.rowHint}>{item.hint}</p>
+                <p className={styles.rowTitle}>{t(`parent.settings.preferences.${item.key}Title`)}</p>
+                <p className={styles.rowHint}>{t(`parent.settings.preferences.${item.key}Hint`)}</p>
               </div>
               <label className={styles.switch}>
                 <input type="checkbox" defaultChecked={item.enabled} />
@@ -35,13 +38,13 @@ export default function ParentSettingsPage() {
       </section>
 
       <section className={styles.securityCard}>
-        <h3 className={styles.blockTitle}>Безопасность</h3>
+        <h3 className={styles.blockTitle}>{t("parent.settings.securityTitle")}</h3>
         <div className={styles.actions}>
           <button className={styles.primaryBtn} type="button">
-            Сменить пароль
+            {t("parent.settings.changePassword")}
           </button>
           <button className={styles.ghostBtn} type="button">
-            Включить 2FA
+            {t("parent.settings.enable2fa")}
           </button>
         </div>
       </section>

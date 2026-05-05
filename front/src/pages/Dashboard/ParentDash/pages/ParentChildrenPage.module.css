@@ -288,3 +288,74 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
+.teachersPagination {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--stroke);
+}
+
+.teachersPageInfo {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.teachersPageBtns {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.teachersPageBtn {
+  height: 32px;
+  min-width: 32px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--stroke);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.teachersPageBtn:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--stroke-accent);
+}
+
+.teachersPageBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.teachersPageBtnActive {
+  background: linear-gradient(135deg, var(--accent), var(--accent-alt));
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.teachersPageBtnActive:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+  border-color: transparent;
+}
+
+.teachersPageDots {
+  color: var(--muted);
+  font-weight: 700;
+  padding: 0 4px;
+}

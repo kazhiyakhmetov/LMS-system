@@ -5,8 +5,22 @@ import { assignmentsApi, filesApi, submissionsApi } from "../../../../shared/lib
 import { formatDateTime } from "../../../../shared/lib/utils/date";
 import { useT } from "../../../../shared/lib/i18n";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
 const FILTER_KEYS = ["all", "completed", "notCompleted", "urgent", "inProgress", "new"];
+
+function pageNumbers(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const set = new Set([1, 2, total - 1, total, current - 1, current, current + 1]);
+  const sorted = Array.from(set).filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+  const result = [];
+  let prev = 0;
+  for (const n of sorted) {
+    if (n - prev > 1) result.push("…");
+    result.push(n);
+    prev = n;
+  }
+  return result;
+}
 
 function deriveStatus(source, assignment) {
   if (source === "active") return "inProgress";
@@ -245,29 +259,45 @@ export default function StudentAssignmentsPage() {
         )}
       </section>
 
-      <section className={styles.pagination}>
-        <button
-          type="button"
-          className={styles.pageBtn}
-          onClick={() => setCurrentPage((value) => Math.max(1, value - 1))}
-          disabled={currentPage === 1}
-        >
-          {t("common.back")}
-        </button>
-
-        <p className={styles.pageInfo}>
-          {currentPage} / {totalPages}
-        </p>
-
-        <button
-          type="button"
-          className={styles.pageBtn}
-          onClick={() => setCurrentPage((value) => Math.min(totalPages, value + 1))}
-          disabled={currentPage === totalPages}
-        >
-          {t("common.next")}
-        </button>
-      </section>
+      {totalPages > 1 ? (
+        <nav className={styles.pagination} aria-label="Pagination">
+          <span className={styles.pageInfoText}>
+            {t("student.assignments.paginationInfo", { start: startItem, end: endItem, total: filtered.length })}
+          </span>
+          <div className={styles.pageBtns}>
+            <button
+              type="button"
+              className={styles.pageBtn}
+              onClick={() => setCurrentPage((value) => Math.max(1, value - 1))}
+              disabled={currentPage <= 1}
+            >
+              {t("common.back")}
+            </button>
+            {pageNumbers(currentPage, totalPages).map((n, i) => (
+              n === "…" ? (
+                <span key={`dots-${i}`} className={styles.pageDots}>…</span>
+              ) : (
+                <button
+                  key={n}
+                  type="button"
+                  className={`${styles.pageBtn} ${n === currentPage ? styles.pageBtnActive : ""}`}
+                  onClick={() => setCurrentPage(n)}
+                >
+                  {n}
+                </button>
+              )
+            ))}
+            <button
+              type="button"
+              className={styles.pageBtn}
+              onClick={() => setCurrentPage((value) => Math.min(totalPages, value + 1))}
+              disabled={currentPage >= totalPages}
+            >
+              {t("common.next")}
+            </button>
+          </div>
+        </nav>
+      ) : null}
 
       <section className={styles.submissionsSection}>
         <h3 className={styles.submissionsTitle}>{t("student.assignments.submissionsTitle")}</h3>

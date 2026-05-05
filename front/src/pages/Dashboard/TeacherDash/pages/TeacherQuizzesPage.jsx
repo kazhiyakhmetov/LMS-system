@@ -6,10 +6,27 @@ import { useT } from "../../../../shared/lib/i18n";
 import styles from "./TeacherQuizzesPage.module.css";
 
 const QUESTION_TYPE_KEYS = ["SINGLE_CHOICE", "MULTIPLE_CHOICE", "TEXT_ANSWER"];
+const PAGE_SIZE = 10;
+
+function pageNumbers(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const set = new Set([1, 2, total - 1, total, current - 1, current, current + 1]);
+  const sorted = Array.from(set).filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+  const result = [];
+  let prev = 0;
+  for (const n of sorted) {
+    if (n - prev > 1) result.push("…");
+    result.push(n);
+    prev = n;
+  }
+  return result;
+}
 
 export default function TeacherQuizzesPage() {
   const { t } = useT();
   const [tab, setTab] = useState("quizzes");
+  const [quizzesPage, setQuizzesPage] = useState(1);
+  const [assignmentsPage, setAssignmentsPage] = useState(1);
 
   const quizzesQuery = useApi(() => quizzesApi.teacherMy(), []);
   const assignmentsQuery = useApi(() => quizzesApi.teacherAssignments(), []);
@@ -18,6 +35,27 @@ export default function TeacherQuizzesPage() {
   const quizzes = useMemo(() => Array.isArray(quizzesQuery.data) ? quizzesQuery.data : [], [quizzesQuery.data]);
   const assignments = useMemo(() => Array.isArray(assignmentsQuery.data) ? assignmentsQuery.data : [], [assignmentsQuery.data]);
   const pairs = useMemo(() => Array.isArray(pairsQuery.data) ? pairsQuery.data : [], [pairsQuery.data]);
+
+  // Reset both pagers when switching tabs
+  useEffect(() => { setQuizzesPage(1); setAssignmentsPage(1); }, [tab]);
+
+  const quizzesTotalPages = Math.max(1, Math.ceil(quizzes.length / PAGE_SIZE));
+  const quizzesSafePage = Math.min(quizzesPage, quizzesTotalPages);
+  const quizzesSliceStart = (quizzesSafePage - 1) * PAGE_SIZE;
+  const pagedQuizzes = useMemo(
+    () => quizzes.slice(quizzesSliceStart, quizzesSliceStart + PAGE_SIZE),
+    [quizzes, quizzesSliceStart],
+  );
+  const quizzesPageNums = pageNumbers(quizzesSafePage, quizzesTotalPages);
+
+  const assignmentsTotalPages = Math.max(1, Math.ceil(assignments.length / PAGE_SIZE));
+  const assignmentsSafePage = Math.min(assignmentsPage, assignmentsTotalPages);
+  const assignmentsSliceStart = (assignmentsSafePage - 1) * PAGE_SIZE;
+  const pagedAssignments = useMemo(
+    () => assignments.slice(assignmentsSliceStart, assignmentsSliceStart + PAGE_SIZE),
+    [assignments, assignmentsSliceStart],
+  );
+  const assignmentsPageNums = pageNumbers(assignmentsSafePage, assignmentsTotalPages);
 
   // === Create Quiz modal ===
   const [createOpen, setCreateOpen] = useState(false);
@@ -297,34 +335,80 @@ export default function TeacherQuizzesPage() {
         quizzesQuery.loading && !quizzes.length ? (
           <p className={styles.emptyState}>{t("teacher.quizzes.loadingQuizzes")}</p>
         ) : quizzes.length ? (
-          <section className={styles.list}>
-            {quizzes.map((q) => (
-              <article key={q.id} className={styles.card}>
-                <div className={styles.cardTop}>
-                  <span className={styles.subject}>{q.subjectName || t("teacher.quizzes.noSubject")}</span>
-                  <span className={styles.qCount}>{q.questions?.length ?? q.questionsCount ?? 0} {t("teacher.quizzes.questionsShort")}</span>
-                </div>
-                <p className={styles.cardTitle}>{q.title}</p>
-                {q.description ? <p className={styles.cardDesc}>{q.description}</p> : null}
-                <div className={styles.cardActions}>
+          <>
+            <section className={styles.list}>
+              {pagedQuizzes.map((q) => (
+                <article key={q.id} className={styles.card}>
+                  <div className={styles.cardTop}>
+                    <span className={styles.subject}>{q.subjectName || t("teacher.quizzes.noSubject")}</span>
+                    <span className={styles.qCount}>{q.questions?.length ?? q.questionsCount ?? 0} {t("teacher.quizzes.questionsShort")}</span>
+                  </div>
+                  <p className={styles.cardTitle}>{q.title}</p>
+                  {q.description ? <p className={styles.cardDesc}>{q.description}</p> : null}
+                  <div className={styles.cardActions}>
+                    <button
+                      type="button"
+                      className={styles.btnGhost}
+                      onClick={() => { setQuestionsForQuiz(q); resetQForm(); }}
+                    >
+                      {t("teacher.quizzes.questionsBtn")}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.btnPrimary}
+                      onClick={() => setAssignQuiz(q)}
+                    >
+                      {t("teacher.quizzes.assignBtn")}
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </section>
+
+            {quizzesTotalPages > 1 ? (
+              <nav className={styles.pagination} aria-label="Pagination">
+                <span className={styles.pageInfo}>
+                  {t("parent.assignments.pagination.info", {
+                    start: quizzesSliceStart + 1,
+                    end: Math.min(quizzesSliceStart + PAGE_SIZE, quizzes.length),
+                    total: quizzes.length,
+                  })}
+                </span>
+                <div className={styles.pageBtns}>
                   <button
                     type="button"
-                    className={styles.btnGhost}
-                    onClick={() => { setQuestionsForQuiz(q); resetQForm(); }}
+                    className={styles.pageBtn}
+                    onClick={() => setQuizzesPage((p) => Math.max(1, p - 1))}
+                    disabled={quizzesSafePage <= 1}
                   >
-                    {t("teacher.quizzes.questionsBtn")}
+                    {t("parent.assignments.pagination.prev")}
                   </button>
+                  {quizzesPageNums.map((n, i) => (
+                    n === "…" ? (
+                      <span key={`q-dots-${i}`} className={styles.pageDots}>…</span>
+                    ) : (
+                      <button
+                        key={`q-${n}`}
+                        type="button"
+                        className={`${styles.pageBtn} ${n === quizzesSafePage ? styles.pageBtnActive : ""}`}
+                        onClick={() => setQuizzesPage(n)}
+                      >
+                        {n}
+                      </button>
+                    )
+                  ))}
                   <button
                     type="button"
-                    className={styles.btnPrimary}
-                    onClick={() => setAssignQuiz(q)}
+                    className={styles.pageBtn}
+                    onClick={() => setQuizzesPage((p) => Math.min(quizzesTotalPages, p + 1))}
+                    disabled={quizzesSafePage >= quizzesTotalPages}
                   >
-                    {t("teacher.quizzes.assignBtn")}
+                    {t("parent.assignments.pagination.next")}
                   </button>
                 </div>
-              </article>
-            ))}
-          </section>
+              </nav>
+            ) : null}
+          </>
         ) : (
           <p className={styles.emptyState}>{t("teacher.quizzes.noQuizzes")}</p>
         )
@@ -332,30 +416,76 @@ export default function TeacherQuizzesPage() {
         assignmentsQuery.loading && !assignments.length ? (
           <p className={styles.emptyState}>{t("teacher.quizzes.loadingAssignments")}</p>
         ) : assignments.length ? (
-          <section className={styles.list}>
-            {assignments.map((a) => (
-              <article key={a.id} className={styles.card}>
-                <div className={styles.cardTop}>
-                  <span className={styles.subject}>{a.className || t("teacher.quizzes.classFallback", { id: a.classId })}</span>
-                  <span className={`${styles.badge} ${styles.badgeActive}`}>{t("teacher.quizzes.assignedBadge")}</span>
-                </div>
-                <p className={styles.cardTitle}>{a.quizTitle || t("teacher.quizzes.quizFallback", { id: a.quizId })}</p>
-                <p className={styles.cardMeta}>
-                  {a.startTime && a.endTime ? t("teacher.quizzes.timeRange", { from: formatDateTime(a.startTime), to: formatDateTime(a.endTime) }) : ""}
-                  {a.timeLimitMinutes ? ` • ${t("teacher.quizzes.timeLimit", { min: a.timeLimitMinutes })}` : ""}
-                </p>
-                <div className={styles.cardActions}>
+          <>
+            <section className={styles.list}>
+              {pagedAssignments.map((a) => (
+                <article key={a.id} className={styles.card}>
+                  <div className={styles.cardTop}>
+                    <span className={styles.subject}>{a.className || t("teacher.quizzes.classFallback", { id: a.classId })}</span>
+                    <span className={`${styles.badge} ${styles.badgeActive}`}>{t("teacher.quizzes.assignedBadge")}</span>
+                  </div>
+                  <p className={styles.cardTitle}>{a.quizTitle || t("teacher.quizzes.quizFallback", { id: a.quizId })}</p>
+                  <p className={styles.cardMeta}>
+                    {a.startTime && a.endTime ? t("teacher.quizzes.timeRange", { from: formatDateTime(a.startTime), to: formatDateTime(a.endTime) }) : ""}
+                    {a.timeLimitMinutes ? ` • ${t("teacher.quizzes.timeLimit", { min: a.timeLimitMinutes })}` : ""}
+                  </p>
+                  <div className={styles.cardActions}>
+                    <button
+                      type="button"
+                      className={styles.btnPrimary}
+                      onClick={() => setResultsAssignment(a)}
+                    >
+                      {t("teacher.quizzes.resultsBtn")}
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </section>
+
+            {assignmentsTotalPages > 1 ? (
+              <nav className={styles.pagination} aria-label="Pagination">
+                <span className={styles.pageInfo}>
+                  {t("parent.assignments.pagination.info", {
+                    start: assignmentsSliceStart + 1,
+                    end: Math.min(assignmentsSliceStart + PAGE_SIZE, assignments.length),
+                    total: assignments.length,
+                  })}
+                </span>
+                <div className={styles.pageBtns}>
                   <button
                     type="button"
-                    className={styles.btnPrimary}
-                    onClick={() => setResultsAssignment(a)}
+                    className={styles.pageBtn}
+                    onClick={() => setAssignmentsPage((p) => Math.max(1, p - 1))}
+                    disabled={assignmentsSafePage <= 1}
                   >
-                    {t("teacher.quizzes.resultsBtn")}
+                    {t("parent.assignments.pagination.prev")}
+                  </button>
+                  {assignmentsPageNums.map((n, i) => (
+                    n === "…" ? (
+                      <span key={`a-dots-${i}`} className={styles.pageDots}>…</span>
+                    ) : (
+                      <button
+                        key={`a-${n}`}
+                        type="button"
+                        className={`${styles.pageBtn} ${n === assignmentsSafePage ? styles.pageBtnActive : ""}`}
+                        onClick={() => setAssignmentsPage(n)}
+                      >
+                        {n}
+                      </button>
+                    )
+                  ))}
+                  <button
+                    type="button"
+                    className={styles.pageBtn}
+                    onClick={() => setAssignmentsPage((p) => Math.min(assignmentsTotalPages, p + 1))}
+                    disabled={assignmentsSafePage >= assignmentsTotalPages}
+                  >
+                    {t("parent.assignments.pagination.next")}
                   </button>
                 </div>
-              </article>
-            ))}
-          </section>
+              </nav>
+            ) : null}
+          </>
         ) : (
           <p className={styles.emptyState}>{t("teacher.quizzes.noAssignments")}</p>
         )

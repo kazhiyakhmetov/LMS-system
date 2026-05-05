@@ -3,6 +3,7 @@ import styles from "./ParentJournalPage.module.css";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { parentApi } from "../../../../shared/lib/api";
 import { formatDayMonth } from "../../../../shared/lib/utils/date";
+import { useT } from "../../../../shared/lib/i18n";
 
 const QUARTERS = [1, 2, 3, 4];
 
@@ -21,6 +22,7 @@ function attendStyle(color) {
 }
 
 export default function ParentJournalPage() {
+  const { t } = useT();
   const childrenQuery = useApi(() => parentApi.children(), []);
   const children = useMemo(
     () => Array.isArray(childrenQuery.data) ? childrenQuery.data : [],
@@ -44,20 +46,18 @@ export default function ParentJournalPage() {
   const dates = subjects[0]?.dates || [];
 
   if (childrenQuery.loading && !children.length) {
-    return <div style={{ padding: 24, color: "var(--muted)" }}>Загрузка…</div>;
+    return <div style={{ padding: 24, color: "var(--muted)" }}>{t("parent.common.loading")}</div>;
   }
   if (!children.length) {
-    return <div style={{ padding: 24, color: "var(--muted)" }}>К вашему аккаунту не привязаны дети.</div>;
+    return <div style={{ padding: 24, color: "var(--muted)" }}>{t("parent.common.noChildren")}</div>;
   }
 
   return (
     <div className={styles.page}>
       <section className={styles.header}>
         <div>
-          <h2 className={styles.title}>Журнал ребёнка</h2>
-          <p className={styles.sub}>
-            Оценки, посещаемость и итоговые баллы по каждому предмету за выбранную четверть.
-          </p>
+          <h2 className={styles.title}>{t("parent.journal.title")}</h2>
+          <p className={styles.sub}>{t("parent.journal.sub")}</p>
         </div>
 
         <div className={styles.headerControls}>
@@ -69,7 +69,7 @@ export default function ParentJournalPage() {
                 className={`${styles.tabBtn} ${quarter === q ? styles.tabBtnActive : ""}`}
                 onClick={() => setQuarter(q)}
               >
-                {q} четверть
+                {t("parent.journal.quarter", { n: q })}
               </button>
             ))}
           </div>
@@ -86,41 +86,41 @@ export default function ParentJournalPage() {
 
       <section className={styles.legendCard}>
         <span className={styles.legendItem}>
-          <span className={`${styles.markChip} ${styles.markChip_5}`}>5</span>отлично
+          <span className={`${styles.markChip} ${styles.markChip_5}`}>5</span>{t("parent.journal.legend.five")}
         </span>
         <span className={styles.legendItem}>
-          <span className={`${styles.markChip} ${styles.markChip_4}`}>4</span>хорошо
+          <span className={`${styles.markChip} ${styles.markChip_4}`}>4</span>{t("parent.journal.legend.four")}
         </span>
         <span className={styles.legendItem}>
-          <span className={`${styles.markChip} ${styles.markChip_3}`}>3</span>удовл.
+          <span className={`${styles.markChip} ${styles.markChip_3}`}>3</span>{t("parent.journal.legend.three")}
         </span>
         <span className={styles.legendItem}>
-          <span className={`${styles.markChip} ${styles.markChip_2}`}>2</span>неудовл.
+          <span className={`${styles.markChip} ${styles.markChip_2}`}>2</span>{t("parent.journal.legend.two")}
         </span>
         <span className={styles.legendItem}>
-          <span className={styles.attendChip} style={attendStyle("#dc2626")}>Н</span>отсутствие
+          <span className={styles.attendChip} style={attendStyle("#dc2626")}>Н</span>{t("parent.journal.legend.absence")}
         </span>
         <span className={styles.legendItem}>
-          <span className={styles.attendChip} style={attendStyle("#d97706")}>Б</span>болеет
+          <span className={styles.attendChip} style={attendStyle("#d97706")}>Б</span>{t("parent.journal.legend.sick")}
         </span>
         <span className={styles.legendItem}>
-          <span className={styles.attendChip} style={attendStyle("#059669")}>У</span>уважительная
+          <span className={styles.attendChip} style={attendStyle("#059669")}>У</span>{t("parent.journal.legend.excused")}
         </span>
       </section>
 
       {journalQuery.loading && !subjects.length ? (
-        <p style={{ padding: 16, color: "var(--muted)" }}>Загрузка журнала…</p>
+        <p style={{ padding: 16, color: "var(--muted)" }}>{t("parent.journal.loading")}</p>
       ) : subjects.length ? (
         <section className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th className={styles.subjectCell}>Предмет</th>
+                <th className={styles.subjectCell}>{t("parent.journal.headers.subject")}</th>
                 {dates.map((d) => (
                   <th key={d} className={styles.dateCell}>{formatDayMonth(d)}</th>
                 ))}
-                <th className={styles.dateCell}>Итог</th>
-                <th className={styles.dateCell}>Год</th>
+                <th className={styles.dateCell}>{t("parent.journal.headers.final")}</th>
+                <th className={styles.dateCell}>{t("parent.journal.headers.year")}</th>
               </tr>
             </thead>
             <tbody>
@@ -155,7 +155,7 @@ export default function ParentJournalPage() {
           </table>
         </section>
       ) : (
-        <p className={styles.empty}>Записей в журнале за выбранную четверть пока нет.</p>
+        <p className={styles.empty}>{t("parent.journal.empty")}</p>
       )}
     </div>
   );

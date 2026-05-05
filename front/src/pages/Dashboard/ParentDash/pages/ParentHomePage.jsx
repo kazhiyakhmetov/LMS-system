@@ -3,6 +3,9 @@ import styles from "./ParentHomePage.module.css";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { parentApi } from "../../../../shared/lib/api";
 import { formatDateTime, formatTime, toISODate } from "../../../../shared/lib/utils/date";
+import { useT } from "../../../../shared/lib/i18n";
+
+const LOCALE_MAP = { ru: "ru-RU", kk: "kk-KZ", en: "en-US" };
 
 function toneFor(deadline) {
   if (!deadline) return "focus";
@@ -24,6 +27,7 @@ function StatIcon({ name }) {
 }
 
 export default function ParentHomePage() {
+  const { t, lang } = useT();
   const today = useMemo(() => toISODate(new Date()), []);
 
   const childrenQuery = useApi(() => parentApi.children(), []);
@@ -62,24 +66,26 @@ export default function ParentHomePage() {
   const stats = statsQuery.data || {};
 
   const longDate = useMemo(
-    () => new Intl.DateTimeFormat("ru-RU", { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date()),
-    [],
+    () => new Intl.DateTimeFormat(LOCALE_MAP[lang] || "ru-RU", {
+      weekday: "long", day: "numeric", month: "long", year: "numeric",
+    }).format(new Date()),
+    [lang],
   );
 
   const kpis = [
-    { key: "avg", label: "Средний балл", value: stats.avgGrade ?? "—", sub: `${stats.totalGrades ?? 0} оценок`, tone: "indigo", icon: "avg" },
-    { key: "lessons", label: "Уроки сегодня", value: lessons.length, sub: lessons.length === 1 ? "урок" : "уроков", tone: "mint", icon: "clock" },
-    { key: "pending", label: "Активные задания", value: stats.pending ?? 0, sub: "ждут сдачи", tone: "gold", icon: "tasks" },
-    { key: "overdue", label: "Просрочено", value: stats.overdue ?? 0, sub: "пропущенных", tone: "rose", icon: "alert" },
+    { key: "avg",     label: t("parent.home.kpiAvg"),     value: stats.avgGrade ?? "—", sub: t("parent.home.kpiAvgSub", { count: stats.totalGrades ?? 0 }), tone: "indigo", icon: "avg" },
+    { key: "lessons", label: t("parent.home.kpiLessons"), value: lessons.length,        sub: lessons.length === 1 ? t("parent.home.kpiLessonsOne") : t("parent.home.kpiLessonsMany"), tone: "mint", icon: "clock" },
+    { key: "pending", label: t("parent.home.kpiPending"), value: stats.pending ?? 0,    sub: t("parent.home.kpiPendingSub"), tone: "gold", icon: "tasks" },
+    { key: "overdue", label: t("parent.home.kpiOverdue"), value: stats.overdue ?? 0,    sub: t("parent.home.kpiOverdueSub"), tone: "rose", icon: "alert" },
   ];
 
   if (childrenQuery.loading && !children.length) {
-    return <div style={{ padding: 24, color: "var(--muted)" }}>Загрузка детей…</div>;
+    return <div style={{ padding: 24, color: "var(--muted)" }}>{t("parent.common.loadingChildren")}</div>;
   }
   if (!children.length) {
     return (
       <div className={styles.emptyState} style={{ margin: 24 }}>
-        К вашему аккаунту не привязаны дети. Обратитесь к администратору школы.
+        {t("parent.common.noChildren")}
       </div>
     );
   }
@@ -88,14 +94,12 @@ export default function ParentHomePage() {
     <div className={styles.page}>
       <section className={styles.hero}>
         <div className={styles.heroBody}>
-          <p className={styles.heroEyebrow}>Parent LMS</p>
-          <h2 className={styles.heroTitle}>Главная родителя</h2>
-          <p className={styles.heroSub}>
-            Контролируйте учебный процесс ребёнка: оценки, расписание, домашние задания и посещаемость.
-          </p>
+          <p className={styles.heroEyebrow}>{t("parent.home.eyebrow")}</p>
+          <h2 className={styles.heroTitle}>{t("parent.home.title")}</h2>
+          <p className={styles.heroSub}>{t("parent.home.sub")}</p>
         </div>
         <div className={styles.heroDate}>
-          <span className={styles.heroDateLabel}>Сегодня</span>
+          <span className={styles.heroDateLabel}>{t("parent.home.todayLabel")}</span>
           <span className={styles.heroDateValue}>{longDate}</span>
         </div>
       </section>
@@ -142,25 +146,24 @@ export default function ParentHomePage() {
         <div className={styles.mainColumn}>
           <article className={styles.scheduleCard}>
             <div className={styles.cardHead}>
-              <h3 className={styles.sectionTitle}>Расписание на сегодня</h3>
+              <h3 className={styles.sectionTitle}>{t("parent.home.todaySchedule")}</h3>
               <span className={styles.lessonCount}>{lessons.length}</span>
             </div>
 
             {lessonsQuery.loading && !lessons.length ? (
-              <p className={styles.emptyState}>Загрузка…</p>
+              <p className={styles.emptyState}>{t("common.loading")}</p>
             ) : lessons.length ? (
               <ul className={styles.lessonList}>
-                {lessons.map((lesson, i) => (
+                {lessons.map((lesson) => (
                   <li key={lesson.id} className={styles.lessonItem}>
-                    <span className={styles.lessonNumber}>{lesson.lessonNumber ?? i + 1}</span>
-                    <div className={styles.lessonTimes}>
+                    <span className={styles.lessonNumber}>
                       <span className={styles.lessonStart}>{formatTime(lesson.startTime)}</span>
                       <span className={styles.lessonEnd}>{formatTime(lesson.endTime)}</span>
-                    </div>
+                    </span>
                     <div className={styles.lessonInfo}>
                       <p className={styles.lessonTitle}>{lesson.subjectName}</p>
                       <p className={styles.lessonMeta}>
-                        {lesson.classroom ? `Каб. ${lesson.classroom}` : ""}
+                        {lesson.classroom ? t("parent.common.classroomShort", { room: lesson.classroom }) : ""}
                         {lesson.teacherName ? ` • ${lesson.teacherName}` : ""}
                       </p>
                     </div>
@@ -168,18 +171,18 @@ export default function ParentHomePage() {
                 ))}
               </ul>
             ) : (
-              <p className={styles.emptyState}>На сегодня уроков нет.</p>
+              <p className={styles.emptyState}>{t("parent.home.todayScheduleEmpty")}</p>
             )}
           </article>
 
           <article className={styles.eventsCard}>
             <div className={styles.cardHead}>
-              <h3 className={styles.sectionTitle}>Последние оценки</h3>
+              <h3 className={styles.sectionTitle}>{t("parent.home.latestGrades")}</h3>
               {grades.length ? <span className={styles.lessonCount}>{grades.length}</span> : null}
             </div>
 
             {gradesQuery.loading && !grades.length ? (
-              <p className={styles.emptyState}>Загрузка…</p>
+              <p className={styles.emptyState}>{t("common.loading")}</p>
             ) : grades.length ? (
               <ul className={styles.eventList}>
                 {grades.map((g, idx) => (
@@ -194,14 +197,14 @@ export default function ParentHomePage() {
                 ))}
               </ul>
             ) : (
-              <p className={styles.emptyState}>Пока нет оценок.</p>
+              <p className={styles.emptyState}>{t("parent.home.latestGradesEmpty")}</p>
             )}
           </article>
         </div>
 
         <aside className={styles.deadlineCard}>
           <div className={styles.cardHead}>
-            <h3 className={styles.sectionTitle}>Уроки сегодня</h3>
+            <h3 className={styles.sectionTitle}>{t("parent.home.todayLessons")}</h3>
             <span className={styles.lessonCount}>{lessons.length}</span>
           </div>
 
@@ -214,14 +217,14 @@ export default function ParentHomePage() {
                     {formatTime(lesson.startTime)} - {formatTime(lesson.endTime)}
                   </p>
                   <p className={styles.deadlineMeta}>
-                    {lesson.classroom ? `Каб. ${lesson.classroom}` : ""}
+                    {lesson.classroom ? t("parent.common.classroomShort", { room: lesson.classroom }) : ""}
                     {lesson.teacherName ? ` • ${lesson.teacherName}` : ""}
                   </p>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className={styles.emptyState}>Уроков нет.</p>
+            <p className={styles.emptyState}>{t("parent.home.todayLessonsEmpty")}</p>
           )}
         </aside>
       </section>

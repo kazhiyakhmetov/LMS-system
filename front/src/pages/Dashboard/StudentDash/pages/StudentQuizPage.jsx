@@ -5,6 +5,22 @@ import { quizzesApi } from "../../../../shared/lib/api";
 import { useT } from "../../../../shared/lib/i18n";
 import { formatDateTime } from "../../../../shared/lib/utils/date";
 
+const PAGE_SIZE = 10;
+
+function pageNumbers(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const set = new Set([1, 2, total - 1, total, current - 1, current, current + 1]);
+  const sorted = Array.from(set).filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+  const result = [];
+  let prev = 0;
+  for (const n of sorted) {
+    if (n - prev > 1) result.push("…");
+    result.push(n);
+    prev = n;
+  }
+  return result;
+}
+
 function CloseIcon() {
   return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>;
 }
@@ -25,6 +41,15 @@ export default function StudentQuizPage() {
 
   const listQuery = useApi(() => quizzesApi.studentAvailable(), []);
   const list = useMemo(() => Array.isArray(listQuery.data) ? listQuery.data : [], [listQuery.data]);
+
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const sliceStart = (safePage - 1) * PAGE_SIZE;
+  const pagedList = list.slice(sliceStart, sliceStart + PAGE_SIZE);
+  const pageNums = pageNumbers(safePage, totalPages);
+
+  useEffect(() => { setPage(1); }, [list.length]);
 
   const [activeAttempt, setActiveAttempt] = useState(null);
   const [activeAssignment, setActiveAssignment] = useState(null);
@@ -249,7 +274,7 @@ export default function StudentQuizPage() {
         <div className={styles.empty}>{t("student.quizzes.empty")}</div>
       ) : (
         <section className={styles.list}>
-          {list.map((item) => {
+          {pagedList.map((item) => {
             const quiz = item.quiz || {};
             const status = statusFromAttempt(item);
             const statusClass = {
@@ -298,6 +323,50 @@ export default function StudentQuizPage() {
           })}
         </section>
       )}
+
+      {list.length > 0 && totalPages > 1 ? (
+        <nav className={styles.pagination} aria-label="Pagination">
+          <span className={styles.pageInfo}>
+            {t("student.quizzes.paginationInfo", {
+              start: sliceStart + 1,
+              end: Math.min(sliceStart + PAGE_SIZE, list.length),
+              total: list.length,
+            })}
+          </span>
+          <div className={styles.pageBtns}>
+            <button
+              type="button"
+              className={styles.pageBtn}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={safePage <= 1}
+            >
+              {t("student.quizzes.prev")}
+            </button>
+            {pageNums.map((n, i) => (
+              n === "…" ? (
+                <span key={`dots-${i}`} className={styles.pageDots}>…</span>
+              ) : (
+                <button
+                  key={n}
+                  type="button"
+                  className={`${styles.pageBtn} ${n === safePage ? styles.pageBtnActive : ""}`}
+                  onClick={() => setPage(n)}
+                >
+                  {n}
+                </button>
+              )
+            ))}
+            <button
+              type="button"
+              className={styles.pageBtn}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={safePage >= totalPages}
+            >
+              {t("student.quizzes.next")}
+            </button>
+          </div>
+        </nav>
+      ) : null}
 
       {activeAttempt ? (
         <div className={styles.modalOverlay} onClick={(e) => { if (e.target === e.currentTarget) closeQuiz(); }}>
