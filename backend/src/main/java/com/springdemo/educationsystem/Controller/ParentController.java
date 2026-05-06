@@ -428,15 +428,15 @@ public class ParentController {
     }
 
     private List<LessonDTO> dayLessons(SchoolClass schoolClass, LocalDate d) {
-        // Dedup by (lessonNumber, subjectId, teacherId, classroom) — keeps legitimate group splits,
-        // collapses true duplicates from past schedule imports.
+        // From a single student's perspective there can be only ONE lesson per
+        // (lessonNumber, startTime) — group splits, parallel imports and pure
+        // duplicates all collapse here. We keep the first occurrence (ordered by
+        // lesson_number, start_time, id by lessonService).
         Map<String, LessonDTO> unique = new LinkedHashMap<>();
         for (Lesson lesson : lessonService.getLessonsByClassAndDate(schoolClass, d)) {
             LessonDTO dto = toLessonDTO(lesson);
-            String key = dto.getLessonNumber() + "|" +
-                    (dto.getSubjectId() != null ? dto.getSubjectId() : "") + "|" +
-                    (dto.getTeacherId() != null ? dto.getTeacherId() : "") + "|" +
-                    (dto.getClassroom() != null ? dto.getClassroom() : "");
+            String key = (dto.getLessonNumber() != null ? dto.getLessonNumber() : "") + "|" +
+                    (dto.getStartTime() != null ? dto.getStartTime().toString() : "");
             unique.putIfAbsent(key, dto);
         }
         return new ArrayList<>(unique.values());

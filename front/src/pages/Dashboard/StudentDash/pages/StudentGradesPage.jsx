@@ -10,6 +10,7 @@ import { useT } from "../../../../shared/lib/i18n";
 
 const ABSENCE_KEYS = ["Н", "П", "Б", "О", "N", "P", "B", "O"];
 const PAGE_SIZE = 10;
+const RECENT_PAGE_SIZE = 5;
 
 function pageNumbers(current, total) {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
@@ -169,10 +170,10 @@ export default function StudentGradesPage() {
   }, [recentQuery.data, subjectFilter]);
 
   const [recentPage, setRecentPage] = useState(1);
-  const recentTotalPages = Math.max(1, Math.ceil(recentRows.length / PAGE_SIZE));
+  const recentTotalPages = Math.max(1, Math.ceil(recentRows.length / RECENT_PAGE_SIZE));
   const recentSafePage = Math.min(recentPage, recentTotalPages);
-  const recentSliceStart = (recentSafePage - 1) * PAGE_SIZE;
-  const recentPaged = recentRows.slice(recentSliceStart, recentSliceStart + PAGE_SIZE);
+  const recentSliceStart = (recentSafePage - 1) * RECENT_PAGE_SIZE;
+  const recentPaged = recentRows.slice(recentSliceStart, recentSliceStart + RECENT_PAGE_SIZE);
   const recentPageNums = pageNumbers(recentSafePage, recentTotalPages);
 
   useEffect(() => { setRecentPage(1); }, [subjectFilter, quarterKey]);
@@ -379,7 +380,7 @@ export default function StudentGradesPage() {
                   <span className={styles.pageInfo}>
                     {t("student.grades.paginationInfo", {
                       start: recentSliceStart + 1,
-                      end: Math.min(recentSliceStart + PAGE_SIZE, recentRows.length),
+                      end: Math.min(recentSliceStart + RECENT_PAGE_SIZE, recentRows.length),
                       total: recentRows.length,
                     })}
                   </span>

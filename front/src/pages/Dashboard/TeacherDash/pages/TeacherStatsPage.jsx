@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import styles from "./TeacherStatsPage.module.css";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
-import { statisticsApi } from "../../../../shared/lib/api";
+import { statisticsApi, aiApi } from "../../../../shared/lib/api";
 import { useT } from "../../../../shared/lib/i18n";
 
 const PAGE_SIZE = 10;
@@ -81,6 +81,39 @@ export default function TeacherStatsPage() {
     [riskRows, sliceStart],
   );
   const pageNums = pageNumbers(safePage, totalPages);
+
+  // === AI Risk panel ===
+  const classOptionsAI = useMemo(
+    () => Array.from(new Map(filtered.map((s) => [s.classId, s.className])).entries())
+      .map(([id, name]) => ({ id, name })),
+    [filtered],
+  );
+  const [aiClassId, setAiClassId] = useState(null);
+  useEffect(() => {
+    if (aiClassId == null && classOptionsAI.length) setAiClassId(classOptionsAI[0].id);
+  }, [classOptionsAI, aiClassId]);
+
+  const aiRiskQuery = useApi(
+    () => (aiClassId ? aiApi.riskTeacherClass(aiClassId) : Promise.resolve([])),
+    [aiClassId],
+    { immediate: Boolean(aiClassId) },
+  );
+  const aiRiskRows = Array.isArray(aiRiskQuery.data) ? aiRiskQuery.data : [];
+  const aiRiskSorted = useMemo(
+    () => [...aiRiskRows].sort((a, b) => (b.score || 0) - (a.score || 0)),
+    [aiRiskRows],
+  );
+  const aiHigh = aiRiskRows.filter((r) => r.level === "high").length;
+  const aiMid = aiRiskRows.filter((r) => r.level === "mid").length;
+  const aiLow = aiRiskRows.filter((r) => r.level === "low").length;
+
+  const [aiPage, setAiPage] = useState(1);
+  useEffect(() => { setAiPage(1); }, [aiClassId]);
+  const aiTotalPages = Math.max(1, Math.ceil(aiRiskSorted.length / PAGE_SIZE));
+  const aiSafePage = Math.min(aiPage, aiTotalPages);
+  const aiSliceStart = (aiSafePage - 1) * PAGE_SIZE;
+  const aiPageItems = aiRiskSorted.slice(aiSliceStart, aiSliceStart + PAGE_SIZE);
+  const aiPageNums = pageNumbers(aiSafePage, aiTotalPages);
 
   if (summaryQuery.loading && !summary.length) {
     return <div style={{ padding: 24 }}>{t("common.loading")}</div>;
@@ -167,6 +200,116 @@ export default function TeacherStatsPage() {
             )}
           </ul>
         </article>
+      </section>
+
+      <section className={styles.aiPanel}>
+        <div className={styles.aiPanelHead}>
+          <h3 className={styles.panelTitle}>
+            <span className={styles.aiBadge}>AI</span> Зона риска по ученикам
+          </h3>
+          {classOptionsAI.length > 1 ? (
+            <select
+              className={styles.aiClassSelect}
+              value={aiClassId ?? ""}
+              onChange={(e) => setAiClassId(Number(e.target.value))}
+            >
+              {classOptionsAI.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          ) : null}
+        </div>
+
+        <div className={styles.aiSummaryRow}>
+          <div className={`${styles.aiSummaryCard} ${styles.aiSumHigh}`}>
+            <span className={styles.aiSummaryLabel}>Высокий</span>
+            <span className={styles.aiSummaryValue}>{aiHigh}</span>
+          </div>
+          <div className={`${styles.aiSummaryCard} ${styles.aiSumMid}`}>
+            <span className={styles.aiSummaryLabel}>Средний</span>
+            <span className={styles.aiSummaryValue}>{aiMid}</span>
+          </div>
+          <div className={`${styles.aiSummaryCard} ${styles.aiSumLow}`}>
+            <span className={styles.aiSummaryLabel}>Низкий</span>
+            <span className={styles.aiSummaryValue}>{aiLow}</span>
+          </div>
+          <div className={styles.aiSummaryHint}>
+            Модель XGBoost · v1 · обновлено по запросу
+          </div>
+        </div>
+
+        {aiRiskQuery.loading && !aiRiskRows.length ? (
+          <p className={styles.emptyState}>{t("common.loading")}</p>
+        ) : aiRiskSorted.length ? (
+          <ul className={styles.aiList}>
+            {aiPageItems.map((r) => (
+              <li key={r.studentId} className={`${styles.aiItem} ${styles[`aiLevel_${r.level}`]}`}>
+                <div className={styles.aiItemMain}>
+                  <p className={styles.aiStudentName}>{r.studentName || `Ученик #${r.studentId}`}</p>
+                  <p className={styles.aiFactors}>
+                    {(r.topFactors || []).map((f) => `${f.label}: ${
+                      f.feature === "attendance_rate" || f.feature === "submission_rate"
+                        ? `${(Number(f.value) * 100).toFixed(0)}%`
+                        : Math.round(Number(f.value))
+                    }`).join(" • ") || "—"}
+                  </p>
+                </div>
+                <div className={styles.aiScore}>
+                  <span className={styles.aiScoreValue}>{Math.round(r.score)}%</span>
+                  <span className={`${styles.aiLevelChip} ${styles[`aiChip_${r.level}`]}`}>
+                    {r.level === "high" ? "Высокий" : r.level === "mid" ? "Средний" : "Низкий"}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className={styles.emptyState}>{t("teacher.stats.noRisk")}</p>
+        )}
+
+        {aiTotalPages > 1 ? (
+          <nav className={styles.pagination} aria-label="AI risk pagination" style={{ marginTop: 14 }}>
+            <span className={styles.pageInfo}>
+              {t("parent.assignments.pagination.info", {
+                start: aiSliceStart + 1,
+                end: Math.min(aiSliceStart + PAGE_SIZE, aiRiskSorted.length),
+                total: aiRiskSorted.length,
+              })}
+            </span>
+            <div className={styles.pageBtns}>
+              <button
+                type="button"
+                className={styles.pageBtn}
+                onClick={() => setAiPage((p) => Math.max(1, p - 1))}
+                disabled={aiSafePage <= 1}
+              >
+                {t("parent.assignments.pagination.prev")}
+              </button>
+              {aiPageNums.map((n, i) => (
+                n === "…" ? (
+                  <span key={`aidots-${i}`} className={styles.pageDots}>…</span>
+                ) : (
+                  <button
+                    key={n}
+                    type="button"
+                    className={`${styles.pageBtn} ${n === aiSafePage ? styles.pageBtnActive : ""}`}
+                    onClick={() => setAiPage(n)}
+                  >
+                    {n}
+                  </button>
+                )
+              ))}
+              <button
+                type="button"
+                className={styles.pageBtn}
+                onClick={() => setAiPage((p) => Math.min(aiTotalPages, p + 1))}
+                disabled={aiSafePage >= aiTotalPages}
+              >
+                {t("parent.assignments.pagination.next")}
+              </button>
+            </div>
+          </nav>
+        ) : null}
       </section>
 
       <section className={styles.riskPanel}>

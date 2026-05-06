@@ -213,15 +213,22 @@
 }
 
 .welcomeFeatureDot {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.16);
   display: grid;
   place-items: center;
-  font-size: 13px;
   flex-shrink: 0;
   backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.welcomeFeatureDot svg {
+  width: 16px;
+  height: 16px;
+  fill: #ffffff;
+  display: block;
 }
 
 .header {

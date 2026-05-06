@@ -4,6 +4,159 @@
   padding: 4px 4px 24px;
 }
 
+/* ===================== AI Risk Panel ===================== */
+.aiPanel {
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(420px 220px at 100% 0%, rgba(99, 102, 241, 0.08), transparent 64%),
+    var(--panel);
+  box-shadow: var(--shadow-1);
+  padding: 22px 24px;
+  display: grid;
+  gap: 14px;
+}
+.aiPanelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.aiBadge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, var(--accent), var(--accent-alt));
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.aiClassSelect {
+  height: 36px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--text);
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+}
+.aiSummaryRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr)) 2fr;
+  gap: 12px;
+  align-items: center;
+}
+.aiSummaryCard {
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+}
+.aiSummaryLabel {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.aiSummaryValue {
+  font-size: 22px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  margin-top: 4px;
+  color: var(--text);
+}
+.aiSumHigh { background: rgba(239, 68, 68, 0.08); border-color: rgba(239,68,68,0.4); }
+.aiSumHigh .aiSummaryValue { color: var(--danger-strong); }
+.aiSumMid  { background: rgba(245, 158, 11, 0.08); border-color: rgba(245,158,11,0.4); }
+.aiSumMid  .aiSummaryValue { color: var(--warning-strong); }
+.aiSumLow  { background: rgba(16, 185, 129, 0.08); border-color: rgba(16,185,129,0.4); }
+.aiSumLow  .aiSummaryValue { color: var(--success-strong); }
+.aiSummaryHint {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: right;
+}
+
+.aiList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+.aiItem {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--stroke);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  padding: 12px 16px;
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+.aiItem:hover { border-color: var(--stroke-accent); transform: translateX(2px); }
+.aiLevel_high { border-left-color: var(--danger); }
+.aiLevel_mid  { border-left-color: var(--warning); }
+.aiLevel_low  { border-left-color: var(--success); }
+
+.aiItemMain { min-width: 0; }
+.aiStudentName {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+}
+.aiFactors {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.aiScore {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.aiScoreValue {
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.aiLevelChip {
+  display: inline-flex;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  align-items: center;
+}
+.aiChip_high { background: rgba(239,68,68,0.12); color: var(--danger-strong); }
+.aiChip_mid  { background: rgba(245,158,11,0.12); color: var(--warning-strong); }
+.aiChip_low  { background: rgba(16,185,129,0.12); color: var(--success-strong); }
+
+@media (max-width: 720px) {
+  .aiSummaryRow { grid-template-columns: 1fr 1fr 1fr; }
+  .aiSummaryHint { grid-column: 1 / -1; text-align: left; }
+}
+
 /* === Hero === */
 .hero {
   position: relative;

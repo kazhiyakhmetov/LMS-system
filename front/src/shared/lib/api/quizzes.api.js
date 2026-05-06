@@ -9,6 +9,7 @@ export const quizzesApi = {
   studentFinish: ({ attemptId }) => http.post("/student/quiz/finish", { attemptId }),
   studentAttempt: (attemptId) => http.get(`/student/quiz/attempt/${attemptId}`),
   studentResult: (attemptId) => http.get(`/student/quiz/result/${attemptId}`),
+  studentCompleted: () => http.get("/student/quiz/completed"),
 
   // === Student peer-quiz creation ===
   studentCreate: (body) => http.post("/student/quiz/create", body),

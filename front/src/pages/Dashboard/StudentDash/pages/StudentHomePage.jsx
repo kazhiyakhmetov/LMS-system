@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
-import { assignmentsApi, gamificationApi, scheduleApi, surveysApi } from "../../../../shared/lib/api";
+import { assignmentsApi, gamificationApi, scheduleApi, surveysApi, aiApi } from "../../../../shared/lib/api";
 import { formatDateTime, formatTime, toISODate } from "../../../../shared/lib/utils/date";
 import { useT } from "../../../../shared/lib/i18n";
 import styles from "./StudentHomePage.module.css";
@@ -38,6 +38,8 @@ export default function StudentHomePage() {
   const assignmentsQuery = useApi(() => assignmentsApi.studentToSubmit(), []);
   const overdueQuery = useApi(() => assignmentsApi.studentOverdue(), []);
   const statsQuery = useApi(() => gamificationApi.studentStats(), []);
+  const recsQuery = useApi(() => aiApi.myRecommendations(5), []);
+  const recommendations = Array.isArray(recsQuery.data) ? recsQuery.data : [];
 
   const studentName = useMemo(() => {
     const name = user?.firstName || user?.name || t("student.home.defaultName");
@@ -143,6 +145,104 @@ export default function StudentHomePage() {
             )}
           </article>
 
+          <article className={styles.aiRecCard}>
+            <div className={styles.cardHead}>
+              <h3 className={styles.sectionTitle}>
+                <span className={styles.aiRecBadge}>AI</span> Что подтянуть
+              </h3>
+              {recommendations.length ? <span className={styles.lessonCount}>{recommendations.length}</span> : null}
+            </div>
+            <p className={styles.aiRecHelp}>
+              ИИ-модель проанализировала твои оценки и нашла предметы, где ты не дотягиваешь до 4. Ниже — что подтянуть и какие квизы помогут.
+            </p>
+
+            {recsQuery.loading && !recommendations.length ? (
+              <p className={styles.emptyState}>{t("common.loading")}</p>
+            ) : recommendations.length ? (
+              <>
+                {(() => {
+                  const weakRe = /средн[а-яё]+ по «([^»]+)»\s*\(([\d.]+)\)/i;
+                  const weakSubjMap = new Map();
+                  recommendations.forEach((r) => {
+                    const m = weakRe.exec(r.reason || "");
+                    if (m) weakSubjMap.set(m[1], parseFloat(m[2]));
+                  });
+                  const weakSubjects = Array.from(weakSubjMap.entries());
+                  if (!weakSubjects.length) return null;
+                  return (
+                    <section className={styles.aiWeakBlock}>
+                      <p className={styles.aiWeakTitle}>🔴 Слабые темы (ниже нормы 4.0)</p>
+                      <ul className={styles.aiWeakList}>
+                        {weakSubjects.map(([name, avg]) => (
+                          <li key={name} className={styles.aiWeakItem}>
+                            <span className={styles.aiWeakName}>{name}</span>
+                            <span className={styles.aiWeakAvg}>{avg.toFixed(1)} <span style={{ color: "var(--muted)", fontWeight: 600 }}>/ 5.0</span></span>
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  );
+                })()}
+
+                <p className={styles.aiSubsectionTitle}>Рекомендуемые квизы</p>
+                <ul className={styles.aiRecList}>
+                  {recommendations.map((r, idx) => {
+                    const isWeak = (r.reason || "").startsWith("Слабый") || (r.reason || "").startsWith("Средний балл");
+                    const target = r.kind === "quiz" ? "/student/quizzes" : "/student/grades";
+                    const tagText = isWeak ? "Подтянуть" : "Практика";
+                    return (
+                      <li key={`${r.kind}-${r.targetId}-${idx}`} className={`${styles.aiRecItem} ${isWeak ? styles.aiRecPriority : ""}`}>
+                        <span className={`${styles.aiRecKindV2} ${isWeak ? styles.aiRecKindWeak : styles.aiRecKindNormal}`}>
+                          {tagText}
+                        </span>
+                        <div className={styles.aiRecBody}>
+                          <p className={styles.aiRecTitle}>{r.title}</p>
+                          <p className={styles.aiRecReason}>
+                            {r.subjectName ? <span className={styles.aiRecSubjectInline}>{r.subjectName}</span> : null}
+                            {isWeak ? " · нужно подтянуть" : " · доп. практика"}
+                          </p>
+                        </div>
+                        <a href={target} className={styles.aiRecAction}>
+                          Открыть →
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            ) : (
+              <p className={styles.emptyState}>Пока нет рекомендаций — сдавайте задания, и AI подскажет, что подтянуть.</p>
+            )}
+          </article>
+        </div>
+
+        <aside className={styles.sideColumn}>
+          <article className={styles.deadlineCard}>
+            <div className={styles.cardHead}>
+              <h3 className={styles.sectionTitle}>{t("student.home.deadlines")}</h3>
+              <span className={styles.lessonCount}>{allDeadlines.length}</span>
+            </div>
+
+            {assignmentsQuery.loading && !allDeadlines.length ? (
+              <p className={styles.emptyState}>{t("common.loading")}</p>
+            ) : allDeadlines.length ? (
+              <ul className={styles.deadlineList}>
+                {allDeadlines.map((item) => {
+                  const tone = toneFor(item.deadline);
+                  return (
+                    <li key={item.id} className={`${styles.deadlineItem} ${styles[tone]}`}>
+                      <p className={styles.deadlineSubject}>{item.subjectName || item.subject || ""}</p>
+                      <p className={styles.deadlineTitle}>{item.title}</p>
+                      <p className={styles.deadlineMeta}>{formatDateTime(item.deadline)}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className={styles.emptyState}>{t("student.home.deadlinesEmpty")}</p>
+            )}
+          </article>
+
           <article className={styles.eventsCard}>
             <div className={styles.cardHead}>
               <h3 className={styles.sectionTitle}>{t("student.home.events")}</h3>
@@ -167,32 +267,6 @@ export default function StudentHomePage() {
               <p className={styles.emptyState}>{t("student.home.eventsEmpty")}</p>
             )}
           </article>
-        </div>
-
-        <aside className={styles.deadlineCard}>
-          <div className={styles.cardHead}>
-            <h3 className={styles.sectionTitle}>{t("student.home.deadlines")}</h3>
-            <span className={styles.lessonCount}>{allDeadlines.length}</span>
-          </div>
-
-          {assignmentsQuery.loading && !allDeadlines.length ? (
-            <p className={styles.emptyState}>{t("common.loading")}</p>
-          ) : allDeadlines.length ? (
-            <ul className={styles.deadlineList}>
-              {allDeadlines.map((item) => {
-                const tone = toneFor(item.deadline);
-                return (
-                  <li key={item.id} className={`${styles.deadlineItem} ${styles[tone]}`}>
-                    <p className={styles.deadlineSubject}>{item.subjectName || item.subject || ""}</p>
-                    <p className={styles.deadlineTitle}>{item.title}</p>
-                    <p className={styles.deadlineMeta}>{formatDateTime(item.deadline)}</p>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className={styles.emptyState}>{t("student.home.deadlinesEmpty")}</p>
-          )}
         </aside>
       </section>
     </div>

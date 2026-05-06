@@ -1,0 +1,15 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info
+.pytest_cache
+.venv
+venv
+.git
+.idea
+.vscode
+notebooks
+*.ipynb
+.DS_Store

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import styles from "./ParentHomePage.module.css";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
-import { parentApi } from "../../../../shared/lib/api";
+import { parentApi, aiApi } from "../../../../shared/lib/api";
 import { formatDateTime, formatTime, toISODate } from "../../../../shared/lib/utils/date";
 import { useT } from "../../../../shared/lib/i18n";
 
@@ -61,6 +61,13 @@ export default function ParentHomePage() {
     { immediate: Boolean(selectedChild) },
   );
 
+  const riskQuery = useApi(
+    () => (selectedChild ? aiApi.riskParentChild(selectedChild.id) : Promise.resolve(null)),
+    [selectedChild?.id],
+    { immediate: Boolean(selectedChild) },
+  );
+  const risk = riskQuery.data || null;
+
   const lessons = Array.isArray(lessonsQuery.data) ? lessonsQuery.data : [];
   const grades = Array.isArray(gradesQuery.data) ? gradesQuery.data : [];
   const stats = statsQuery.data || {};
@@ -114,6 +121,16 @@ export default function ParentHomePage() {
           </p>
         </div>
 
+        {risk && risk.available !== false ? (
+          <div
+            className={`${styles.riskBadge} ${styles[`riskLevel_${risk.level}`]}`}
+            title={(risk.topFactors || []).map((f) => `${f.label}: ${f.value}`).join(" • ")}
+          >
+            <span className={styles.riskBadgeLabel}>AI · риск</span>
+            <span className={styles.riskBadgeValue}>{Math.round(risk.score)}%</span>
+          </div>
+        ) : null}
+
         {children.length > 1 ? (
           <select
             className={styles.childSelect}
@@ -128,6 +145,30 @@ export default function ParentHomePage() {
           </select>
         ) : null}
       </section>
+
+      {risk && risk.level === "high" && risk.topFactors?.length ? (
+        <section className={styles.riskAlertCard}>
+          <div className={styles.riskAlertHead}>
+            <span className={styles.riskAlertIcon}>⚠</span>
+            <h3 className={styles.riskAlertTitle}>Внимание — высокий риск ({Math.round(risk.score)}%)</h3>
+          </div>
+          <p className={styles.riskAlertText}>
+            ИИ-модель определила, что у ребёнка повышенный риск академических проблем. Основные причины:
+          </p>
+          <ul className={styles.riskAlertList}>
+            {risk.topFactors.map((f) => (
+              <li key={f.feature} className={styles.riskAlertFactor}>
+                <span className={styles.riskAlertFactorLabel}>{f.label}</span>
+                <span className={styles.riskAlertFactorValue}>
+                  {f.feature === "attendance_rate" || f.feature === "submission_rate"
+                    ? `${(Number(f.value) * 100).toFixed(0)}%`
+                    : f.value}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className={styles.kpiRow}>
         {kpis.map((k) => (

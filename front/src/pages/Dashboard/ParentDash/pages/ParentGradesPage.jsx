@@ -6,6 +6,22 @@ import { average } from "../../../../shared/lib/utils/math";
 import { formatDayMonth, formatDateTime } from "../../../../shared/lib/utils/date";
 import { useT } from "../../../../shared/lib/i18n";
 
+const RECENT_PAGE_SIZE = 5;
+
+function pageNumbers(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const set = new Set([1, 2, total - 1, total, current - 1, current, current + 1]);
+  const sorted = Array.from(set).filter((n) => n >= 1 && n <= total).sort((a, b) => a - b);
+  const result = [];
+  let prev = 0;
+  for (const n of sorted) {
+    if (n - prev > 1) result.push("…");
+    result.push(n);
+    prev = n;
+  }
+  return result;
+}
+
 export default function ParentGradesPage() {
   const { t } = useT();
   const childrenQuery = useApi(() => parentApi.children(), []);
@@ -13,10 +29,13 @@ export default function ParentGradesPage() {
 
   const [childId, setChildId] = useState(null);
   const [subjectFilter, setSubjectFilter] = useState("all");
+  const [recentPage, setRecentPage] = useState(1);
 
   useEffect(() => {
     if (childId == null && children.length) setChildId(children[0].id);
   }, [children, childId]);
+
+  useEffect(() => { setRecentPage(1); }, [childId, subjectFilter]);
 
   const gradesQuery = useApi(
     () => (childId ? parentApi.childGrades(childId, 200) : Promise.resolve([])),
@@ -145,22 +164,77 @@ export default function ParentGradesPage() {
       <section className={styles.bottom}>
         <article className={styles.panel}>
           <h3 className={styles.panelTitle}>{t("parent.grades.latest")}</h3>
-          <ul className={styles.eventList}>
-            {filteredGrades.length ? filteredGrades.slice(0, 12).map((g, idx) => (
-              <li key={`${g.date}-${idx}`} className={styles.eventItem}>
-                <span className={styles.eventDate}>{g.date ? formatDayMonth(g.date) : "—"}</span>
-                <span className={styles.eventSubject}>{g.subject || "—"}</span>
-                <span className={styles.eventType}>
-                  {g.title || ""}
-                  {g.title && g.date ? " • " : ""}
-                  {g.date ? formatDateTime(g.date) : ""}
-                </span>
-                <span className={styles.eventMark}>{g.grade ?? "—"}</span>
-              </li>
-            )) : (
-              <li className={styles.eventEmpty}>{t("parent.grades.latestEmpty")}</li>
-            )}
-          </ul>
+          {(() => {
+            const totalPages = Math.max(1, Math.ceil(filteredGrades.length / RECENT_PAGE_SIZE));
+            const safePage = Math.min(recentPage, totalPages);
+            const sliceStart = (safePage - 1) * RECENT_PAGE_SIZE;
+            const pageItems = filteredGrades.slice(sliceStart, sliceStart + RECENT_PAGE_SIZE);
+            const pageNums = pageNumbers(safePage, totalPages);
+            return (
+              <>
+                <ul className={styles.eventList}>
+                  {pageItems.length ? pageItems.map((g, idx) => (
+                    <li key={`${g.date}-${idx}`} className={styles.eventItem}>
+                      <span className={styles.eventDate}>{g.date ? formatDayMonth(g.date) : "—"}</span>
+                      <span className={styles.eventSubject}>{g.subject || "—"}</span>
+                      <span className={styles.eventType}>
+                        {g.title || ""}
+                        {g.title && g.date ? " • " : ""}
+                        {g.date ? formatDateTime(g.date) : ""}
+                      </span>
+                      <span className={styles.eventMark}>{g.grade ?? "—"}</span>
+                    </li>
+                  )) : (
+                    <li className={styles.eventEmpty}>{t("parent.grades.latestEmpty")}</li>
+                  )}
+                </ul>
+
+                {totalPages > 1 ? (
+                  <nav className={styles.pagination} aria-label="Pagination">
+                    <span className={styles.pageInfo}>
+                      {t("parent.assignments.pagination.info", {
+                        start: sliceStart + 1,
+                        end: Math.min(sliceStart + RECENT_PAGE_SIZE, filteredGrades.length),
+                        total: filteredGrades.length,
+                      })}
+                    </span>
+                    <div className={styles.pageBtns}>
+                      <button
+                        type="button"
+                        className={styles.pageBtn}
+                        onClick={() => setRecentPage((p) => Math.max(1, p - 1))}
+                        disabled={safePage <= 1}
+                      >
+                        {t("parent.assignments.pagination.prev")}
+                      </button>
+                      {pageNums.map((n, i) => (
+                        n === "…" ? (
+                          <span key={`dots-${i}`} className={styles.pageDots}>…</span>
+                        ) : (
+                          <button
+                            key={n}
+                            type="button"
+                            className={`${styles.pageBtn} ${n === safePage ? styles.pageBtnActive : ""}`}
+                            onClick={() => setRecentPage(n)}
+                          >
+                            {n}
+                          </button>
+                        )
+                      ))}
+                      <button
+                        type="button"
+                        className={styles.pageBtn}
+                        onClick={() => setRecentPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={safePage >= totalPages}
+                      >
+                        {t("parent.assignments.pagination.next")}
+                      </button>
+                    </div>
+                  </nav>
+                ) : null}
+              </>
+            );
+          })()}
         </article>
       </section>
     </div>

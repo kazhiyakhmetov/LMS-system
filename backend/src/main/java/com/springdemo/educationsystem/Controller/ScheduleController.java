@@ -87,15 +87,14 @@ public class ScheduleController {
             // Получаем расписание на указанную дату
             List<Lesson> lessons = lessonService.getLessonsByClassAndDate(schoolClass, date);
 
-            // Дедуп дубликатов по (lessonNumber, subjectId, teacherId, classroom) —
-            // сохраняет split на группы (разные учителя), но убирает полные дубли из старых импортов.
+            // С точки зрения одного ученика на одном временном слоте может быть
+            // только ОДИН урок. Сжимаем по (lessonNumber, startTime) — это убирает
+            // и group-splits, и data-corruption из старых импортов.
             java.util.Map<String, LessonDTO> unique = new java.util.LinkedHashMap<>();
             for (Lesson l : lessons) {
                 LessonDTO dto = convertToDTO(l);
-                String key = dto.getLessonNumber() + "|" +
-                        (dto.getSubjectId() != null ? dto.getSubjectId() : "") + "|" +
-                        (dto.getTeacherId() != null ? dto.getTeacherId() : "") + "|" +
-                        (dto.getClassroom() != null ? dto.getClassroom() : "");
+                String key = (dto.getLessonNumber() != null ? dto.getLessonNumber() : "") + "|" +
+                        (dto.getStartTime() != null ? dto.getStartTime().toString() : "");
                 unique.putIfAbsent(key, dto);
             }
             List<LessonDTO> lessonDTOs = new java.util.ArrayList<>(unique.values());

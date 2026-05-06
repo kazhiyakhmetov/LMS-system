@@ -137,15 +137,27 @@ export default function LoginPage() {
 
           <div className={styles.welcomeFooter}>
             <div className={styles.welcomeFeature}>
-              <span className={styles.welcomeFeatureDot}>📅</span>
+              <span className={styles.welcomeFeatureDot}>
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z" />
+                </svg>
+              </span>
               Расписание, журнал и оценки в одном окне
             </div>
             <div className={styles.welcomeFeature}>
-              <span className={styles.welcomeFeatureDot}>📝</span>
+              <span className={styles.welcomeFeatureDot}>
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM8 13h8v2H8v-2zm0 4h5v2H8v-2z" />
+                </svg>
+              </span>
               Домашние задания и тесты онлайн
             </div>
             <div className={styles.welcomeFeature}>
-              <span className={styles.welcomeFeatureDot}>💬</span>
+              <span className={styles.welcomeFeatureDot}>
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2zM7 9h10v2H7V9zm6 5H7v-2h6v2zm4-6H7V6h10v2z" />
+                </svg>
+              </span>
               Чаты учеников, родителей и учителей
             </div>
           </div>

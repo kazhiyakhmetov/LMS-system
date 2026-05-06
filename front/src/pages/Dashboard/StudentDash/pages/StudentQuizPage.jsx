@@ -42,6 +42,35 @@ export default function StudentQuizPage() {
   const listQuery = useApi(() => quizzesApi.studentAvailable(), []);
   const list = useMemo(() => Array.isArray(listQuery.data) ? listQuery.data : [], [listQuery.data]);
 
+  const completedQuery = useApi(() => quizzesApi.studentCompleted(), []);
+  const completedList = useMemo(
+    () => Array.isArray(completedQuery.data) ? completedQuery.data : [],
+    [completedQuery.data],
+  );
+
+  const [tab, setTab] = useState("available"); // "available" | "completed"
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewData, setReviewData] = useState(null);
+  const [reviewError, setReviewError] = useState("");
+
+  async function openReview(attemptId) {
+    setReviewLoading(true);
+    setReviewError("");
+    setReviewData({ attemptId });
+    try {
+      const data = await quizzesApi.studentResult(attemptId);
+      setReviewData(data);
+    } catch (e) {
+      setReviewError(e?.message || "Не удалось загрузить результаты");
+    } finally {
+      setReviewLoading(false);
+    }
+  }
+  function closeReview() {
+    setReviewData(null);
+    setReviewError("");
+  }
+
   const [page, setPage] = useState(1);
   const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -270,7 +299,92 @@ export default function StudentQuizPage() {
         </section>
       ) : null}
 
-      {list.length === 0 ? (
+      <section style={{ display: "flex", gap: 8, padding: "4px", borderRadius: 999, background: "var(--panel-2)", border: "1px solid var(--stroke)", width: "fit-content" }}>
+        <button
+          type="button"
+          onClick={() => setTab("available")}
+          style={{
+            height: 30, padding: "0 14px", border: 0, borderRadius: 999,
+            background: tab === "available" ? "linear-gradient(135deg, var(--accent), var(--accent-alt))" : "transparent",
+            color: tab === "available" ? "#fff" : "var(--muted)",
+            fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+            boxShadow: tab === "available" ? "0 4px 12px rgba(99, 102, 241, 0.35)" : "none",
+          }}
+        >Доступные ({list.length})</button>
+        <button
+          type="button"
+          onClick={() => setTab("completed")}
+          style={{
+            height: 30, padding: "0 14px", border: 0, borderRadius: 999,
+            background: tab === "completed" ? "linear-gradient(135deg, var(--accent), var(--accent-alt))" : "transparent",
+            color: tab === "completed" ? "#fff" : "var(--muted)",
+            fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+            boxShadow: tab === "completed" ? "0 4px 12px rgba(99, 102, 241, 0.35)" : "none",
+          }}
+        >Пройденные ({completedList.length})</button>
+      </section>
+
+      {tab === "completed" ? (
+        completedList.length === 0 ? (
+          <div className={styles.empty}>Вы пока не прошли ни одного квиза.</div>
+        ) : (
+          <section className={styles.list}>
+            {completedList.map((c) => {
+              const score = Number(c.score ?? 0);
+              const tone = score >= 80 ? "var(--success-strong)" : score >= 50 ? "var(--warning-strong)" : "var(--danger-strong)";
+              const bg = score >= 80 ? "rgba(16,185,129,0.10)" : score >= 50 ? "rgba(245,158,11,0.10)" : "rgba(239,68,68,0.10)";
+              return (
+                <article key={c.attemptId} className={styles.card}>
+                  <div className={styles.cardHead}>
+                    <div>
+                      <h3 className={styles.cardTitle}>{c.title || `#${c.quizId}`}</h3>
+                      {c.subjectName ? (
+                        <p className={styles.cardDesc} style={{ textTransform: "uppercase", letterSpacing: "0.04em", color: "var(--accent-strong)", fontWeight: 700, fontSize: 11, marginTop: 4 }}>
+                          {c.subjectName}
+                        </p>
+                      ) : null}
+                      {c.description ? <p className={styles.cardDesc}>{c.description}</p> : null}
+                    </div>
+                    <span style={{
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
+                      minWidth: 56, height: 36, padding: "0 12px", borderRadius: 10,
+                      background: bg, color: tone, fontWeight: 800, fontSize: 16,
+                      fontVariantNumeric: "tabular-nums",
+                    }}>{score}%</span>
+                  </div>
+
+                  <div className={styles.metrics}>
+                    <div className={styles.metric}>
+                      <span className={styles.metricLabel}>Вопросов</span>
+                      <span className={styles.metricValue}>{c.questionsCount ?? "—"}</span>
+                    </div>
+                    <div className={styles.metric}>
+                      <span className={styles.metricLabel}>Сдано</span>
+                      <span className={styles.metricValue} style={{ fontSize: 12 }}>
+                        {c.endTime ? formatDateTime(c.endTime) : "—"}
+                      </span>
+                    </div>
+                    <div className={styles.metric}>
+                      <span className={styles.metricLabel}>Время</span>
+                      <span className={styles.metricValue} style={{ fontSize: 13 }}>
+                        {c.durationSeconds ? `${Math.round(c.durationSeconds / 60)} мин` : "—"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className={styles.startBtn}
+                    onClick={() => openReview(c.attemptId)}
+                  >
+                    Посмотреть ответы
+                  </button>
+                </article>
+              );
+            })}
+          </section>
+        )
+      ) : list.length === 0 ? (
         <div className={styles.empty}>{t("student.quizzes.empty")}</div>
       ) : (
         <section className={styles.list}>
@@ -324,7 +438,7 @@ export default function StudentQuizPage() {
         </section>
       )}
 
-      {list.length > 0 && totalPages > 1 ? (
+      {tab === "available" && list.length > 0 && totalPages > 1 ? (
         <nav className={styles.pagination} aria-label="Pagination">
           <span className={styles.pageInfo}>
             {t("student.quizzes.paginationInfo", {
@@ -661,6 +775,119 @@ export default function StudentQuizPage() {
               </div>
             )}
           </section>
+        </div>
+      ) : null}
+
+      {reviewData ? (
+        <div
+          onClick={(e) => { if (e.target === e.currentTarget) closeReview(); }}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(15,23,42,0.55)",
+            display: "grid", placeItems: "center", zIndex: 100, padding: 16,
+          }}
+        >
+          <div style={{
+            width: "min(720px, 100%)", maxHeight: "90vh", overflow: "auto",
+            background: "var(--panel)", borderRadius: 18, border: "1px solid var(--stroke)",
+            boxShadow: "0 24px 60px rgba(15,23,42,0.16)", padding: 24,
+          }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, marginBottom: 14 }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "var(--text)" }}>
+                  {reviewData?.quiz?.title || "Результат"}
+                </h3>
+                {reviewData?.quiz?.subjectName ? (
+                  <p style={{ margin: "4px 0 0", fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--accent-strong)" }}>
+                    {reviewData.quiz.subjectName}
+                  </p>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                onClick={closeReview}
+                style={{ width: 36, height: 36, border: "1px solid var(--stroke)", borderRadius: 10, background: "var(--panel-2)", cursor: "pointer", display: "grid", placeItems: "center" }}
+                aria-label="Закрыть"
+              ><CloseIcon /></button>
+            </div>
+
+            {reviewLoading ? (
+              <p style={{ color: "var(--muted)" }}>{t("common.loading")}</p>
+            ) : reviewError ? (
+              <p style={{ color: "var(--danger-strong)" }}>{reviewError}</p>
+            ) : reviewData?.questions ? (
+              <>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 16 }}>
+                  <div style={{ padding: 12, border: "1px solid var(--stroke)", borderRadius: 10, background: "var(--panel-2)" }}>
+                    <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Балл</p>
+                    <p style={{ margin: "6px 0 0", fontSize: 22, fontWeight: 800, color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>{reviewData.score ?? 0}%</p>
+                  </div>
+                  <div style={{ padding: 12, border: "1px solid var(--stroke)", borderRadius: 10, background: "var(--panel-2)" }}>
+                    <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Правильных</p>
+                    <p style={{ margin: "6px 0 0", fontSize: 22, fontWeight: 800, color: "var(--success-strong)", fontVariantNumeric: "tabular-nums" }}>
+                      {reviewData.correctCount ?? 0} / {reviewData.totalQuestions ?? 0}
+                    </p>
+                  </div>
+                  <div style={{ padding: 12, border: "1px solid var(--stroke)", borderRadius: 10, background: "var(--panel-2)" }}>
+                    <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Время</p>
+                    <p style={{ margin: "6px 0 0", fontSize: 18, fontWeight: 800, color: "var(--text)" }}>
+                      {reviewData.durationSeconds ? `${Math.round(reviewData.durationSeconds / 60)} мин` : "—"}
+                    </p>
+                  </div>
+                </div>
+
+                <ol style={{ display: "grid", gap: 12, padding: 0, listStyle: "none", margin: 0 }}>
+                  {reviewData.questions.map((q, idx) => (
+                    <li key={q.id} style={{
+                      border: "1px solid var(--stroke)",
+                      borderLeft: `4px solid ${q.isCorrect ? "var(--success)" : "var(--danger)"}`,
+                      borderRadius: 12, background: "var(--panel-2)", padding: 14,
+                    }}>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "var(--text)" }}>
+                        <span style={{ color: "var(--muted)", marginRight: 8, fontVariantNumeric: "tabular-nums" }}>{idx + 1}.</span>
+                        {q.text}
+                      </p>
+                      <ul style={{ margin: "10px 0 0", padding: 0, listStyle: "none", display: "grid", gap: 6 }}>
+                        {q.options.map((o) => {
+                          const isCorrectOpt = o.isCorrect;
+                          const isSelected = o.selected;
+                          let bg = "var(--panel)";
+                          let bd = "var(--stroke)";
+                          let icon = null;
+                          if (isCorrectOpt) {
+                            bg = "rgba(16,185,129,0.08)";
+                            bd = "rgba(16,185,129,0.4)";
+                            icon = "✓";
+                          }
+                          if (isSelected && !isCorrectOpt) {
+                            bg = "rgba(239,68,68,0.08)";
+                            bd = "rgba(239,68,68,0.4)";
+                            icon = "✕";
+                          }
+                          return (
+                            <li key={o.id} style={{
+                              padding: "8px 12px", border: `1px solid ${bd}`, borderRadius: 8,
+                              background: bg, fontSize: 13, color: "var(--text)",
+                              display: "flex", alignItems: "center", gap: 10,
+                            }}>
+                              <span style={{ minWidth: 18, textAlign: "center", color: isCorrectOpt ? "var(--success-strong)" : "var(--danger-strong)" }}>
+                                {icon || "·"}
+                              </span>
+                              <span style={{ flex: 1 }}>{o.text}</span>
+                              {isSelected ? (
+                                <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", color: "var(--muted)", letterSpacing: "0.06em" }}>
+                                  Ваш ответ
+                                </span>
+                              ) : null}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </li>
+                  ))}
+                </ol>
+              </>
+            ) : null}
+          </div>
         </div>
       ) : null}
     </div>

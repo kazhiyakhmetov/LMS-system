@@ -117,6 +117,125 @@
   color: var(--muted);
 }
 
+.riskBadge {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 84px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--stroke);
+  background: var(--panel-2);
+  cursor: help;
+  transition: transform var(--transition-fast);
+}
+
+.riskBadge:hover { transform: translateY(-1px); }
+
+.riskBadgeLabel {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.riskBadgeValue {
+  font-size: 22px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  margin-top: 2px;
+  color: var(--text);
+}
+
+.riskLevel_low {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.10);
+}
+.riskLevel_low .riskBadgeValue { color: var(--success-strong); }
+
+.riskLevel_mid {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.10);
+}
+.riskLevel_mid .riskBadgeValue { color: var(--warning-strong); }
+
+.riskLevel_high {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.12);
+}
+.riskLevel_high .riskBadgeValue { color: var(--danger-strong); }
+
+/* === Risk alert card (only for level=high) === */
+.riskAlertCard {
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-left: 4px solid var(--danger);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, var(--panel) 60%);
+  box-shadow: var(--shadow-1);
+  padding: 18px 22px;
+  display: grid;
+  gap: 10px;
+}
+
+.riskAlertHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.riskAlertIcon {
+  font-size: 22px;
+  color: var(--danger);
+}
+
+.riskAlertTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--danger-strong);
+}
+
+.riskAlertText {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.riskAlertList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.riskAlertFactor {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+}
+
+.riskAlertFactorLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.riskAlertFactorValue {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--danger-strong);
+  font-variant-numeric: tabular-nums;
+}
+
 .childSelect {
   height: 38px;
   border: 1px solid var(--stroke);
