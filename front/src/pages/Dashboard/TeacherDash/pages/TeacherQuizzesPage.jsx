@@ -3,6 +3,7 @@ import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { quizzesApi, teachingApi } from "../../../../shared/lib/api";
 import { formatDateTime } from "../../../../shared/lib/utils/date";
 import { useT } from "../../../../shared/lib/i18n";
+import AIQuizGenerator from "../../../../shared/ui/AIQuizGenerator/AIQuizGenerator";
 import styles from "./TeacherQuizzesPage.module.css";
 
 const QUESTION_TYPE_KEYS = ["SINGLE_CHOICE", "MULTIPLE_CHOICE", "TEXT_ANSWER"];
@@ -62,6 +63,8 @@ export default function TeacherQuizzesPage() {
   const [createForm, setCreateForm] = useState({ title: "", description: "", subjectId: "" });
   const [createError, setCreateError] = useState("");
   const [createSubmitting, setCreateSubmitting] = useState(false);
+
+  const [aiOpen, setAiOpen] = useState(false);
 
   const subjectOptions = useMemo(() => {
     const map = new Map();
@@ -309,9 +312,20 @@ export default function TeacherQuizzesPage() {
           <h2 className={styles.title}>{t("teacher.quizzes.title")}</h2>
           <p className={styles.sub}>{t("teacher.quizzes.sub")}</p>
         </div>
-        <button className={styles.createBtn} type="button" onClick={() => setCreateOpen(true)}>
-          {t("teacher.quizzes.createBtn")}
-        </button>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <button
+            type="button"
+            onClick={() => setAiOpen(true)}
+            style={{
+              height: 40, padding: "0 18px", borderRadius: 10, border: "1px solid var(--stroke-accent)",
+              background: "var(--accent-soft)", color: "var(--accent-strong)", fontSize: 13, fontWeight: 700,
+              cursor: "pointer", fontFamily: "inherit",
+            }}
+          >✨ Сгенерировать ИИ</button>
+          <button className={styles.createBtn} type="button" onClick={() => setCreateOpen(true)}>
+            {t("teacher.quizzes.createBtn")}
+          </button>
+        </div>
       </section>
 
       <div className={styles.tabs}>
@@ -810,6 +824,13 @@ export default function TeacherQuizzesPage() {
           </section>
         </div>
       ) : null}
+
+      <AIQuizGenerator
+        open={aiOpen}
+        onClose={() => setAiOpen(false)}
+        role="teacher"
+        onSaved={() => quizzesQuery.refetch().catch(() => {})}
+      />
     </div>
   );
 }

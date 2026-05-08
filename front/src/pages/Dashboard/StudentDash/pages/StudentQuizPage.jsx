@@ -4,6 +4,7 @@ import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { quizzesApi } from "../../../../shared/lib/api";
 import { useT } from "../../../../shared/lib/i18n";
 import { formatDateTime } from "../../../../shared/lib/utils/date";
+import AIQuizGenerator from "../../../../shared/ui/AIQuizGenerator/AIQuizGenerator";
 
 const PAGE_SIZE = 10;
 
@@ -91,6 +92,7 @@ export default function StudentQuizPage() {
   // === Peer-quiz creation ===
   const myCreatedQuery = useApi(() => quizzesApi.studentMyCreated(), []);
   const myCreated = useMemo(() => Array.isArray(myCreatedQuery.data) ? myCreatedQuery.data : [], [myCreatedQuery.data]);
+  const [aiOpen, setAiOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [creatorMode, setCreatorMode] = useState("info"); // info | questions | share
   const [draftQuiz, setDraftQuiz] = useState(null);
@@ -258,6 +260,15 @@ export default function StudentQuizPage() {
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <span className={styles.statusChip}>{list.length}</span>
+          <button
+            type="button"
+            onClick={() => setAiOpen(true)}
+            style={{
+              height: 40, padding: "0 18px", borderRadius: 10, border: "1px solid var(--stroke-accent)",
+              background: "var(--accent-soft)", color: "var(--accent-strong)", fontSize: 13, fontWeight: 700,
+              cursor: "pointer", fontFamily: "inherit",
+            }}
+          >✨ Сгенерировать ИИ</button>
           <button
             type="button"
             onClick={openCreator}
@@ -890,6 +901,13 @@ export default function StudentQuizPage() {
           </div>
         </div>
       ) : null}
+
+      <AIQuizGenerator
+        open={aiOpen}
+        onClose={() => setAiOpen(false)}
+        role="student"
+        onSaved={() => myCreatedQuery.refetch().catch(() => {})}
+      />
     </div>
   );
 }

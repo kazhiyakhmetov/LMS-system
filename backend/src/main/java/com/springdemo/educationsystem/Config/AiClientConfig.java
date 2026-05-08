@@ -34,4 +34,19 @@ public class AiClientConfig {
                 .requestFactory(factory)
                 .build();
     }
+
+    /**
+     * Separate client for slow LLM-backed operations (quiz generation).
+     * Read-timeout up to 4 min — Qwen 2.5 3B on CPU may take 30-90 seconds.
+     */
+    @Bean(name = "aiGenRestClient")
+    public RestClient aiGenRestClient() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofMillis(connectTimeoutMs));
+        factory.setReadTimeout(Duration.ofMillis(240_000));
+        return RestClient.builder()
+                .baseUrl(aiServiceUrl)
+                .requestFactory(factory)
+                .build();
+    }
 }

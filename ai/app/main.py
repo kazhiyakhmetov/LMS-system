@@ -15,6 +15,7 @@ from fastapi import FastAPI
 from .db import close_pool, get_pool
 from .risk.routes import router as risk_router
 from .recommend.routes import router as recommend_router
+from .generate.routes import router as generate_router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 log = logging.getLogger("studix.ai")
@@ -48,3 +49,4 @@ def health() -> dict:
 
 app.include_router(risk_router, prefix="/risk", tags=["risk"])
 app.include_router(recommend_router, prefix="/recommend", tags=["recommend"])
+app.include_router(generate_router, prefix="/generate", tags=["generate"])

@@ -16,6 +16,7 @@ import com.springdemo.educationsystem.Repository.QuizAnswerRepository;
 import com.springdemo.educationsystem.Repository.QuizAttemptRepository;
 import com.springdemo.educationsystem.Repository.QuizOptionRepository;
 import com.springdemo.educationsystem.Repository.QuizQuestionRepository;
+import com.springdemo.educationsystem.Service.AiService;
 import com.springdemo.educationsystem.Service.AuthService;
 import com.springdemo.educationsystem.Service.QuizAssignmentService;
 import com.springdemo.educationsystem.Service.QuizAttemptService;
@@ -45,6 +46,7 @@ public class StudentQuizController {
     private final QuizAnswerRepository answerRepository;
     private final QuizQuestionRepository questionRepository;
     private final QuizOptionRepository optionRepository;
+    private final AiService aiService;
 
     public StudentQuizController(
             QuizAttemptService quizAttemptService,
@@ -54,7 +56,8 @@ public class StudentQuizController {
             QuizAttemptRepository attemptRepository,
             QuizAnswerRepository answerRepository,
             QuizQuestionRepository questionRepository,
-            QuizOptionRepository optionRepository
+            QuizOptionRepository optionRepository,
+            AiService aiService
     ) {
         this.quizAttemptService = quizAttemptService;
         this.quizAssignmentService = quizAssignmentService;
@@ -64,6 +67,35 @@ public class StudentQuizController {
         this.answerRepository = answerRepository;
         this.questionRepository = questionRepository;
         this.optionRepository = optionRepository;
+        this.aiService = aiService;
+    }
+
+    /**
+     * AI-powered quiz generator for students (peer-quiz creation).
+     */
+    @PostMapping("/generate-ai")
+    public ResponseEntity<?> generateWithAi(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader("Authorization") String auth
+    ) {
+        String token = auth != null && auth.startsWith("Bearer ") ? auth.substring(7) : "";
+        if (!authService.isValidToken(token)) {
+            return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
+        }
+        if (!"student".equals(authService.getUserRole(token))) {
+            return ResponseEntity.status(403).body(Map.of("error", "Student only"));
+        }
+
+        String text = body.get("text") != null ? body.get("text").toString() : "";
+        int n = 5;
+        try { n = Integer.parseInt(String.valueOf(body.getOrDefault("nQuestions", 5))); }
+        catch (NumberFormatException ignored) {}
+        String difficulty = body.get("difficulty") != null ? body.get("difficulty").toString() : "medium";
+        Map<String, Object> result = aiService.generateQuiz(text, n, difficulty, "quiz");
+        if (result.containsKey("error")) {
+            return ResponseEntity.status(502).body(result);
+        }
+        return ResponseEntity.ok(result);
     }
 
     // ========== STUDENT PEER-QUIZ CREATION ==========

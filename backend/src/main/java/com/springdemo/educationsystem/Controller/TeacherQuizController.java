@@ -11,6 +11,7 @@ import com.springdemo.educationsystem.Entity.QuizAttempt;
 import com.springdemo.educationsystem.Entity.QuizQuestion;
 import com.springdemo.educationsystem.Entity.Teacher;
 import com.springdemo.educationsystem.Repository.QuizAttemptRepository;
+import com.springdemo.educationsystem.Service.AiService;
 import com.springdemo.educationsystem.Service.AuthService;
 import com.springdemo.educationsystem.Service.QuizAssignmentService;
 import com.springdemo.educationsystem.Service.QuizService;
@@ -34,6 +35,7 @@ public class TeacherQuizController {
     private final QuizAssignmentService quizAssignmentService;
     private final QuizAttemptRepository attemptRepository;
     private final TeacherQuizReviewService teacherQuizReviewService;
+    private final AiService aiService;
 
     public TeacherQuizController(
             QuizService quizService,
@@ -41,7 +43,8 @@ public class TeacherQuizController {
             TeacherService teacherService,
             QuizAssignmentService quizAssignmentService,
             QuizAttemptRepository attemptRepository,
-            TeacherQuizReviewService teacherQuizReviewService
+            TeacherQuizReviewService teacherQuizReviewService,
+            AiService aiService
     ) {
         this.quizService = quizService;
         this.authService = authService;
@@ -49,6 +52,33 @@ public class TeacherQuizController {
         this.quizAssignmentService = quizAssignmentService;
         this.attemptRepository = attemptRepository;
         this.teacherQuizReviewService = teacherQuizReviewService;
+        this.aiService = aiService;
+    }
+
+    /**
+     * AI-powered test generator. Teacher sends a paragraph and parameters,
+     * gets back a draft list of single-choice questions to review and save.
+     */
+    @PostMapping("/generate-ai")
+    public ResponseEntity<?> generateWithAi(
+            @RequestBody Map<String, Object> body,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+        try {
+            getAuthorizedTeacher(authorizationHeader);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
+        }
+        String text = body.get("text") != null ? body.get("text").toString() : "";
+        int n = 5;
+        try { n = Integer.parseInt(String.valueOf(body.getOrDefault("nQuestions", 5))); }
+        catch (NumberFormatException ignored) {}
+        String difficulty = body.get("difficulty") != null ? body.get("difficulty").toString() : "medium";
+        Map<String, Object> result = aiService.generateQuiz(text, n, difficulty, "test");
+        if (result.containsKey("error")) {
+            return ResponseEntity.status(502).body(result);
+        }
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/create")

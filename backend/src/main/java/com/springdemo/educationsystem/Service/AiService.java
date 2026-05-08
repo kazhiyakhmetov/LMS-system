@@ -26,9 +26,38 @@ public class AiService {
     private static final Logger log = LoggerFactory.getLogger(AiService.class);
 
     private final RestClient ai;
+    private final RestClient aiGen;
 
-    public AiService(@Qualifier("aiRestClient") RestClient ai) {
+    public AiService(@Qualifier("aiRestClient") RestClient ai,
+                     @Qualifier("aiGenRestClient") RestClient aiGen) {
         this.ai = ai;
+        this.aiGen = aiGen;
+    }
+
+    /**
+     * Calls the AI quiz generator. Uses a separate RestClient with 4 min
+     * read-timeout — Qwen 2.5 3B on CPU may take 30-90 seconds per request.
+     */
+    public Map<String, Object> generateQuiz(String text, int nQuestions, String difficulty, String kind) {
+        Map<String, Object> body = Map.of(
+                "text", text == null ? "" : text,
+                "nQuestions", Math.max(2, Math.min(15, nQuestions)),
+                "difficulty", difficulty == null || difficulty.isBlank() ? "medium" : difficulty,
+                "kind", kind == null || kind.isBlank() ? "quiz" : kind
+        );
+        try {
+            return aiGen.post()
+                    .uri("/generate/quiz")
+                    .body(body)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+        } catch (ResourceAccessException e) {
+            log.warn("AI generator unreachable: {}", e.getMessage());
+            return Map.of("error", "AI service is unreachable");
+        } catch (Exception e) {
+            log.warn("generateQuiz failed: {}", e.getMessage());
+            return Map.of("error", e.getMessage());
+        }
     }
 
     public StudentRiskDTO riskForStudent(Long studentId) {

@@ -10,6 +10,8 @@ export const quizzesApi = {
   studentAttempt: (attemptId) => http.get(`/student/quiz/attempt/${attemptId}`),
   studentResult: (attemptId) => http.get(`/student/quiz/result/${attemptId}`),
   studentCompleted: () => http.get("/student/quiz/completed"),
+  studentGenerateAi: (body) => http.post("/student/quiz/generate-ai", body, { timeout: 240000 }),
+  teacherGenerateAi: (body) => http.post("/teacher/quiz/generate-ai", body, { timeout: 240000 }),
 
   // === Student peer-quiz creation ===
   studentCreate: (body) => http.post("/student/quiz/create", body),
