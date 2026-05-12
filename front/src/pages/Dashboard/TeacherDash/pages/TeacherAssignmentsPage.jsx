@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import styles from "./TeacherAssignmentsPage.module.css";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
-import { assignmentsApi, submissionsApi, teachingApi } from "../../../../shared/lib/api";
+import { assignmentsApi, filesApi, submissionsApi, teachingApi } from "../../../../shared/lib/api";
 import { formatDateTime } from "../../../../shared/lib/utils/date";
 import { useT } from "../../../../shared/lib/i18n";
 
@@ -447,8 +447,24 @@ export default function TeacherAssignmentsPage() {
                         <div>
                           <p className={styles.studentName}>{s.studentName || t("teacher.assignments.modal.studentFallback", { id: s.studentId })}</p>
                           <p className={styles.studentMeta}>
-                            {s.fileName || "—"} • {s.submittedAt ? formatDateTime(s.submittedAt) : ""}
+                            {s.fileName ? (
+                              <a
+                                href={filesApi.downloadSubmissionUrl(s.id)}
+                                download={s.fileName}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{ color: "var(--accent-strong)", textDecoration: "underline", fontWeight: 600 }}
+                              >
+                                ⬇ {s.fileName}
+                              </a>
+                            ) : "—"}
+                            {s.submittedAt ? ` • ${formatDateTime(s.submittedAt)}` : ""}
                           </p>
+                          {s.comment ? (
+                            <p className={styles.studentMeta} style={{ fontStyle: "italic", marginTop: 4 }}>
+                              «{s.comment}»
+                            </p>
+                          ) : null}
                         </div>
                         <div className={styles.gradeControls}>
                           <select
@@ -457,10 +473,10 @@ export default function TeacherAssignmentsPage() {
                             onChange={(e) => setGrading((prev) => ({ ...prev, [s.id]: { ...prev[s.id], grade: e.target.value } }))}
                           >
                             <option value="">—</option>
-                            <option value="5">5</option>
-                            <option value="4">4</option>
-                            <option value="3">3</option>
-                            <option value="2">2</option>
+                            {Array.from({ length: Math.max(1, Number(selectedTask?.maxGrade) || 5) }, (_, i) => {
+                              const n = (Number(selectedTask?.maxGrade) || 5) - i;
+                              return <option key={n} value={n}>{n}</option>;
+                            })}
                           </select>
                           <input
                             className={styles.noteInput}

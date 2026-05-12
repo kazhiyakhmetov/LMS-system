@@ -6,5 +6,8 @@ export const adminMenu = [
   { href: "/admin/teaching", labelKey: "nav.admin.teaching", icon: "link" },
   { href: "/admin/schedule", labelKey: "nav.admin.schedule", icon: "calendar-plus" },
   { href: "/admin/surveys", labelKey: "nav.admin.surveys", icon: "poll" },
+  { href: "/admin/news", label: "Новости", icon: "news" },
+  { href: "/admin/banners", label: "Уведомления", icon: "poll" },
+  { href: "/admin/grade-formula", label: "Формула оценок", icon: "chart" },
   { href: "/admin/settings", labelKey: "nav.admin.settings", icon: "settings" },
 ];

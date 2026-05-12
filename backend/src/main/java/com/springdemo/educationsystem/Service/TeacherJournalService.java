@@ -29,6 +29,7 @@ public class TeacherJournalService {
     private final AttendanceMarkRepository attendanceMarkRepository;
     private final JournalEntryRepository journalEntryRepository;
     private final JournalFinalGradeRepository journalFinalGradeRepository;
+    private final GradeFormulaService gradeFormulaService;
 
     public TeacherJournalService(
             TeacherRepository teacherRepository,
@@ -41,7 +42,8 @@ public class TeacherJournalService {
             QuizAttemptRepository quizAttemptRepository,
             AttendanceMarkRepository attendanceMarkRepository,
             JournalEntryRepository journalEntryRepository,
-            JournalFinalGradeRepository journalFinalGradeRepository
+            JournalFinalGradeRepository journalFinalGradeRepository,
+            GradeFormulaService gradeFormulaService
     ) {
         this.teacherRepository = teacherRepository;
         this.studentRepository = studentRepository;
@@ -54,6 +56,7 @@ public class TeacherJournalService {
         this.attendanceMarkRepository = attendanceMarkRepository;
         this.journalEntryRepository = journalEntryRepository;
         this.journalFinalGradeRepository = journalFinalGradeRepository;
+        this.gradeFormulaService = gradeFormulaService;
     }
 
     public List<TeacherJournalClassDTO> getTeacherJournalClasses(Long teacherUserId) {
@@ -355,12 +358,19 @@ public class TeacherJournalService {
                 .orElseThrow(() -> new RuntimeException("Subject not found"));
 
         LocalDate lessonDate = LocalDate.parse(request.getLessonDate());
-        AttendanceStatus newStatus = AttendanceStatus.valueOf(request.getStatus());
 
         Optional<AttendanceMark> existingOpt = attendanceMarkRepository
                 .findByTeacherIdAndStudentIdAndSchoolClassIdAndSubjectIdAndLessonDate(
                         teacher.getId(), student.getId(), schoolClass.getId(), subject.getId(), lessonDate
                 );
+
+        // Если status пустой / null — очищаем существующую отметку (это и есть «убрать»).
+        if (request.getStatus() == null || request.getStatus().isBlank()) {
+            existingOpt.ifPresent(attendanceMarkRepository::delete);
+            return;
+        }
+
+        AttendanceStatus newStatus = AttendanceStatus.valueOf(request.getStatus());
 
         if (existingOpt.isPresent()) {
             AttendanceMark existing = existingOpt.get();
@@ -402,9 +412,18 @@ public class TeacherJournalService {
 
         LocalDate lessonDate = LocalDate.parse(request.getLessonDate());
 
+        // Определяем тип записи: LESSON_GRADE (по умолчанию), SOR_GRADE, SOCH_GRADE.
+        JournalEntryType entryType = JournalEntryType.LESSON_GRADE;
+        String sourceType = "LESSON";
+        if (request.getEntryType() != null) {
+            String t = request.getEntryType().trim().toUpperCase();
+            if (t.equals("SOR") || t.equals("SOR_GRADE")) { entryType = JournalEntryType.SOR_GRADE; sourceType = "SOR"; }
+            else if (t.equals("SOCH") || t.equals("SOCH_GRADE")) { entryType = JournalEntryType.SOCH_GRADE; sourceType = "SOCH"; }
+        }
+
         Optional<JournalEntry> existingOpt = journalEntryRepository
                 .findByTeacherIdAndStudentIdAndSchoolClassIdAndSubjectIdAndLessonDateAndEntryType(
-                        teacher.getId(), student.getId(), schoolClass.getId(), subject.getId(), lessonDate, JournalEntryType.LESSON_GRADE
+                        teacher.getId(), student.getId(), schoolClass.getId(), subject.getId(), lessonDate, entryType
                 );
 
         if (request.getValue() == null) {
@@ -420,12 +439,12 @@ public class TeacherJournalService {
         entry.setSubject(subject);
         entry.setLessonDate(lessonDate);
         entry.setQuarter(request.getQuarter());
-        entry.setEntryType(JournalEntryType.LESSON_GRADE);
+        entry.setEntryType(entryType);
         entry.setNumericValue(request.getValue());
         entry.setMaxValue(10.0);
         entry.setDisplayValue(trimZero(request.getValue()));
         entry.setSourceId(null);
-        entry.setSourceType("LESSON");
+        entry.setSourceType(sourceType);
         entry.setComment(request.getComment());
         entry.setManual(true);
 
@@ -802,15 +821,32 @@ public class TeacherJournalService {
                 teacherId, studentId, classId, subjectId, quarter
         );
 
-        List<Double> values = entries.stream()
-                .map(JournalEntry::getNumericValue)
-                .filter(Objects::nonNull)
-                .toList();
+        if (entries.isEmpty()) return null;
 
-        if (values.isEmpty()) return null;
+        // Группируем по категориям: ФО (урок/задание/квиз), СОР, СОЧ.
+        List<Double> foValues = new java.util.ArrayList<>();
+        List<Double> sorValues = new java.util.ArrayList<>();
+        List<Double> sochValues = new java.util.ArrayList<>();
 
-        double avg = values.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-        return (int) Math.round(avg);
+        for (JournalEntry e : entries) {
+            if (e.getNumericValue() == null) continue;
+            double v = e.getNumericValue();
+            JournalEntryType type = e.getEntryType();
+            if (type == null) continue;
+            switch (type) {
+                case SOR_GRADE -> sorValues.add(v);
+                case SOCH_GRADE -> sochValues.add(v);
+                case LESSON_GRADE, ASSIGNMENT_GRADE, QUIZ_GRADE -> foValues.add(v);
+            }
+        }
+
+        Double foAvg = foValues.isEmpty() ? null : foValues.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+        Double sorAvg = sorValues.isEmpty() ? null : sorValues.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+        Double sochAvg = sochValues.isEmpty() ? null : sochValues.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+
+        Double weighted = gradeFormulaService.calcQuarter(foAvg, sorAvg, sochAvg);
+        if (weighted == null) return null;
+        return (int) Math.round(weighted);
     }
 
     private String buildStudentName(User user) {
@@ -845,6 +881,8 @@ public class TeacherJournalService {
             case LESSON_GRADE -> "Урок";
             case ASSIGNMENT_GRADE -> "Задание";
             case QUIZ_GRADE -> "Квиз";
+            case SOR_GRADE -> "СОР";
+            case SOCH_GRADE -> "СОЧ";
         };
     }
 

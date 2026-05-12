@@ -9,6 +9,10 @@ public class AdminSchoolClassDTO {
     private Long schoolId;
     private String schoolName;
     private int studentsCount;
+    private String language;
+
+    public String getLanguage() { return language; }
+    public void setLanguage(String language) { this.language = language; }
 
     // НОВОЕ: данные классного руководителя
     private Long homeroomTeacherId;

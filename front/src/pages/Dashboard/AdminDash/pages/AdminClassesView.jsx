@@ -8,6 +8,7 @@ const INITIAL_CLASS_FORM = {
   name: "",
   academicYear: "2025-2026",
   homeroomTeacherId: "",
+  language: "",
   active: true,
 };
 
@@ -87,6 +88,7 @@ export default function AdminClassesView() {
       name: cls.name || "",
       academicYear: cls.academicYear || "2025-2026",
       homeroomTeacherId: cls.homeroomTeacherId ? String(cls.homeroomTeacherId) : "",
+      language: cls.language || "",
       active: cls.active,
     });
     setEditingClass(cls);
@@ -107,6 +109,7 @@ export default function AdminClassesView() {
           academicYear: form.academicYear,
           active: form.active,
           homeroomTeacherId: form.homeroomTeacherId ? Number(form.homeroomTeacherId) : null,
+          language: form.language || null,
         });
         setMessage(t("admin.classes.updated"));
       } else {
@@ -115,6 +118,7 @@ export default function AdminClassesView() {
           name: form.name,
           academicYear: form.academicYear,
           homeroomTeacherId: form.homeroomTeacherId ? Number(form.homeroomTeacherId) : null,
+          language: form.language || null,
         });
         setMessage(t("admin.classes.created"));
       }
@@ -223,7 +227,17 @@ export default function AdminClassesView() {
             >
               <div className={styles.classCardHead}>
                 <div>
-                  <h3 className={styles.classCardTitle}>{cls.name}</h3>
+                  <h3 className={styles.classCardTitle}>
+                    {cls.name}
+                    {cls.language ? (
+                      <span style={{
+                        marginLeft: 8, padding: "2px 8px", borderRadius: 999,
+                        background: "var(--accent-soft)", color: "var(--accent-strong)",
+                        fontSize: 10, fontWeight: 800, letterSpacing: "0.04em",
+                        verticalAlign: "middle",
+                      }}>{cls.language}</span>
+                    ) : null}
+                  </h3>
                   <p className={styles.classCardYear}>{cls.academicYear}</p>
                 </div>
                 <span className={`${styles.classCardStatus} ${cls.active ? styles.classCardStatusActive : styles.classCardStatusArchived}`}>
@@ -296,6 +310,20 @@ export default function AdminClassesView() {
                       {tt.fullName || tt.email}
                     </option>
                   ))}
+                </select>
+              </label>
+
+              <label className={styles.field}>
+                <span className={styles.label}>Язык обучения</span>
+                <select
+                  className={styles.select}
+                  value={form.language}
+                  onChange={(e) => setForm({ ...form, language: e.target.value })}
+                >
+                  <option value="">Не указан</option>
+                  <option value="RU">Русский</option>
+                  <option value="KZ">Қазақ</option>
+                  <option value="EN">English</option>
                 </select>
               </label>
 

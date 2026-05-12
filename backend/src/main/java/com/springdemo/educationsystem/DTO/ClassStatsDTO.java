@@ -7,8 +7,16 @@ public class ClassStatsDTO {
     private String className;
     private Integer totalStudents;
     private Integer totalAssignments;
+    private Integer totalQuizzes;
     private Double classAverageGrade;
+    private Double successRatePercent;
     private List<StudentStatsDTO> students;
+
+    public Integer getTotalQuizzes() { return totalQuizzes; }
+    public void setTotalQuizzes(Integer totalQuizzes) { this.totalQuizzes = totalQuizzes; }
+
+    public Double getSuccessRatePercent() { return successRatePercent; }
+    public void setSuccessRatePercent(Double successRatePercent) { this.successRatePercent = successRatePercent; }
 
     public ClassStatsDTO() {}
 

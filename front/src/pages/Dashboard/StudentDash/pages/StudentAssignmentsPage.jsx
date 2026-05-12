@@ -71,23 +71,63 @@ export default function StudentAssignmentsPage() {
   const loading = toSubmitQuery.loading || activeQuery.loading || overdueQuery.loading;
   const error = toSubmitQuery.error || activeQuery.error || overdueQuery.error;
 
-  const assignments = useMemo(() => {
-    const items = [];
-    (toSubmitQuery.data || []).forEach((a) => items.push(normalizeAssignment(a, "to-submit", t)));
-    (activeQuery.data || []).forEach((a) => items.push(normalizeAssignment(a, "active", t)));
-    (overdueQuery.data || []).forEach((a) => items.push(normalizeAssignment(a, "overdue", t)));
-    const seen = new Set();
-    return items.filter((item) => {
-      if (!item.id || seen.has(item.id)) return false;
-      seen.add(item.id);
-      return true;
-    });
-  }, [toSubmitQuery.data, activeQuery.data, overdueQuery.data, t]);
-
   const submissions = useMemo(
     () => Array.isArray(submissionsQuery.data) ? submissionsQuery.data : [],
     [submissionsQuery.data],
   );
+
+  // submission по assignmentId. Если у студента несколько сдач (повторная отправка) —
+  // берём последнюю с проставленной оценкой, иначе самую последнюю.
+  const submissionByAssignment = useMemo(() => {
+    const map = new Map();
+    submissions.forEach((s) => {
+      if (!s || s.assignmentId == null) return;
+      const existing = map.get(s.assignmentId);
+      if (!existing) { map.set(s.assignmentId, s); return; }
+      const existingGraded = existing.grade != null;
+      const newGraded = s.grade != null;
+      if (newGraded && !existingGraded) map.set(s.assignmentId, s);
+    });
+    return map;
+  }, [submissions]);
+
+  const assignments = useMemo(() => {
+    const items = [];
+    const pushFromAssignment = (a, source) => {
+      const sub = submissionByAssignment.get(a?.id);
+      // Если есть сдача с оценкой — нормализуем как submission-shape (raw.assignment + grade на корне)
+      const raw = sub ? { ...sub, assignment: a } : a;
+      items.push(normalizeAssignment(raw, source, t));
+    };
+    (toSubmitQuery.data || []).forEach((a) => pushFromAssignment(a, "to-submit"));
+    (activeQuery.data || []).forEach((a) => pushFromAssignment(a, "active"));
+    (overdueQuery.data || []).forEach((a) => pushFromAssignment(a, "overdue"));
+
+    // Дополняем completed-сдачами, чьих заданий нет в трёх API (бэк их сюда не вернул,
+    // потому что фильтрует "to submit / active / overdue" по дедлайну).
+    const knownIds = new Set(items.map((i) => i.id).filter(Boolean));
+    submissions.forEach((s) => {
+      if (s?.grade == null) return; // только проверенные
+      if (s.assignmentId == null) return;
+      if (knownIds.has(s.assignmentId)) return;
+      items.push({
+        id: s.assignmentId,
+        subject: s.subjectName || "—",
+        title: s.assignmentTitle || t("common.untitled"),
+        deadline: s.deadline || null,
+        teacher: s.teacherName || "",
+        description: "",
+        maxGrade: s.maxGrade ?? null,
+        status: "completed",
+        grade: `${s.grade}${s.maxGrade ? `/${s.maxGrade}` : ""}`,
+        submissionId: s.id,
+        submittedAt: s.submittedAt || null,
+        _source: "completed",
+      });
+      knownIds.add(s.assignmentId);
+    });
+    return items;
+  }, [toSubmitQuery.data, activeQuery.data, overdueQuery.data, submissions, submissionByAssignment, t]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");

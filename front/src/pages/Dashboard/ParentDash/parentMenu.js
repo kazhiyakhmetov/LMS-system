@@ -6,4 +6,6 @@ export const parentMenu = [
   { href: "/parent/journal", labelKey: "nav.parent.journal", icon: "book" },
   { href: "/parent/assignments", labelKey: "nav.parent.assignments", icon: "clipboard" },
   { href: "/parent/chat", labelKey: "nav.parent.chat", icon: "chat" },
+  { href: "/parent/news", label: "Новости", icon: "news" },
+  { href: "/parent/friends", label: "Друзья", icon: "user-plus" },
 ];

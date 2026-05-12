@@ -7,6 +7,7 @@ import com.springdemo.educationsystem.Entity.Lesson;
 import com.springdemo.educationsystem.Entity.ScheduleDay;
 import com.springdemo.educationsystem.Entity.ScheduleTemplate;
 import com.springdemo.educationsystem.Entity.SchoolClass;
+import com.springdemo.educationsystem.Repository.LessonRepository;
 import com.springdemo.educationsystem.Repository.ScheduleDayRepository;
 import com.springdemo.educationsystem.Repository.ScheduleTemplateRepository;
 import com.springdemo.educationsystem.Repository.SchoolClassRepository;
@@ -40,6 +41,7 @@ public class TeacherScheduleController {
     private final ScheduleDayRepository scheduleDayRepository;
     private final ScheduleTemplateRepository scheduleTemplateRepository;
     private final ScheduleDayService scheduleDayService;
+    private final LessonRepository lessonRepository;
 
     public TeacherScheduleController(TeacherScheduleService teacherScheduleService,
                                      LessonService lessonService,
@@ -47,7 +49,8 @@ public class TeacherScheduleController {
                                      SchoolClassRepository schoolClassRepository,
                                      ScheduleDayRepository scheduleDayRepository,
                                      ScheduleTemplateRepository scheduleTemplateRepository,
-                                     ScheduleDayService scheduleDayService) {
+                                     ScheduleDayService scheduleDayService,
+                                     LessonRepository lessonRepository) {
         this.teacherScheduleService = teacherScheduleService;
         this.lessonService = lessonService;
         this.authService = authService;
@@ -55,6 +58,35 @@ public class TeacherScheduleController {
         this.scheduleDayRepository = scheduleDayRepository;
         this.scheduleTemplateRepository = scheduleTemplateRepository;
         this.scheduleDayService = scheduleDayService;
+        this.lessonRepository = lessonRepository;
+    }
+
+    /**
+     * Admin view: schedule of a SPECIFIC CLASS for a given date.
+     * Returns all lessons taught in that class that day regardless of teacher.
+     */
+    @GetMapping("/class/{classId}")
+    public ResponseEntity<?> getClassSchedule(
+            @PathVariable Long classId,
+            @RequestParam LocalDate date,
+            @RequestHeader("Authorization") String authorizationHeader) {
+
+        if (!isAdmin(authorizationHeader)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied. Admin rights required."));
+        }
+
+        try {
+            SchoolClass schoolClass = schoolClassRepository.findById(classId)
+                    .orElseThrow(() -> new RuntimeException("Class not found"));
+            List<Lesson> lessons = lessonRepository.findBySchoolClassAndDate(schoolClass, date);
+            List<LessonDTO> lessonDTOs = lessons.stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(lessonDTOs);
+        } catch (Exception e) {
+            logger.error("Error getting class schedule: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     // Создать расписание для учителя

@@ -7,6 +7,7 @@ public class UserSearchDTO {
     private String email;
     private String profilePhotoPath;
     private String friendshipStatus; // "NONE", "PENDING", "ACCEPTED", "REJECTED"
+    private String role; // "ADMIN", "TEACHER", "STUDENT", "PARENT"
 
     public UserSearchDTO() {}
 
@@ -23,4 +24,6 @@ public class UserSearchDTO {
     public void setProfilePhotoPath(String profilePhotoPath) { this.profilePhotoPath = profilePhotoPath; }
     public String getFriendshipStatus() { return friendshipStatus; }
     public void setFriendshipStatus(String friendshipStatus) { this.friendshipStatus = friendshipStatus; }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 }

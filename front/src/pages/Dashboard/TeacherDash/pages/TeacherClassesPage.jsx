@@ -49,13 +49,19 @@ export default function TeacherClassesPage() {
   const rows = useMemo(() => {
     return pairs.map((pair, idx) => {
       const stats = summaryByClass.get(String(pair.classId));
+      const avg5 = Number(stats?.classAverageGrade ?? 0);
+      // Перевод 5-балльной средней в 10-балльную для отображения (avg * 2)
+      const avg10 = avg5 > 0 ? Math.min(10, Math.round(avg5 * 2 * 10) / 10) : 0;
       return {
         id: pair.assignmentId ?? `${pair.classId}-${pair.subjectId}-${idx}`,
         className: pair.className || "—",
         subject: pair.subjectName || "—",
         students: stats?.totalStudents ?? 0,
-        average: stats?.classAverageGrade ?? 0,
+        average: avg5,
+        average10: avg10,
         assignments: stats?.totalAssignments ?? 0,
+        quizzes: stats?.totalQuizzes ?? 0,
+        successRate: Math.min(100, Number(stats?.successRatePercent ?? 0)),
       };
     });
   }, [pairs, summaryByClass]);
@@ -189,7 +195,9 @@ export default function TeacherClassesPage() {
                 <th>{t("teacher.classes.tableHeaders.subject")}</th>
                 <th>{t("teacher.classes.tableHeaders.students")}</th>
                 <th>{t("teacher.classes.tableHeaders.assignments")}</th>
-                <th>{t("teacher.classes.tableHeaders.avgScore")}</th>
+                <th>Квизов</th>
+                <th>Средняя (10)</th>
+                <th>Успеваемость</th>
               </tr>
             </thead>
             <tbody>
@@ -199,7 +207,9 @@ export default function TeacherClassesPage() {
                   <td>{row.subject}</td>
                   <td>{row.students}</td>
                   <td>{row.assignments}</td>
-                  <td>{row.average ? row.average.toFixed(1) : "—"}</td>
+                  <td>{row.quizzes}</td>
+                  <td>{row.average10 ? row.average10.toFixed(1) : "—"}</td>
+                  <td>{row.successRate ? `${row.successRate.toFixed(0)}%` : "—"}</td>
                 </tr>
               ))}
             </tbody>

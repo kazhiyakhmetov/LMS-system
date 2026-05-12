@@ -1,19 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import styles from "./AdminPages.module.css";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { surveysApi } from "../../../../shared/lib/api";
 import { useT } from "../../../../shared/lib/i18n";
+
+function blankQuestion() {
+  return { text: "", type: "MULTIPLE_CHOICE", options: ["", ""] };
+}
 
 const defaultDraft = {
   title: "",
   description: "",
   forStudents: true,
   forTeachers: false,
-  question: "",
-  option1: "",
-  option2: "",
-  option3: "",
-  option4: "",
+  questions: [blankQuestion()],
 };
 
 function CloseIcon() {
@@ -38,20 +38,73 @@ export default function AdminSurveyView() {
   );
   const results = resultsQuery.data;
 
-  const previewOptions = useMemo(
-    () => [draft.option1, draft.option2, draft.option3, draft.option4].filter((s) => s && s.trim()),
-    [draft.option1, draft.option2, draft.option3, draft.option4],
-  );
-
   function update(field, value) {
     setDraft((prev) => ({ ...prev, [field]: value }));
+  }
+
+  function updateQuestion(qIdx, patch) {
+    setDraft((prev) => ({
+      ...prev,
+      questions: prev.questions.map((q, i) => (i === qIdx ? { ...q, ...patch } : q)),
+    }));
+  }
+
+  function addQuestion() {
+    setDraft((prev) => ({ ...prev, questions: [...prev.questions, blankQuestion()] }));
+  }
+
+  function removeQuestion(qIdx) {
+    setDraft((prev) => ({
+      ...prev,
+      questions: prev.questions.length > 1
+        ? prev.questions.filter((_, i) => i !== qIdx)
+        : prev.questions,
+    }));
+  }
+
+  function updateOption(qIdx, optIdx, value) {
+    setDraft((prev) => ({
+      ...prev,
+      questions: prev.questions.map((q, i) => i === qIdx
+        ? { ...q, options: q.options.map((o, j) => (j === optIdx ? value : o)) }
+        : q),
+    }));
+  }
+
+  function addOption(qIdx) {
+    setDraft((prev) => ({
+      ...prev,
+      questions: prev.questions.map((q, i) => i === qIdx
+        ? { ...q, options: [...q.options, ""] }
+        : q),
+    }));
+  }
+
+  function removeOption(qIdx, optIdx) {
+    setDraft((prev) => ({
+      ...prev,
+      questions: prev.questions.map((q, i) => i === qIdx
+        ? { ...q, options: q.options.length > 2 ? q.options.filter((_, j) => j !== optIdx) : q.options }
+        : q),
+    }));
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setMessage("");
     setError("");
-    if (!draft.title.trim() || !draft.question.trim()) {
+    if (!draft.title.trim()) {
+      setError(t("admin.surveys.validation"));
+      return;
+    }
+    const cleanedQuestions = draft.questions
+      .filter((q) => q.text.trim())
+      .map((q) => ({
+        text: q.text.trim(),
+        type: q.type,
+        options: q.type === "TEXT" ? [] : q.options.map((o) => o.trim()).filter(Boolean),
+      }));
+    if (!cleanedQuestions.length) {
       setError(t("admin.surveys.validation"));
       return;
     }
@@ -59,19 +112,13 @@ export default function AdminSurveyView() {
     try {
       await surveysApi.adminCreate({
         title: draft.title,
-        description: draft.description || draft.question,
+        description: draft.description || "",
         forStudents: draft.forStudents,
         forTeachers: draft.forTeachers,
-        questions: [
-          {
-            text: draft.question,
-            type: "MULTIPLE_CHOICE",
-            options: previewOptions,
-          },
-        ],
+        questions: cleanedQuestions,
       });
       setMessage(t("admin.surveys.success"));
-      setDraft({ ...defaultDraft });
+      setDraft({ ...defaultDraft, questions: [blankQuestion()] });
       await listQuery.refetch();
     } catch (err) {
       setError(err?.message || t("common.error"));
@@ -121,31 +168,69 @@ export default function AdminSurveyView() {
               <input className={styles.input} value={draft.description} onChange={(e) => update("description", e.target.value)} />
             </label>
 
-            <label className={styles.field}>
-              <span className={styles.label}>{t("admin.surveys.question")}</span>
-              <textarea className={styles.textarea} value={draft.question} onChange={(e) => update("question", e.target.value)} required />
-            </label>
+            <div style={{ display: "grid", gap: 14, marginTop: 6 }}>
+              {draft.questions.map((q, qIdx) => (
+                <div key={qIdx} style={{ border: "1px solid var(--stroke)", borderRadius: 12, padding: 14, background: "var(--bg-soft)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--accent-strong)" }}>
+                      Вопрос #{qIdx + 1}
+                    </span>
+                    {draft.questions.length > 1 ? (
+                      <button type="button" onClick={() => removeQuestion(qIdx)} style={{
+                        border: "1px solid var(--stroke)", background: "var(--panel)", borderRadius: 8,
+                        padding: "4px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", color: "var(--danger-strong)",
+                      }}>Удалить</button>
+                    ) : null}
+                  </div>
 
-            <div className={styles.fieldGrid2}>
-              <label className={styles.field}>
-                <span className={styles.label}>{t("admin.surveys.option")} 1</span>
-                <input className={styles.input} value={draft.option1} onChange={(e) => update("option1", e.target.value)} />
-              </label>
-              <label className={styles.field}>
-                <span className={styles.label}>{t("admin.surveys.option")} 2</span>
-                <input className={styles.input} value={draft.option2} onChange={(e) => update("option2", e.target.value)} />
-              </label>
-            </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 180px", gap: 10 }}>
+                    <textarea
+                      className={styles.textarea}
+                      value={q.text}
+                      onChange={(e) => updateQuestion(qIdx, { text: e.target.value })}
+                      placeholder="Текст вопроса"
+                      style={{ minHeight: 56 }}
+                    />
+                    <select
+                      className={styles.input}
+                      value={q.type}
+                      onChange={(e) => updateQuestion(qIdx, { type: e.target.value })}
+                      style={{ height: 42, alignSelf: "start" }}
+                    >
+                      <option value="MULTIPLE_CHOICE">С вариантами ответа</option>
+                      <option value="TEXT">Открытый ответ</option>
+                    </select>
+                  </div>
 
-            <div className={styles.fieldGrid2}>
-              <label className={styles.field}>
-                <span className={styles.label}>{t("admin.surveys.option")} 3</span>
-                <input className={styles.input} value={draft.option3} onChange={(e) => update("option3", e.target.value)} />
-              </label>
-              <label className={styles.field}>
-                <span className={styles.label}>{t("admin.surveys.option")} 4</span>
-                <input className={styles.input} value={draft.option4} onChange={(e) => update("option4", e.target.value)} />
-              </label>
+                  {q.type === "MULTIPLE_CHOICE" ? (
+                    <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+                      {q.options.map((opt, optIdx) => (
+                        <div key={optIdx} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8 }}>
+                          <input
+                            className={styles.input}
+                            value={opt}
+                            onChange={(e) => updateOption(qIdx, optIdx, e.target.value)}
+                            placeholder={`Вариант ${optIdx + 1}`}
+                          />
+                          {q.options.length > 2 ? (
+                            <button type="button" onClick={() => removeOption(qIdx, optIdx)} style={{
+                              width: 36, height: 42, border: "1px solid var(--stroke)", borderRadius: 8,
+                              background: "var(--panel)", cursor: "pointer", color: "var(--muted)", fontSize: 16, fontFamily: "inherit",
+                            }}>×</button>
+                          ) : null}
+                        </div>
+                      ))}
+                      <button type="button" onClick={() => addOption(qIdx)} className={styles.ghostBtn} style={{ height: 36, fontSize: 12 }}>
+                        + Добавить вариант
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+
+              <button type="button" onClick={addQuestion} className={styles.ghostBtn} style={{ alignSelf: "start", height: 38, padding: "0 16px" }}>
+                + Добавить вопрос
+              </button>
             </div>
 
             <div className={styles.actions}>
@@ -166,10 +251,28 @@ export default function AdminSurveyView() {
           <h3 className={styles.panelTitle}>{t("admin.surveys.preview")}</h3>
           <div className={styles.pollPreview}>
             <p className={styles.noteMain}>{draft.title || t("admin.surveys.defaultPreviewTitle")}</p>
-            <p className={styles.noteMeta}>{draft.question || t("admin.surveys.defaultPreviewQuestion")}</p>
-            {previewOptions.map((item, i) => (
-              <div key={`${i}-${item}`} className={styles.pollOption}>{item}</div>
-            ))}
+            {draft.description ? <p className={styles.noteMeta}>{draft.description}</p> : null}
+            {draft.questions.map((q, qIdx) => {
+              const visible = q.text.trim() || q.options.some((o) => o.trim());
+              if (!visible) return null;
+              const opts = q.options.filter((o) => o.trim());
+              return (
+                <div key={qIdx} style={{ marginTop: qIdx === 0 ? 8 : 14, paddingTop: qIdx === 0 ? 0 : 12, borderTop: qIdx === 0 ? "0" : "1px dashed var(--stroke)" }}>
+                  <p className={styles.noteMeta} style={{ fontWeight: 700, color: "var(--text)" }}>
+                    {qIdx + 1}. {q.text || t("admin.surveys.defaultPreviewQuestion")}
+                  </p>
+                  {q.type === "TEXT" ? (
+                    <div className={styles.pollOption} style={{ fontStyle: "italic", color: "var(--muted)" }}>
+                      Открытый ответ
+                    </div>
+                  ) : opts.length ? (
+                    opts.map((item, i) => (
+                      <div key={`${qIdx}-${i}-${item}`} className={styles.pollOption}>{item}</div>
+                    ))
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
 
           <h3 className={styles.panelTitle} style={{ marginTop: 18 }}>{t("admin.surveys.existing")}</h3>

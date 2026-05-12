@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useT } from "../shared/lib/i18n";
 import { useApi } from "../shared/lib/hooks/useApi";
@@ -134,6 +134,7 @@ function Icon({ name }) {
 export default function Header() {
   const { user, logout } = useAuth();
   const { lang, setLang, languages, t } = useT();
+  const navigate = useNavigate();
 
   const [userOpen, setUserOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
@@ -191,6 +192,45 @@ export default function Header() {
     } catch { /* ignore */ }
   }
 
+  async function hideNotification(id, event) {
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    try {
+      await notificationsApi.hide(id);
+      await Promise.all([countQuery.refetch(), listQuery.refetch()]);
+    } catch { /* ignore */ }
+  }
+
+  function notificationTargetPath(n) {
+    const role = user?.role;
+    if (!role) return null;
+    const base = role === "STUDENT" ? "/student"
+      : role === "TEACHER" ? "/teacher"
+      : role === "PARENT" ? "/parent"
+      : role === "ADMIN" ? "/admin" : null;
+    if (!base) return null;
+    const kind = notifIconType(n.type);
+    switch (kind) {
+      case "assignment": return `${base}/assignments`;
+      case "grade": return `${base}/grades`;
+      case "survey": return `${base}/surveys`;
+      case "message": return `${base}/chat`;
+      default: return null;
+    }
+  }
+
+  async function handleNotifClick(n) {
+    const target = notificationTargetPath(n);
+    if (!n.read) {
+      try { await notificationsApi.markRead(n.id); } catch { /* ignore */ }
+    }
+    setNotifOpen(false);
+    if (target) navigate(target);
+    countQuery.refetch().catch(() => {});
+  }
+
   return (
     <header className={styles.header}>
       <div className={styles.right}>
@@ -225,23 +265,42 @@ export default function Header() {
               ) : notifications.length ? (
                 <ul className={styles.notifList}>
                   {notifications.slice(0, 12).map((n) => (
-                    <li key={n.id} className={`${styles.notifItem} ${!n.read ? styles.notifItemUnread : ""}`}>
+                    <li
+                      key={n.id}
+                      className={`${styles.notifItem} ${!n.read ? styles.notifItemUnread : ""}`}
+                      onClick={() => handleNotifClick(n)}
+                      style={{ cursor: notificationTargetPath(n) ? "pointer" : "default" }}
+                    >
                       <span className={styles.notifIco}><NotifTypeIcon type={n.type} /></span>
                       <div className={styles.notifBody}>
                         <p className={styles.notifMsg}>{n.message}</p>
                         <p className={styles.notifMeta}>{timeAgo(n.createdAt, t)}</p>
                       </div>
-                      {!n.read ? (
+                      <div style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
+                        {!n.read ? (
+                          <button
+                            type="button"
+                            className={styles.notifReadBtn}
+                            onClick={(e) => { e.stopPropagation(); markRead(n.id); }}
+                            title={t("header.notif.markRead")}
+                            aria-label={t("header.notif.markRead")}
+                          >
+                            <Icon name="check" />
+                          </button>
+                        ) : null}
                         <button
                           type="button"
                           className={styles.notifReadBtn}
-                          onClick={() => markRead(n.id)}
-                          title={t("header.notif.markRead")}
-                          aria-label={t("header.notif.markRead")}
+                          onClick={(e) => hideNotification(n.id, e)}
+                          title="Удалить"
+                          aria-label="Удалить уведомление"
+                          style={{ color: "var(--danger-strong)" }}
                         >
-                          <Icon name="check" />
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                            <path d="M6 6l12 12M18 6L6 18" />
+                          </svg>
                         </button>
-                      ) : null}
+                      </div>
                     </li>
                   ))}
                 </ul>

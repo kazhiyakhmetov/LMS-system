@@ -100,6 +100,26 @@ export default function TeacherQuizzesPage() {
 
   // === Add Question modal ===
   const [questionsForQuiz, setQuestionsForQuiz] = useState(null);
+  // Live view of the quiz being edited — отображает свежий список вопросов
+  // после refetch, даже если ссылка questionsForQuiz уже устарела.
+  const activeQuizForQuestions = useMemo(() => {
+    if (!questionsForQuiz) return null;
+    return quizzes.find((q) => q.id === questionsForQuiz.id) || questionsForQuiz;
+  }, [quizzes, questionsForQuiz]);
+  const [deletingQuestionId, setDeletingQuestionId] = useState(null);
+
+  async function deleteQuestion(qId) {
+    if (!questionsForQuiz) return;
+    setDeletingQuestionId(qId);
+    try {
+      await quizzesApi.teacherDeleteQuestion(questionsForQuiz.id, qId);
+      await quizzesQuery.refetch();
+    } catch (err) {
+      alert(err?.message || t("common.error"));
+    } finally {
+      setDeletingQuestionId(null);
+    }
+  }
   const [qForm, setQForm] = useState({
     questionText: "",
     questionType: "SINGLE_CHOICE",
@@ -560,10 +580,10 @@ export default function TeacherQuizzesPage() {
               <button type="button" className={styles.modalClose} onClick={() => setQuestionsForQuiz(null)}>×</button>
             </div>
 
-            {Array.isArray(questionsForQuiz.questions) && questionsForQuiz.questions.length ? (
+            {Array.isArray(activeQuizForQuestions?.questions) && activeQuizForQuestions.questions.length ? (
               <div className={styles.questionList}>
                 <p className={styles.sectionLabel}>{t("teacher.quizzes.questionsModal.existing")}</p>
-                {questionsForQuiz.questions.map((q, idx) => (
+                {activeQuizForQuestions.questions.map((q, idx) => (
                   <div key={q.id} className={styles.questionItem}>
                     <span className={styles.questionNum}>{idx + 1}</span>
                     <div style={{ flex: 1 }}>
@@ -574,6 +594,21 @@ export default function TeacherQuizzesPage() {
                         {q.points} {q.points === 1 ? t("teacher.quizzes.questionsModal.pointsOne") : t("teacher.quizzes.questionsModal.pointsMany")}
                       </p>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm("Удалить вопрос?")) deleteQuestion(q.id);
+                      }}
+                      disabled={deletingQuestionId === q.id}
+                      style={{
+                        height: 32, padding: "0 12px", borderRadius: 8,
+                        border: "1px solid var(--stroke)", background: "var(--panel)",
+                        color: "var(--danger-strong)", fontSize: 12, fontWeight: 700,
+                        cursor: deletingQuestionId === q.id ? "not-allowed" : "pointer",
+                        fontFamily: "inherit", opacity: deletingQuestionId === q.id ? 0.5 : 1,
+                      }}
+                      title="Удалить вопрос"
+                    >{deletingQuestionId === q.id ? "…" : "✕"}</button>
                   </div>
                 ))}
               </div>

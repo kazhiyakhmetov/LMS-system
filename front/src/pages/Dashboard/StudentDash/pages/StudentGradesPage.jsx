@@ -70,8 +70,10 @@ function buildRow(subjectDto) {
     ?? null;
   const marksValues = marks.map((m) => m.value);
   const marksAverage = marksValues.length ? average(marksValues) : 0;
-  const progress = marks.length ? Math.round((marksAverage / 5) * 100) : 0;
-  const attendancePercent = total > 0 ? Math.round(((total - absent) / total) * 100) : 0;
+  // Адаптивная шкала: если есть оценка >5 — пользуемся 10-балльной, иначе 5-балльной
+  const maxScale = marksValues.some((v) => v > 5) ? 10 : 5;
+  const progress = marks.length ? Math.min(100, Math.round((marksAverage / maxScale) * 100)) : 0;
+  const attendancePercent = total > 0 ? Math.min(100, Math.round(((total - absent) / total) * 100)) : 0;
 
   return {
     subject: subjectDto.subjectName || "—",
@@ -124,13 +126,28 @@ export default function StudentGradesPage() {
   }, [rows]);
 
   const distribution = useMemo(() => {
-    const buckets = { 5: 0, 4: 0, 3: 0, 2: 0 };
-    rows.forEach((r) => {
-      r.marks.forEach((m) => {
-        const v = typeof m === "object" ? m.value : m;
-        if (buckets[v] != null) buckets[v] += 1;
+    // Адаптивные категории: на 5-балльной — 5/4/3/2, на 10-балльной группируем по диапазонам
+    const allValues = rows.flatMap((r) => r.marks.map((m) => typeof m === "object" ? m.value : m));
+    const isTenScale = allValues.some((v) => v > 5);
+
+    if (isTenScale) {
+      const buckets = { excellent: 0, good: 0, ok: 0, bad: 0 };
+      allValues.forEach((v) => {
+        if (v >= 9) buckets.excellent += 1;        // 9-10 «отлично»
+        else if (v >= 7) buckets.good += 1;        // 7-8 «хорошо»
+        else if (v >= 5) buckets.ok += 1;          // 5-6 «удовл.»
+        else buckets.bad += 1;                      // 1-4 «неудовл.»
       });
-    });
+      return [
+        { label: t("student.grades.marks.excellent"), value: buckets.excellent, color: MARK_COLORS[5] },
+        { label: t("student.grades.marks.good"), value: buckets.good, color: MARK_COLORS[4] },
+        { label: t("student.grades.marks.ok"), value: buckets.ok, color: MARK_COLORS[3] },
+        { label: t("student.grades.marks.bad"), value: buckets.bad, color: MARK_COLORS[2] },
+      ];
+    }
+
+    const buckets = { 5: 0, 4: 0, 3: 0, 2: 0 };
+    allValues.forEach((v) => { if (buckets[v] != null) buckets[v] += 1; });
     return [
       { label: t("student.grades.marks.excellent"), value: buckets[5], color: MARK_COLORS[5] },
       { label: t("student.grades.marks.good"), value: buckets[4], color: MARK_COLORS[4] },
@@ -215,7 +232,23 @@ export default function StudentGradesPage() {
               ))}
             </select>
 
-            <button className={styles.exportBtn} type="button">{t("student.grades.exportBtn")}</button>
+            <button className={styles.exportBtn} type="button" onClick={() => {
+              const header = ["Дата", "Предмет", "Оценка"];
+              const dataLines = recentRows.map((r) => [r.date, r.subject, r.mark].map((v) => {
+                const s = String(v ?? "");
+                return s.includes(",") || s.includes("\"") ? `"${s.replace(/"/g, '""')}"` : s;
+              }).join(","));
+              const csv = "﻿" + [header.join(","), ...dataLines].join("\n");
+              const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url;
+              link.download = `grades_${quarterKey}_${new Date().toISOString().slice(0, 10)}.csv`;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              URL.revokeObjectURL(url);
+            }}>{t("student.grades.exportBtn")}</button>
           </div>
         </div>
       </section>

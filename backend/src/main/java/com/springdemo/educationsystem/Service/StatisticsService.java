@@ -18,17 +18,20 @@ public class StatisticsService {
     private final StudentRepository studentRepository;
     private final SchoolClassRepository schoolClassRepository;
     private final TeacherRepository teacherRepository;
+    private final QuizAssignmentRepository quizAssignmentRepository;
 
     public StatisticsService(AssignmentRepository assignmentRepository,
                              GradeRepository gradeRepository,
                              StudentRepository studentRepository,
                              SchoolClassRepository schoolClassRepository,
-                             TeacherRepository teacherRepository) {
+                             TeacherRepository teacherRepository,
+                             QuizAssignmentRepository quizAssignmentRepository) {
         this.assignmentRepository = assignmentRepository;
         this.gradeRepository = gradeRepository;
         this.studentRepository = studentRepository;
         this.schoolClassRepository = schoolClassRepository;
         this.teacherRepository = teacherRepository;
+        this.quizAssignmentRepository = quizAssignmentRepository;
     }
 
     public List<SchoolClass> getTeacherClasses(Long teacherId) {
@@ -78,12 +81,23 @@ public class StatisticsService {
         classStats.setTotalAssignments(classAssignments.size());
         classStats.setStudents(studentStats);
 
+        // Считаем квизы, назначенные данным учителем на этот класс
+        long quizCount = quizAssignmentRepository.findByTeacherIdOrderByCreatedAtDesc(teacherId)
+                .stream()
+                .filter(qa -> qa.getSchoolClass() != null && qa.getSchoolClass().getId().equals(classId))
+                .count();
+        classStats.setTotalQuizzes((int) quizCount);
+
         // Рассчитываем среднюю оценку по классу
+        double avg = 0.0;
         if (studentsWithGrades > 0) {
-            classStats.setClassAverageGrade(Math.round((totalClassAverage / studentsWithGrades) * 100.0) / 100.0);
-        } else {
-            classStats.setClassAverageGrade(0.0);
+            avg = Math.round((totalClassAverage / studentsWithGrades) * 100.0) / 100.0;
         }
+        classStats.setClassAverageGrade(avg);
+
+        // Успеваемость = avg / 5 * 100, clipped to 100
+        double rate = avg > 0 ? Math.min(100.0, Math.round((avg / 5.0) * 100.0 * 10.0) / 10.0) : 0.0;
+        classStats.setSuccessRatePercent(rate);
 
         return classStats;
     }

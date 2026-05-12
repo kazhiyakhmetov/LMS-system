@@ -153,6 +153,16 @@ function NavIcon({ name }) {
           <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5" />
         </svg>
       );
+    case "news":
+      return (
+        <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 5h13a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5Z" />
+          <path d="M19 8h2v9a2 2 0 0 1-2 2" />
+          <path d="M8 9h7" />
+          <path d="M8 13h7" />
+          <path d="M8 17h4" />
+        </svg>
+      );
     default:
       return (
         <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

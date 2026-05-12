@@ -183,4 +183,24 @@ public class QuizService {
     public List<Quiz> getTeacherQuizzes(Long teacherId) {
         return quizRepository.findByTeacherIdOrderByCreatedAtDesc(teacherId);
     }
+
+    public void deleteQuestion(Long quizId, Long questionId, Long teacherId) {
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new RuntimeException("Quiz not found with id: " + quizId));
+
+        if (quiz.getTeacher() == null || !quiz.getTeacher().getId().equals(teacherId)) {
+            throw new RuntimeException("You can edit only your own quizzes");
+        }
+
+        QuizQuestion question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found with id: " + questionId));
+
+        if (question.getQuiz() == null || !question.getQuiz().getId().equals(quizId)) {
+            throw new RuntimeException("Question does not belong to this quiz");
+        }
+
+        // Сначала удаляем варианты, потом сам вопрос (CASCADE может не сработать в обратную сторону для answers)
+        optionRepository.deleteAll(question.getOptions());
+        questionRepository.delete(question);
+    }
 }

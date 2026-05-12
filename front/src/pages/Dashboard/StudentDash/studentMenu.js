@@ -6,6 +6,9 @@ export const studentMenu = [
   { href: "/student/quizzes", labelKey: "nav.student.quizzes", icon: "quiz" },
   { href: "/student/grades", labelKey: "nav.student.grades", icon: "star" },
   { href: "/student/wiki", labelKey: "nav.student.wiki", icon: "book" },
+  { href: "/student/library", labelKey: "nav.student.library", icon: "book" },
+  { href: "/student/news", label: "Новости", icon: "news" },
   { href: "/student/surveys", labelKey: "nav.student.surveys", icon: "poll" },
   { href: "/student/chat", labelKey: "nav.student.chat", icon: "chat" },
+  { href: "/student/friends", label: "Друзья", icon: "users" },
 ];

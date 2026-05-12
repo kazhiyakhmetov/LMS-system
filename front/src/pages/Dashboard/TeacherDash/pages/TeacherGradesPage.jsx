@@ -69,8 +69,8 @@ function buildStudentRow(studentDto, t) {
     ?? studentDto.finalGrade?.calculatedQuarterGrade
     ?? null;
   const marksAverage = marks.length ? average(marks) : 0;
-  const progress = marks.length ? Math.round((marksAverage / 5) * 100) : 0;
-  const attendancePercent = total > 0 ? Math.round(((total - absent) / total) * 100) : 0;
+  const progress = marks.length ? Math.min(100, Math.round((marksAverage / 5) * 100)) : 0;
+  const attendancePercent = total > 0 ? Math.min(100, Math.round(((total - absent) / total) * 100)) : 0;
 
   return {
     studentId: studentDto.studentId,
@@ -92,6 +92,7 @@ export default function TeacherGradesPage() {
   const [editing, setEditing] = useState(null);
   const [editAttendance, setEditAttendance] = useState("");
   const [editGrade, setEditGrade] = useState("");
+  const [editGradeType, setEditGradeType] = useState("LESSON"); // LESSON / SOR / SOCH
   const [editComment, setEditComment] = useState("");
   const [savingCell, setSavingCell] = useState(false);
   const [cellError, setCellError] = useState("");
@@ -188,6 +189,11 @@ export default function TeacherGradesPage() {
     const codeKey = code ? Object.entries(ATTENDANCE_VALUES).find(([, v]) => v === code)?.[0] : "";
     setEditAttendance(codeKey || "");
     setEditGrade(existingEntry?.numericValue != null ? String(Math.round(existingEntry.numericValue)) : "");
+    // Тип берём из существующей записи если есть, иначе LESSON
+    const existingType = existingEntry?.entryType || existingEntry?.type;
+    if (existingType === "SOR_GRADE" || existingType === "SOR") setEditGradeType("SOR");
+    else if (existingType === "SOCH_GRADE" || existingType === "SOCH") setEditGradeType("SOCH");
+    else setEditGradeType("LESSON");
     setEditComment("");
     setCellError("");
   }
@@ -196,6 +202,7 @@ export default function TeacherGradesPage() {
     setEditing(null);
     setEditAttendance("");
     setEditGrade("");
+    setEditGradeType("LESSON");
     setEditComment("");
     setCellError("");
     setSavingCell(false);
@@ -221,6 +228,7 @@ export default function TeacherGradesPage() {
           ...base,
           value: Number(editGrade),
           comment: editComment || null,
+          entryType: editGradeType,
         }));
       }
       await Promise.all(tasks);
@@ -508,6 +516,32 @@ export default function TeacherGradesPage() {
 
               <div style={{ display: "grid", gap: 6 }}>
                 <label style={{ fontSize: 11, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                  Тип оценки
+                </label>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {[
+                    { key: "LESSON", label: "Урок (ФО)" },
+                    { key: "SOR", label: "СОР" },
+                    { key: "SOCH", label: "СОЧ" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => setEditGradeType(opt.key)}
+                      style={{
+                        flex: 1, height: 36, border: editGradeType === opt.key ? "1px solid var(--accent)" : "1px solid var(--stroke)",
+                        background: editGradeType === opt.key ? "var(--accent-soft)" : "var(--panel)",
+                        color: editGradeType === opt.key ? "var(--accent-strong)" : "var(--text)",
+                        fontSize: 12, fontWeight: 700, fontFamily: "inherit", cursor: "pointer",
+                        borderRadius: "var(--radius-sm)",
+                      }}
+                    >{opt.label}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
                   {t("teacher.grades.cellEditor.grade")}
                 </label>
                 <select
@@ -519,10 +553,16 @@ export default function TeacherGradesPage() {
                   }}
                 >
                   <option value="">{t("teacher.grades.cellEditor.gradeOptions.none")}</option>
-                  <option value="5">{t("teacher.grades.cellEditor.gradeOptions.five")}</option>
-                  <option value="4">{t("teacher.grades.cellEditor.gradeOptions.four")}</option>
-                  <option value="3">{t("teacher.grades.cellEditor.gradeOptions.three")}</option>
-                  <option value="2">{t("teacher.grades.cellEditor.gradeOptions.two")}</option>
+                  <option value="10">10</option>
+                  <option value="9">9</option>
+                  <option value="8">8</option>
+                  <option value="7">7</option>
+                  <option value="6">6</option>
+                  <option value="5">5</option>
+                  <option value="4">4</option>
+                  <option value="3">3</option>
+                  <option value="2">2</option>
+                  <option value="1">1</option>
                 </select>
               </div>
 

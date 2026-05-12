@@ -11,6 +11,8 @@ export const scheduleApi = {
   adminBulkTeacherLessons: (body) => http.post("/admin/schedule/teacher/bulk", body),
   adminGetTeacherSchedule: (teacherId, date) =>
     http.get(`/admin/schedule/teacher/${teacherId}`, { query: { date } }),
+  adminGetClassSchedule: (classId, date) =>
+    http.get(`/admin/schedule/class/${classId}`, { query: { date } }),
   adminUpdateLesson: (lessonId, body) =>
     http.put(`/admin/schedule/teacher/lesson/${lessonId}`, body),
   adminDeleteLesson: (lessonId) =>

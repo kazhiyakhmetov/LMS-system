@@ -110,6 +110,21 @@ public class TeacherQuizController {
         }
     }
 
+    @DeleteMapping("/{quizId}/question/{questionId}")
+    public ResponseEntity<?> deleteQuestion(
+            @PathVariable Long quizId,
+            @PathVariable Long questionId,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+        try {
+            Teacher teacher = getAuthorizedTeacher(authorizationHeader);
+            quizService.deleteQuestion(quizId, questionId, teacher.getId());
+            return ResponseEntity.ok(Map.of("message", "Question deleted"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @GetMapping("/my")
     public ResponseEntity<?> getMyQuizzes(
             @RequestHeader("Authorization") String authorizationHeader
@@ -142,7 +157,23 @@ public class TeacherQuizController {
     ) {
         try {
             Teacher teacher = getAuthorizedTeacher(authorizationHeader);
-            return ResponseEntity.ok(quizAssignmentService.getTeacherAssignments(teacher.getId()));
+            List<QuizAssignment> assignments = quizAssignmentService.getTeacherAssignments(teacher.getId());
+            // Маппим в плоский Map, чтобы вернуть className/quizTitle (entity-поля @JsonIgnore).
+            List<Map<String, Object>> result = assignments.stream().map(a -> {
+                Map<String, Object> m = new HashMap<>();
+                m.put("id", a.getId());
+                m.put("quizId", a.getQuiz() != null ? a.getQuiz().getId() : null);
+                m.put("quizTitle", a.getQuiz() != null ? a.getQuiz().getTitle() : null);
+                m.put("quizDescription", a.getQuiz() != null ? a.getQuiz().getDescription() : null);
+                m.put("classId", a.getSchoolClass() != null ? a.getSchoolClass().getId() : null);
+                m.put("className", a.getSchoolClass() != null ? a.getSchoolClass().getName() : null);
+                m.put("startTime", a.getStartTime());
+                m.put("endTime", a.getEndTime());
+                m.put("timeLimitMinutes", a.getTimeLimitMinutes());
+                m.put("active", a.getActive());
+                return m;
+            }).toList();
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

@@ -6,8 +6,17 @@ public class AdminSchoolClassCreateDTO {
     private String name;
     private String academicYear;
     private Long homeroomTeacherId; // nullable
+    private String language; // nullable: RU / KZ / EN
 
     public AdminSchoolClassCreateDTO() {
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     public Long getSchoolId() {

@@ -82,9 +82,18 @@ public class AdminSchoolStructureService {
         schoolClass.setName(dto.getName().trim());
         schoolClass.setAcademicYear(dto.getAcademicYear().trim());
         schoolClass.setActive(true);
+        schoolClass.setLanguage(normalizeLanguage(dto.getLanguage()));
         schoolClass.setHomeroomTeacher(resolveAndValidateHomeroomTeacher(dto.getHomeroomTeacherId(), school.getId()));
 
         return toClassDto(schoolClassRepository.save(schoolClass));
+    }
+
+    private String normalizeLanguage(String raw) {
+        if (raw == null) return null;
+        String s = raw.trim().toUpperCase();
+        if (s.isEmpty()) return null;
+        if (s.equals("RU") || s.equals("KZ") || s.equals("EN")) return s;
+        return null;
     }
 
     public AdminSchoolClassDTO updateClass(Long classId, AdminSchoolClassUpdateDTO dto) {
@@ -130,6 +139,10 @@ public class AdminSchoolStructureService {
         schoolClass.setHomeroomTeacher(
                 resolveAndValidateHomeroomTeacher(dto.getHomeroomTeacherId(), schoolClass.getSchool().getId())
         );
+
+        if (dto.getLanguage() != null) {
+            schoolClass.setLanguage(normalizeLanguage(dto.getLanguage()));
+        }
 
         return toClassDto(schoolClassRepository.save(schoolClass));
     }
@@ -370,6 +383,7 @@ public class AdminSchoolStructureService {
         dto.setName(schoolClass.getName());
         dto.setAcademicYear(schoolClass.getAcademicYear());
         dto.setActive(schoolClass.isActive());
+        dto.setLanguage(schoolClass.getLanguage());
 
         if (schoolClass.getSchool() != null) {
             dto.setSchoolId(schoolClass.getSchool().getId());

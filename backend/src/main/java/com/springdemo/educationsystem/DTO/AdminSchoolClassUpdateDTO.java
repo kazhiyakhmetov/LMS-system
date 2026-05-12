@@ -6,8 +6,17 @@ public class AdminSchoolClassUpdateDTO {
     private String academicYear;
     private Boolean active;
     private Long homeroomTeacherId; // nullable
+    private String language; // nullable
 
     public AdminSchoolClassUpdateDTO() {
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     public String getName() {

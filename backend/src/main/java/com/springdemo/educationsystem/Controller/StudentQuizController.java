@@ -265,6 +265,8 @@ public class StudentQuizController {
             qd.put("correctOptionId", correctOptId);
             qd.put("selectedOptionIds", selectedIds);
             qd.put("options", optDtos);
+            qd.put("points", q.getPoints() != null ? q.getPoints() : 1);
+            qd.put("pointsEarned", ans != null && ans.getPointsAwarded() != null ? ans.getPointsAwarded() : 0);
             qDtos.add(qd);
         }
 
@@ -343,8 +345,14 @@ public class StudentQuizController {
                 row.put("title", quiz.getTitle());
                 row.put("description", quiz.getDescription());
                 row.put("subjectName", quiz.getSubject() != null ? quiz.getSubject().getName() : null);
-                row.put("questionsCount",
-                        questionRepository.findByQuizIdOrderByOrderIndexAsc(quiz.getId()).size());
+                List<QuizQuestion> qs = questionRepository.findByQuizIdOrderByOrderIndexAsc(quiz.getId());
+                row.put("questionsCount", qs.size());
+                int maxScore = qs.stream().mapToInt(q -> q.getPoints() != null ? q.getPoints() : 0).sum();
+                row.put("maxScore", maxScore);
+                long correct = answerRepository.findByAttemptId(a.getId()).stream()
+                        .filter(ans -> Boolean.TRUE.equals(ans.getIsCorrect()))
+                        .count();
+                row.put("correctCount", (int) correct);
             }
             rows.add(row);
         }

@@ -24,6 +24,7 @@ export const quizzesApi = {
   teacherMy: () => http.get("/teacher/quiz/my"),
   teacherCreate: (body) => http.post("/teacher/quiz/create", body),
   teacherAddQuestion: (quizId, body) => http.post(`/teacher/quiz/${quizId}/question`, body),
+  teacherDeleteQuestion: (quizId, questionId) => http.delete(`/teacher/quiz/${quizId}/question/${questionId}`),
   teacherAssign: (body) => http.post("/teacher/quiz/assign", body),
   teacherAssignments: () => http.get("/teacher/quiz/assignments"),
   teacherResults: (assignmentId) => http.get(`/teacher/quiz/results/${assignmentId}`),

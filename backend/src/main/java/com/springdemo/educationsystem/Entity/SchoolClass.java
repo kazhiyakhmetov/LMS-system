@@ -23,6 +23,12 @@ public class SchoolClass {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
+    /**
+     * Язык обучения класса: RU, KZ, EN. Только админ может редактировать.
+     */
+    @Column(name = "language", length = 8)
+    private String language;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "school_id", nullable = false)
     private School school;
@@ -76,6 +82,14 @@ public class SchoolClass {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     public School getSchool() {

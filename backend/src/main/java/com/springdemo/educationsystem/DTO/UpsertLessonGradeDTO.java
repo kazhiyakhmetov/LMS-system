@@ -29,4 +29,9 @@ public class UpsertLessonGradeDTO {
 
     public String getComment() { return comment; }
     public void setComment(String comment) { this.comment = comment; }
+
+    /** Optional: LESSON / SOR / SOCH. Default: LESSON. */
+    private String entryType;
+    public String getEntryType() { return entryType; }
+    public void setEntryType(String entryType) { this.entryType = entryType; }
 }

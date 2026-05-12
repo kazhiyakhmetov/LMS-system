@@ -7,9 +7,13 @@ public class FriendshipDTO {
     private Long requesterId;
     private String requesterName;
     private String requesterEmail;
+    private String requesterPhotoPath;
+    private String requesterRole;
     private Long addresseeId;
     private String addresseeName;
     private String addresseeEmail;
+    private String addresseePhotoPath;
+    private String addresseeRole;
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -25,12 +29,20 @@ public class FriendshipDTO {
     public void setRequesterName(String requesterName) { this.requesterName = requesterName; }
     public String getRequesterEmail() { return requesterEmail; }
     public void setRequesterEmail(String requesterEmail) { this.requesterEmail = requesterEmail; }
+    public String getRequesterPhotoPath() { return requesterPhotoPath; }
+    public void setRequesterPhotoPath(String requesterPhotoPath) { this.requesterPhotoPath = requesterPhotoPath; }
+    public String getRequesterRole() { return requesterRole; }
+    public void setRequesterRole(String requesterRole) { this.requesterRole = requesterRole; }
     public Long getAddresseeId() { return addresseeId; }
     public void setAddresseeId(Long addresseeId) { this.addresseeId = addresseeId; }
     public String getAddresseeName() { return addresseeName; }
     public void setAddresseeName(String addresseeName) { this.addresseeName = addresseeName; }
     public String getAddresseeEmail() { return addresseeEmail; }
     public void setAddresseeEmail(String addresseeEmail) { this.addresseeEmail = addresseeEmail; }
+    public String getAddresseePhotoPath() { return addresseePhotoPath; }
+    public void setAddresseePhotoPath(String addresseePhotoPath) { this.addresseePhotoPath = addresseePhotoPath; }
+    public String getAddresseeRole() { return addresseeRole; }
+    public void setAddresseeRole(String addresseeRole) { this.addresseeRole = addresseeRole; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public LocalDateTime getCreatedAt() { return createdAt; }

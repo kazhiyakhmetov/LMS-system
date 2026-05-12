@@ -96,13 +96,13 @@ public class SurveyService {
                 .collect(Collectors.toSet());
 
         return surveys.stream()
-                .filter(s -> !answered.contains(s.getId()))
                 .map(s -> {
                     SurveyShortDTO dto = new SurveyShortDTO();
                     dto.setId(s.getId());
                     dto.setTitle(s.getTitle());
                     dto.setDescription(s.getDescription());
                     dto.setQuestionsCount(s.getQuestions() != null ? s.getQuestions().size() : 0);
+                    dto.setDone(answered.contains(s.getId()));
                     return dto;
                 }).collect(Collectors.toList());
     }

@@ -48,6 +48,14 @@ public class FriendshipService {
             throw new RuntimeException("Cannot send friend request to yourself");
         }
 
+        if (isAdmin(addressee)) {
+            throw new RuntimeException("Нельзя добавить администратора в друзья");
+        }
+
+        if (isAdmin(requester)) {
+            throw new RuntimeException("Администратор не может добавлять пользователей в друзья");
+        }
+
         Optional<Friendship> existingFriendship = friendshipRepository
                 .findFriendshipBetweenUsers(requester, addressee);
 
@@ -242,9 +250,13 @@ public class FriendshipService {
         dto.setRequesterId(friendship.getRequester().getId());
         dto.setRequesterName(friendship.getRequester().getFirstName() + " " + friendship.getRequester().getLastName());
         dto.setRequesterEmail(friendship.getRequester().getEmail());
+        dto.setRequesterPhotoPath(friendship.getRequester().getProfilePhotoPath());
+        dto.setRequesterRole(getPrimaryRoleName(friendship.getRequester()));
         dto.setAddresseeId(friendship.getAddressee().getId());
         dto.setAddresseeName(friendship.getAddressee().getFirstName() + " " + friendship.getAddressee().getLastName());
         dto.setAddresseeEmail(friendship.getAddressee().getEmail());
+        dto.setAddresseePhotoPath(friendship.getAddressee().getProfilePhotoPath());
+        dto.setAddresseeRole(getPrimaryRoleName(friendship.getAddressee()));
         dto.setStatus(friendship.getStatus().name());
         dto.setCreatedAt(friendship.getCreatedAt());
         dto.setUpdatedAt(friendship.getUpdatedAt());
@@ -259,7 +271,20 @@ public class FriendshipService {
         dto.setEmail(user.getEmail());
         dto.setProfilePhotoPath(user.getProfilePhotoPath());
         dto.setFriendshipStatus(friendshipStatus);
+        dto.setRole(getPrimaryRoleName(user));
         return dto;
+    }
+
+    private String getPrimaryRoleName(User user) {
+        if (user.getRoles() == null || user.getRoles().isEmpty()) return null;
+        return user.getRoles().get(0).getName();
+    }
+
+    private boolean isAdmin(User user) {
+        if (user.getRoles() == null) return false;
+        return user.getRoles().stream()
+                .anyMatch(role -> role.getName() != null
+                        && role.getName().equalsIgnoreCase("ADMIN"));
     }
 
     private void createFriendRequestNotification(User addressee, User requester) {

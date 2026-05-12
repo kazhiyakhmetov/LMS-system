@@ -5,6 +5,7 @@ public class SurveyShortDTO {
     private String title;
     private String description;
     private int questionsCount;
+    private boolean done;
 
     public SurveyShortDTO() {}
 
@@ -19,4 +20,7 @@ public class SurveyShortDTO {
 
     public int getQuestionsCount() { return questionsCount; }
     public void setQuestionsCount(int questionsCount) { this.questionsCount = questionsCount; }
+
+    public boolean isDone() { return done; }
+    public void setDone(boolean done) { this.done = done; }
 }

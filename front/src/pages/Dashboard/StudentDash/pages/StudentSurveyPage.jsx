@@ -42,7 +42,7 @@ export default function StudentSurveyPage() {
     title: s.title || t("common.untitled"),
     description: s.description || "",
     questionsCount: s.questionsCount ?? s.questions?.length ?? 0,
-    done: answeredIds.has(s.id),
+    done: Boolean(s.done) || answeredIds.has(s.id),
   })), [surveys, answeredIds, t]);
 
   const filtered = useMemo(() => {

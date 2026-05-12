@@ -9,6 +9,8 @@ import ParentChatPage from "./pages/ParentChatPage";
 import ParentGradesPage from "./pages/ParentGradesPage";
 import ParentJournalPage from "./pages/ParentJournalPage";
 import ParentAssignmentsPage from "./pages/ParentAssignmentsPage";
+import ParentNewsPage from "./pages/ParentNewsPage";
+import ParentFriendsPage from "./pages/ParentFriendsPage";
 import ParentProfilePage from "./pages/ParentProfilePage";
 import ParentSettingsPage from "./pages/ParentSettingsPage";
 import { resolveDashboardSection } from "../shared/resolveDashboardSection";
@@ -25,6 +27,8 @@ const sections = [
   { path: "/parent/journal", title: "Журнал", component: ParentJournalPage },
   { path: "/parent/assignments", title: "Задания", component: ParentAssignmentsPage },
   { path: "/parent/chat", title: "Чат", component: ParentChatPage },
+  { path: "/parent/news", title: "Новости", component: ParentNewsPage },
+  { path: "/parent/friends", title: "Друзья", component: ParentFriendsPage },
   { path: "/parent/profile", title: "Профиль", component: ParentProfilePage },
   { path: "/parent/settings", title: "Настройки", component: ParentSettingsPage },
 ];

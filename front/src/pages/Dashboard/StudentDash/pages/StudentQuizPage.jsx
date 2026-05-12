@@ -357,17 +357,24 @@ export default function StudentQuizPage() {
                       {c.description ? <p className={styles.cardDesc}>{c.description}</p> : null}
                     </div>
                     <span style={{
-                      display: "inline-flex", alignItems: "center", justifyContent: "center",
-                      minWidth: 56, height: 36, padding: "0 12px", borderRadius: 10,
-                      background: bg, color: tone, fontWeight: 800, fontSize: 16,
-                      fontVariantNumeric: "tabular-nums",
-                    }}>{score}%</span>
+                      display: "inline-flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                      minWidth: 64, padding: "6px 12px", borderRadius: 10,
+                      background: bg, color: tone, fontWeight: 800,
+                      fontVariantNumeric: "tabular-nums", lineHeight: 1.15,
+                    }}>
+                      <span style={{ fontSize: 16 }}>{(score / 10).toFixed(1)}</span>
+                      <span style={{ fontSize: 10, opacity: 0.75 }}>{score}%</span>
+                    </span>
                   </div>
 
                   <div className={styles.metrics}>
                     <div className={styles.metric}>
-                      <span className={styles.metricLabel}>Вопросов</span>
-                      <span className={styles.metricValue}>{c.questionsCount ?? "—"}</span>
+                      <span className={styles.metricLabel}>Правильных</span>
+                      <span className={styles.metricValue}>
+                        {c.correctCount != null && c.questionsCount != null
+                          ? `${c.correctCount} / ${c.questionsCount}`
+                          : (c.questionsCount ?? "—")}
+                      </span>
                     </div>
                     <div className={styles.metric}>
                       <span className={styles.metricLabel}>Сдано</span>
@@ -378,7 +385,14 @@ export default function StudentQuizPage() {
                     <div className={styles.metric}>
                       <span className={styles.metricLabel}>Время</span>
                       <span className={styles.metricValue} style={{ fontSize: 13 }}>
-                        {c.durationSeconds ? `${Math.round(c.durationSeconds / 60)} мин` : "—"}
+                        {c.durationSeconds
+                          ? (c.durationSeconds < 60 ? `${c.durationSeconds} c` : `${Math.round(c.durationSeconds / 60)} мин`)
+                          : (c.startTime && c.endTime
+                              ? (() => {
+                                  const diff = Math.max(0, Math.round((new Date(c.endTime) - new Date(c.startTime)) / 1000));
+                                  return diff < 60 ? `${diff} c` : `${Math.round(diff / 60)} мин`;
+                                })()
+                              : "—")}
                       </span>
                     </div>
                   </div>
@@ -829,8 +843,13 @@ export default function StudentQuizPage() {
               <>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 16 }}>
                   <div style={{ padding: 12, border: "1px solid var(--stroke)", borderRadius: 10, background: "var(--panel-2)" }}>
-                    <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Балл</p>
-                    <p style={{ margin: "6px 0 0", fontSize: 22, fontWeight: 800, color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>{reviewData.score ?? 0}%</p>
+                    <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Балл (из 10)</p>
+                    <p style={{ margin: "6px 0 0", fontSize: 22, fontWeight: 800, color: "var(--text)", fontVariantNumeric: "tabular-nums" }}>
+                      {(Number(reviewData.score ?? 0) / 10).toFixed(1)}
+                    </p>
+                    <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--muted)", fontVariantNumeric: "tabular-nums" }}>
+                      {reviewData.score ?? 0}%
+                    </p>
                   </div>
                   <div style={{ padding: 12, border: "1px solid var(--stroke)", borderRadius: 10, background: "var(--panel-2)" }}>
                     <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Правильных</p>
@@ -853,10 +872,23 @@ export default function StudentQuizPage() {
                       borderLeft: `4px solid ${q.isCorrect ? "var(--success)" : "var(--danger)"}`,
                       borderRadius: 12, background: "var(--panel-2)", padding: 14,
                     }}>
-                      <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "var(--text)" }}>
-                        <span style={{ color: "var(--muted)", marginRight: 8, fontVariantNumeric: "tabular-nums" }}>{idx + 1}.</span>
-                        {q.text}
-                      </p>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 10, justifyContent: "space-between" }}>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "var(--text)", flex: 1 }}>
+                          <span style={{ color: "var(--muted)", marginRight: 8, fontVariantNumeric: "tabular-nums" }}>{idx + 1}.</span>
+                          {q.text}
+                        </p>
+                        {q.points != null ? (
+                          <span style={{
+                            display: "inline-flex", alignItems: "center", padding: "2px 10px",
+                            borderRadius: 999, background: q.isCorrect ? "rgba(16,185,129,0.12)" : "rgba(0,0,0,0.05)",
+                            color: q.isCorrect ? "var(--success-strong)" : "var(--muted)",
+                            fontSize: 12, fontWeight: 800, fontVariantNumeric: "tabular-nums",
+                            whiteSpace: "nowrap", flexShrink: 0,
+                          }}>
+                            {q.pointsEarned ?? 0} / {q.points}
+                          </span>
+                        ) : null}
+                      </div>
                       <ul style={{ margin: "10px 0 0", padding: 0, listStyle: "none", display: "grid", gap: 6 }}>
                         {q.options.map((o) => {
                           const isCorrectOpt = o.isCorrect;

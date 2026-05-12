@@ -23,6 +23,8 @@ export default function AdminScheduleView() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [viewMode, setViewMode] = useState("teacher"); // "teacher" | "class"
+  const [viewDate, setViewDate] = useState(() => toISODate(new Date()));
 
   const schoolsQuery = useApi(() => schoolsApi.all(), []);
   const subjectsQuery = useApi(() => schoolsApi.subjects(), []);
@@ -49,14 +51,18 @@ export default function AdminScheduleView() {
   const classes = Array.isArray(classesQuery.data) ? classesQuery.data : [];
   const teachers = Array.isArray(teachersQuery.data) ? teachersQuery.data : [];
 
-  const todayISO = useMemo(() => toISODate(new Date()), []);
   const todayQuery = useApi(
-    () => (form.teacherId
-      ? scheduleApi.adminGetTeacherSchedule(form.teacherId, todayISO).catch(() => [])
-      : Promise.resolve([])
-    ),
-    [form.teacherId, todayISO],
-    { immediate: Boolean(form.teacherId) },
+    () => {
+      if (viewMode === "teacher" && form.teacherId) {
+        return scheduleApi.adminGetTeacherSchedule(form.teacherId, viewDate).catch(() => []);
+      }
+      if (viewMode === "class" && form.classId) {
+        return scheduleApi.adminGetClassSchedule(form.classId, viewDate).catch(() => []);
+      }
+      return Promise.resolve([]);
+    },
+    [viewMode, form.teacherId, form.classId, viewDate],
+    { immediate: (viewMode === "teacher" ? Boolean(form.teacherId) : Boolean(form.classId)) },
   );
 
   function update(field, value) {
@@ -210,8 +216,40 @@ export default function AdminScheduleView() {
 
         <article className={styles.formCard}>
           <h3 className={styles.panelTitle}>{t("admin.schedule.todayLessons")}</h3>
-          {!form.teacherId ? (
-            <p className={styles.emptyState}>{t("admin.schedule.noTeacher")}</p>
+
+          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+            <button
+              type="button"
+              className={viewMode === "teacher" ? styles.primaryBtn : styles.ghostBtn}
+              style={{ flex: 1, height: 34, padding: "0 14px", fontSize: 12 }}
+              onClick={() => setViewMode("teacher")}
+            >
+              По учителю
+            </button>
+            <button
+              type="button"
+              className={viewMode === "class" ? styles.primaryBtn : styles.ghostBtn}
+              style={{ flex: 1, height: 34, padding: "0 14px", fontSize: 12 }}
+              onClick={() => setViewMode("class")}
+            >
+              По классу
+            </button>
+          </div>
+
+          <label className={styles.field} style={{ marginBottom: 10 }}>
+            <span className={styles.label}>Дата просмотра</span>
+            <input
+              className={styles.input}
+              type="date"
+              value={viewDate}
+              onChange={(e) => setViewDate(e.target.value)}
+            />
+          </label>
+
+          {(viewMode === "teacher" && !form.teacherId) || (viewMode === "class" && !form.classId) ? (
+            <p className={styles.emptyState}>
+              {viewMode === "teacher" ? "Выберите учителя слева" : "Выберите класс слева"}
+            </p>
           ) : todayQuery.loading ? (
             <p className={styles.emptyState}>{t("common.loading")}</p>
           ) : todayLessons.length ? (
