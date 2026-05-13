@@ -59,7 +59,6 @@ public class LibraryService {
             HttpHeaders headers = new HttpHeaders();
             headers.set("User-Agent", "StudIX/1.0 (education platform)");
             headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<Map<String, Object>> response = restTemplate.exchange(

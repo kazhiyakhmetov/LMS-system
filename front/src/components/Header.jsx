@@ -113,6 +113,12 @@ function Icon({ name }) {
           <path d="M14 4h6v16h-6" />
         </svg>
       );
+    case "chat":
+      return (
+        <svg {...common} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12a8 8 0 0 1-11.6 7.2L4 21l1.8-5.4A8 8 0 1 1 21 12Z" />
+        </svg>
+      );
     case "check":
       return (
         <svg {...common} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -148,6 +154,9 @@ export default function Header() {
   const hasProfile = ROLES_WITH_PROFILE.has(user?.role);
   const profilePath = roleSectionPath(user?.role, "profile");
   const settingsPath = roleSectionPath(user?.role, "settings");
+  const chatPath = user?.role === "STUDENT" ? "/student/chat"
+    : user?.role === "TEACHER" ? "/teacher/chat"
+    : user?.role === "PARENT" ? "/parent/chat" : null;
 
   const activeLanguage = languages.find((l) => l.code === lang) ?? languages[0];
 
@@ -234,6 +243,17 @@ export default function Header() {
   return (
     <header className={styles.header}>
       <div className={styles.right}>
+        {user?.role !== "ADMIN" && chatPath ? (
+          <Link
+            to={chatPath}
+            className={styles.iconBtn}
+            aria-label="Чаты"
+            title="Чаты"
+          >
+            <Icon name="chat" />
+          </Link>
+        ) : null}
+
         <div className={styles.dropdown} ref={notifContainerRef}>
           <button
             className={styles.iconBtn}

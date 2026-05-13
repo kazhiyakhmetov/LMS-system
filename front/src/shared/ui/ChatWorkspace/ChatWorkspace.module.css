@@ -579,6 +579,331 @@
 
 .replyBarClose:hover { color: var(--text); background: var(--stroke); }
 
+/* === New-chat modal === */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(15, 23, 42, 0.45);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.modal {
+  width: min(520px, 100%);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+  padding: 18px 20px 20px;
+  font-family: inherit;
+}
+
+.modalHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.modalClose {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.modalClose:hover { background: var(--bg-soft); color: var(--text); }
+
+.modalSearch {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--stroke);
+  padding: 0 12px;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg-soft);
+  font-family: inherit;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.modalSearch:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+  background: var(--panel);
+}
+
+.modalHint {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.modalEmpty {
+  margin: 8px 0 0;
+  padding: 18px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.peerList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  max-height: 50vh;
+}
+
+.peerItem {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background var(--transition-fast);
+}
+
+.peerItem:hover { background: var(--bg-soft); }
+
+.peerAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.peerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.peerName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.peerMeta {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* === ⋯-button on each message + attachment link + composer toolbar === */
+.messageRow {
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.messageActions {
+  display: flex;
+  align-items: flex-end;
+  opacity: 0;
+  transition: opacity 120ms;
+}
+
+.messageRow:hover .messageActions { opacity: 1; }
+.outgoing .messageActions { order: 1; }
+
+.messageMoreBtn {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid var(--stroke);
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.messageMoreBtn:hover { color: var(--text); background: var(--bg-soft); }
+
+.attachmentLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.08);
+  text-decoration: none;
+  color: inherit;
+  margin-top: 6px;
+  max-width: 100%;
+  cursor: pointer;
+  transition: background 120ms;
+}
+
+.attachmentLink:hover { background: rgba(0, 0, 0, 0.12); }
+.outgoing .attachmentLink { background: rgba(255, 255, 255, 0.15); }
+.outgoing .attachmentLink:hover { background: rgba(255, 255, 255, 0.22); }
+
+.attachmentIcon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.attachmentInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.attachmentName {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+}
+
+.attachmentSize {
+  font-size: 10px;
+  opacity: 0.75;
+  font-weight: 600;
+}
+
+/* Attachment preview above composer */
+.attachmentBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--stroke);
+  background: var(--bg-soft);
+}
+
+.attachmentBarInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.attachmentError {
+  margin: 0;
+  padding: 8px 14px;
+  background: var(--danger-soft);
+  color: var(--danger-strong);
+  font-size: 12px;
+  border-top: 1px solid var(--stroke);
+}
+
+/* Composer toolbar (paperclip / emoji) */
+.composer {
+  grid-template-columns: auto 1fr auto !important;
+  align-items: end;
+}
+
+.composerToolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  align-self: end;
+  padding-bottom: 4px;
+}
+
+.toolBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--stroke);
+  background: var(--panel);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 120ms;
+}
+
+.toolBtn:hover:not(:disabled) { background: var(--bg-soft); }
+.toolBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.emojiPopover {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+  width: max-content;
+}
+
+.emojiPick {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-family: inherit;
+}
+
+.emojiPick:hover { background: var(--bg-soft); transform: scale(1.1); }
+
 @media (max-width: 1200px) {
   .layout {
     grid-template-columns: 280px 1fr;

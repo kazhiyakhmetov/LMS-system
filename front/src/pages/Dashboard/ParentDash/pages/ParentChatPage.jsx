@@ -16,6 +16,7 @@ export default function ParentChatPage() {
     draft,
     setDraft,
     handleSend,
+    startChat,
     loading,
     error,
   } = useChatApi(user?.id);
@@ -45,6 +46,7 @@ export default function ParentChatPage() {
       draft={draft}
       onDraftChange={setDraft}
       onSend={handleSend}
+      onStartChat={startChat}
       emptyText="Нет активных диалогов."
     />
   );

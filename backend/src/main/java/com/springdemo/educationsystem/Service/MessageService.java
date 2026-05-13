@@ -26,14 +26,29 @@ public class MessageService {
     }
 
     public MessageDTO sendMessage(Long senderId, Long receiverId, String content, Long replyToId) {
+        return sendMessage(senderId, receiverId, content, replyToId, null, null, null);
+    }
+
+    public MessageDTO sendMessage(Long senderId, Long receiverId, String content, Long replyToId,
+                                  String attachmentUrl, String attachmentName, Long attachmentSize) {
         User sender = userRepository.findById(senderId)
                 .orElseThrow(() -> new RuntimeException("Sender not found"));
         User receiver = userRepository.findById(receiverId)
                 .orElseThrow(() -> new RuntimeException("Receiver not found"));
 
-        Message message = new Message(sender, receiver, content);
+        String text = content == null ? "" : content;
+        boolean hasAttachment = attachmentUrl != null && !attachmentUrl.isBlank();
+        if (text.isBlank() && !hasAttachment) {
+            throw new RuntimeException("Message must have either text or attachment");
+        }
 
-        // Если это ответ на сообщение
+        Message message = new Message(sender, receiver, text);
+        if (hasAttachment) {
+            message.setAttachmentUrl(attachmentUrl);
+            message.setAttachmentName(attachmentName);
+            message.setAttachmentSize(attachmentSize);
+        }
+
         if (replyToId != null) {
             Message replyToMessage = messageRepository.findById(replyToId)
                     .orElseThrow(() -> new RuntimeException("Reply message not found"));
@@ -123,6 +138,9 @@ public class MessageService {
         dto.setCreatedAt(message.getCreatedAt());
         dto.setConversationId(message.getConversationId());
         dto.setReactions(new HashMap<>(message.getReactions()));
+        dto.setAttachmentUrl(message.getAttachmentUrl());
+        dto.setAttachmentName(message.getAttachmentName());
+        dto.setAttachmentSize(message.getAttachmentSize());
 
         // Конвертируем сообщение-ответ
         if (message.getReplyTo() != null) {

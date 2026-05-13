@@ -1,10 +1,12 @@
 import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../../../contexts/AuthContext";
 import styles from "./TeacherHomePage.module.css";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { assignmentsApi, scheduleApi, statisticsApi } from "../../../../shared/lib/api";
 import { formatDateTime, formatTime, toISODate } from "../../../../shared/lib/utils/date";
 import { useT } from "../../../../shared/lib/i18n";
+import NewsSlider from "../../../../shared/ui/NewsSlider/NewsSlider";
 
 function lessonStatus(lesson, nowMin) {
   if (!lesson?.startTime || !lesson?.endTime) return "today";
@@ -67,27 +69,27 @@ export default function TeacherHomePage() {
 
   return (
     <div className={styles.page}>
-      <section className={styles.hero}>
-        <div>
-          <p className={styles.heroEyebrow}>{t("teacher.home.eyebrow")}</p>
-          <h2 className={styles.heroTitle}>{t("teacher.home.welcome", { name: teacherName })}</h2>
-          <p className={styles.heroSub}>{t("teacher.home.sub")}</p>
-        </div>
-        <div className={styles.heroDate}>{longDate}</div>
-      </section>
-
-      <section className={styles.stats}>
-        {summaryCards.map((card) => (
-          <article key={card.label} className={`${styles.statCard} ${styles[card.tone]}`}>
-            <p className={styles.statLabel}>{card.label}</p>
-            <p className={styles.statValue}>{card.value}</p>
-            <p className={styles.statMeta}>{card.meta}</p>
-          </article>
-        ))}
-      </section>
-
       <section className={styles.layout}>
         <div className={styles.mainColumn}>
+          <section className={styles.hero}>
+            <div>
+              <p className={styles.heroEyebrow}>{t("teacher.home.eyebrow")}</p>
+              <h2 className={styles.heroTitle}>{t("teacher.home.welcome", { name: teacherName })}</h2>
+              <p className={styles.heroSub}>{t("teacher.home.sub")}</p>
+            </div>
+            <div className={styles.heroDate}>{longDate}</div>
+          </section>
+
+          <section className={styles.stats}>
+            {summaryCards.map((card) => (
+              <article key={card.label} className={`${styles.statCard} ${styles[card.tone]}`}>
+                <p className={styles.statLabel}>{card.label}</p>
+                <p className={styles.statValue}>{card.value}</p>
+                <p className={styles.statMeta}>{card.meta}</p>
+              </article>
+            ))}
+          </section>
+
           <article className={styles.scheduleCard}>
             <div className={styles.sectionHead}>
               <h3 className={styles.sectionTitle}>{t("teacher.home.todaySchedule")}</h3>
@@ -129,27 +131,39 @@ export default function TeacherHomePage() {
           </article>
         </div>
 
-        <aside className={styles.deadlineCard}>
-          <div className={styles.deadlineHead}>
-            <h3 className={styles.sectionTitle}>{t("teacher.home.deadlines")}</h3>
-            <span className={styles.deadlineCount}>{deadlines.length}</span>
+        <aside className={styles.sideColumn}>
+          <div className={styles.newsSlot}>
+            <NewsSlider />
           </div>
 
-          {assignmentsQuery.loading && !deadlines.length ? (
-            <p className={styles.emptyState}>{t("common.loading")}</p>
-          ) : deadlines.length ? (
-            <ul className={styles.deadlineList}>
-              {deadlines.map((item) => (
-                <li key={item.id} className={`${styles.deadlineItem} ${styles.deadlineFocus}`}>
-                  <p className={styles.deadlineSubject}>{item.subjectName} • {item.className}</p>
-                  <p className={styles.deadlineTitle}>{item.title}</p>
-                  <p className={styles.deadlineMeta}>{formatDateTime(item.deadline)}</p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className={styles.emptyState}>{t("teacher.home.deadlinesEmpty")}</p>
-          )}
+          <article className={styles.deadlineCard}>
+            <div className={styles.deadlineHead}>
+              <h3 className={styles.sectionTitle}>{t("teacher.home.deadlines")}</h3>
+              <span className={styles.deadlineCount}>{deadlines.length}</span>
+            </div>
+
+            {assignmentsQuery.loading && !deadlines.length ? (
+              <p className={styles.emptyState}>{t("common.loading")}</p>
+            ) : deadlines.length ? (
+              <ul className={styles.deadlineList}>
+                {deadlines.map((item) => (
+                  <Link
+                    key={item.id}
+                    to="/teacher/assignments"
+                    className={styles.deadlineLink}
+                  >
+                    <article className={`${styles.deadlineItem} ${styles.deadlineFocus}`}>
+                      <p className={styles.deadlineSubject}>{item.subjectName} • {item.className}</p>
+                      <p className={styles.deadlineTitle}>{item.title}</p>
+                      <p className={styles.deadlineMeta}>{formatDateTime(item.deadline)}</p>
+                    </article>
+                  </Link>
+                ))}
+              </ul>
+            ) : (
+              <p className={styles.emptyState}>{t("teacher.home.deadlinesEmpty")}</p>
+            )}
+          </article>
         </aside>
       </section>
     </div>

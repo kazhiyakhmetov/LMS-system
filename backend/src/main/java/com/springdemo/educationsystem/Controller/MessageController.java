@@ -37,12 +37,21 @@ public class MessageController {
         Long receiverId = Long.valueOf(messageData.get("receiverId").toString());
         String content = (String) messageData.get("content");
 
-        // НОВОЕ: ID сообщения, на которое отвечаем (может быть null)
-        Long replyToId = messageData.containsKey("replyToId") ?
+        // ID сообщения, на которое отвечаем (может быть null)
+        Long replyToId = messageData.get("replyToId") != null ?
                 Long.valueOf(messageData.get("replyToId").toString()) : null;
 
+        // Прикреплённый файл (может быть null)
+        String attachmentUrl = (String) messageData.get("attachmentUrl");
+        String attachmentName = (String) messageData.get("attachmentName");
+        Long attachmentSize = messageData.get("attachmentSize") != null ?
+                Long.valueOf(messageData.get("attachmentSize").toString()) : null;
+
         try {
-            MessageDTO message = messageService.sendMessage(senderId, receiverId, content, replyToId);
+            MessageDTO message = messageService.sendMessage(
+                    senderId, receiverId, content, replyToId,
+                    attachmentUrl, attachmentName, attachmentSize
+            );
             return ResponseEntity.ok(message);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

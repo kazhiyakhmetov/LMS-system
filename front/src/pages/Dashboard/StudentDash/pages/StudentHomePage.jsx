@@ -1,10 +1,12 @@
 import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../../../contexts/AuthContext";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { assignmentsApi, gamificationApi, scheduleApi, surveysApi, aiApi } from "../../../../shared/lib/api";
 import { formatDateTime, formatTime, toISODate } from "../../../../shared/lib/utils/date";
 import { useT } from "../../../../shared/lib/i18n";
 import styles from "./StudentHomePage.module.css";
+import NewsSlider from "../../../../shared/ui/NewsSlider/NewsSlider";
 
 function toneFor(deadline) {
   if (!deadline) return "focus";
@@ -77,38 +79,38 @@ export default function StudentHomePage() {
 
   return (
     <div className={styles.page}>
-      <section className={styles.hero}>
-        <div className={styles.heroBody}>
-          <p className={styles.heroEyebrow}>{t("student.home.eyebrow")} · {stats.level != null ? t("student.gamification.currentLevel", { level: stats.level }) : ""}</p>
-          <h2 className={styles.heroTitle}>{t("student.home.greeting", { name: studentName })} 👋</h2>
-          <p className={styles.heroSub}>{t("student.home.sub")}</p>
-        </div>
-        <div className={styles.heroDate}>
-          <span className={styles.heroDateLabel}>{t("student.home.todayLabel")}</span>
-          <span className={styles.heroDateValue}>{longDate}</span>
-          {stats.currentStreak ? (
-            <span className={styles.heroStreak}>
-              <StatIcon name="fire" /> {t("student.home.streakDays", { count: stats.currentStreak })}
-            </span>
-          ) : null}
-        </div>
-      </section>
-
-      <section className={styles.kpiRow}>
-        {kpis.map((k) => (
-          <article key={k.key} className={`${styles.kpiCard} ${styles[`tone_${k.tone}`]}`}>
-            <div className={styles.kpiHead}>
-              <span className={styles.kpiLabel}>{k.label}</span>
-              <span className={styles.kpiIcon}><StatIcon name={k.icon} /></span>
-            </div>
-            <p className={styles.kpiValue}>{k.value}</p>
-            {k.sub ? <p className={styles.kpiSub}>{k.sub}</p> : null}
-          </article>
-        ))}
-      </section>
-
       <section className={styles.layout}>
         <div className={styles.mainColumn}>
+          <section className={styles.hero}>
+            <div className={styles.heroBody}>
+              <p className={styles.heroEyebrow}>{t("student.home.eyebrow")} · {stats.level != null ? t("student.gamification.currentLevel", { level: stats.level }) : ""}</p>
+              <h2 className={styles.heroTitle}>{t("student.home.greeting", { name: studentName })} 👋</h2>
+              <p className={styles.heroSub}>{t("student.home.sub")}</p>
+            </div>
+            <div className={styles.heroDate}>
+              <span className={styles.heroDateLabel}>{t("student.home.todayLabel")}</span>
+              <span className={styles.heroDateValue}>{longDate}</span>
+              {stats.currentStreak ? (
+                <span className={styles.heroStreak}>
+                  <StatIcon name="fire" /> {t("student.home.streakDays", { count: stats.currentStreak })}
+                </span>
+              ) : null}
+            </div>
+          </section>
+
+          <section className={styles.kpiRow}>
+            {kpis.map((k) => (
+              <article key={k.key} className={`${styles.kpiCard} ${styles[`tone_${k.tone}`]}`}>
+                <div className={styles.kpiHead}>
+                  <span className={styles.kpiLabel}>{k.label}</span>
+                  <span className={styles.kpiIcon}><StatIcon name={k.icon} /></span>
+                </div>
+                <p className={styles.kpiValue}>{k.value}</p>
+                {k.sub ? <p className={styles.kpiSub}>{k.sub}</p> : null}
+              </article>
+            ))}
+          </section>
+
           <article className={styles.scheduleCard}>
             <div className={styles.cardHead}>
               <h3 className={styles.sectionTitle}>{t("student.home.scheduleToday")}</h3>
@@ -217,6 +219,10 @@ export default function StudentHomePage() {
         </div>
 
         <aside className={styles.sideColumn}>
+          <div className={styles.newsSlot}>
+            <NewsSlider />
+          </div>
+
           <article className={styles.deadlineCard}>
             <div className={styles.cardHead}>
               <h3 className={styles.sectionTitle}>{t("student.home.deadlines")}</h3>
@@ -230,11 +236,17 @@ export default function StudentHomePage() {
                 {allDeadlines.map((item) => {
                   const tone = toneFor(item.deadline);
                   return (
-                    <li key={item.id} className={`${styles.deadlineItem} ${styles[tone]}`}>
-                      <p className={styles.deadlineSubject}>{item.subjectName || item.subject || ""}</p>
-                      <p className={styles.deadlineTitle}>{item.title}</p>
-                      <p className={styles.deadlineMeta}>{formatDateTime(item.deadline)}</p>
-                    </li>
+                    <Link
+                      key={item.id}
+                      to="/student/assignments"
+                      className={styles.deadlineLink}
+                    >
+                      <article className={`${styles.deadlineItem} ${styles[tone]}`}>
+                        <p className={styles.deadlineSubject}>{item.subjectName || item.subject || ""}</p>
+                        <p className={styles.deadlineTitle}>{item.title}</p>
+                        <p className={styles.deadlineMeta}>{formatDateTime(item.deadline)}</p>
+                      </article>
+                    </Link>
                   );
                 })}
               </ul>

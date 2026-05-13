@@ -67,6 +67,45 @@ export default function AdminStatsView() {
     return Array.from(map.values()).sort((a, b) => b.count - a.count);
   }, [users, schools]);
 
+  // Полная раскладка по ролям для каждой школы — для чипов в карточке "Школы"
+  const schoolBreakdown = useMemo(() => {
+    const map = new Map();
+    schools.forEach((s) => map.set(s.id, {
+      id: s.id, name: s.name, students: 0, teachers: 0, parents: 0, admins: 0, total: 0,
+    }));
+    users.forEach((u) => {
+      const sid = u.schoolId;
+      const role = normalizeRole(u.roles?.[0] ?? u.role);
+      if (!sid || !map.has(sid)) return;
+      const entry = map.get(sid);
+      entry.total += 1;
+      if (role === "STUDENT") entry.students += 1;
+      else if (role === "TEACHER") entry.teachers += 1;
+      else if (role === "PARENT") entry.parents += 1;
+      else if (role === "ADMIN") entry.admins += 1;
+    });
+    return Array.from(map.values()).sort((a, b) => b.total - a.total);
+  }, [users, schools]);
+
+  // Системная сводка (3-я строка снизу)
+  const systemSummary = useMemo(() => {
+    const biggest = schoolBreakdown[0];
+    const usersWithSchool = users.filter((u) => u.schoolId).length;
+    const avgSurveyQuestions = surveys.length
+      ? (surveys.reduce((a, s) => a + (s.questionsCount || 0), 0) / surveys.length).toFixed(1)
+      : "0";
+    const studentToTeacher = counts.TEACHER > 0
+      ? (counts.STUDENT / counts.TEACHER).toFixed(1)
+      : "—";
+    return {
+      biggestName: biggest?.name || "—",
+      biggestCount: biggest?.total || 0,
+      coverage: users.length ? Math.round((usersWithSchool / users.length) * 100) : 0,
+      avgSurveyQuestions,
+      studentToTeacher,
+    };
+  }, [schoolBreakdown, users, surveys, counts]);
+
   const totalQuestions = useMemo(
     () => surveys.reduce((acc, s) => acc + (s.questionsCount || 0), 0),
     [surveys],
@@ -181,14 +220,39 @@ export default function AdminStatsView() {
       <section className={styles.grid}>
         <article className={styles.panel}>
           <h3 className={styles.panelTitle}>{t("admin.stats.schoolsList")}</h3>
-          {schools.length ? (
-            <ul className={styles.activityList}>
-              {schools.map((s) => (
-                <li key={s.id} className={styles.activityItem}>
-                  <span className={styles.activityMain}>{s.name}</span>
-                  <span className={styles.activityTime}>ID: {s.id}</span>
-                </li>
-              ))}
+          {schoolBreakdown.length ? (
+            <ul className={styles.schoolListRich}>
+              {schoolBreakdown.map((s) => {
+                const maxTotal = schoolBreakdown[0]?.total || 1;
+                const ratio = Math.round((s.total / maxTotal) * 100);
+                return (
+                  <li key={s.id} className={styles.schoolItemRich}>
+                    <div className={styles.schoolItemHead}>
+                      <span className={styles.schoolAvatar}>
+                        {(s.name || "?").trim().charAt(0).toUpperCase()}
+                      </span>
+                      <div className={styles.schoolMeta}>
+                        <p className={styles.schoolName}>{s.name}</p>
+                        <p className={styles.schoolSub}>ID: {s.id} · {s.total} пользователей</p>
+                      </div>
+                    </div>
+                    <div className={styles.schoolBarTrack}>
+                      <div className={styles.schoolBarFill} style={{ width: `${ratio}%` }} />
+                    </div>
+                    <div className={styles.schoolChips}>
+                      <span className={`${styles.schoolChip} ${styles.chipStudents}`}>
+                        Учеников <strong>{s.students}</strong>
+                      </span>
+                      <span className={`${styles.schoolChip} ${styles.chipTeachers}`}>
+                        Учителей <strong>{s.teachers}</strong>
+                      </span>
+                      <span className={`${styles.schoolChip} ${styles.chipParents}`}>
+                        Родителей <strong>{s.parents}</strong>
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <p className={styles.emptyState}>{t("admin.stats.noSchools")}</p>
@@ -198,17 +262,46 @@ export default function AdminStatsView() {
         <article className={styles.panel}>
           <h3 className={styles.panelTitle}>{t("admin.surveys.existing")}</h3>
           {surveys.length ? (
-            <ul className={styles.activityList}>
-              {surveys.slice(0, 5).map((s) => (
-                <li key={s.id} className={styles.activityItem}>
-                  <span className={styles.activityMain}>{s.title}</span>
-                  <span className={styles.activityTime}>{t("admin.surveys.questionsCount", { count: s.questionsCount ?? 0 })}</span>
+            <ul className={styles.surveyListRich}>
+              {surveys.slice(0, 6).map((s) => (
+                <li key={s.id} className={styles.surveyItemRich}>
+                  <span className={styles.surveyBadge}>{s.questionsCount ?? 0}</span>
+                  <div className={styles.surveyBody}>
+                    <p className={styles.surveyName}>{s.title}</p>
+                    <p className={styles.surveySub}>
+                      {t("admin.surveys.questionsCount", { count: s.questionsCount ?? 0 })}
+                      {s.description ? ` · ${s.description.slice(0, 60)}${s.description.length > 60 ? "…" : ""}` : ""}
+                    </p>
+                  </div>
                 </li>
               ))}
             </ul>
           ) : (
             <p className={styles.emptyState}>{t("admin.surveys.empty")}</p>
           )}
+        </article>
+      </section>
+
+      <section className={styles.summaryRow}>
+        <article className={`${styles.summaryCard} ${styles.summaryAccent}`}>
+          <p className={styles.summaryLabel}>Крупнейшая школа</p>
+          <p className={styles.summaryValue}>{systemSummary.biggestName}</p>
+          <p className={styles.summarySub}>{systemSummary.biggestCount} пользователей</p>
+        </article>
+        <article className={styles.summaryCard}>
+          <p className={styles.summaryLabel}>Соотношение ученик/учитель</p>
+          <p className={styles.summaryValue}>{systemSummary.studentToTeacher}</p>
+          <p className={styles.summarySub}>учеников на одного учителя</p>
+        </article>
+        <article className={styles.summaryCard}>
+          <p className={styles.summaryLabel}>Школы покрыты</p>
+          <p className={styles.summaryValue}>{systemSummary.coverage}%</p>
+          <p className={styles.summarySub}>пользователей привязаны к школе</p>
+        </article>
+        <article className={styles.summaryCard}>
+          <p className={styles.summaryLabel}>Вопросов в опросе</p>
+          <p className={styles.summaryValue}>{systemSummary.avgSurveyQuestions}</p>
+          <p className={styles.summarySub}>в среднем по платформе</p>
         </article>
       </section>
     </div>

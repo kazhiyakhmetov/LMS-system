@@ -5,79 +5,76 @@ import com.springdemo.educationsystem.Repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
-import com.springdemo.educationsystem.Entity.Teacher;
-import com.springdemo.educationsystem.Entity.User;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Authentication facade поверх {@link JwtService}.
+ *
+ * Stateless: токен — это JWT, подписанный HMAC-SHA256. Сервер НЕ хранит
+ * соответствие token↔userId в памяти — все данные содержатся в payload и
+ * проверяются по подписи + сроку действия при каждом запросе.
+ *
+ * Logout: т.к. JWT stateless, для "отзыва" токена держим in-memory blacklist
+ * (revokedTokens) — токен в нём перестаёт быть валидным досрочно, даже если
+ * подпись/exp корректны. При рестарте контейнера blacklist чистится — это OK,
+ * потому что одновременно сбрасывается весь uptime, а пользователь всё равно
+ * получит свежий JWT при следующем login. Для prod-multi-replica blacklist
+ * стоит вынести в Redis.
+ */
 @Service
 public class AuthService {
     private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
+
     private final UserRepository userRepository;
     private final GamificationService gamificationService;
+    private final JwtService jwtService;
 
+    /** Отозванные (logout) токены — стают невалидными до своей natural-expiry. */
+    private final Set<String> revokedTokens = ConcurrentHashMap.newKeySet();
 
-    public AuthService(UserRepository userRepository,  GamificationService gamificationService) {
+    public AuthService(UserRepository userRepository,
+                       GamificationService gamificationService,
+                       JwtService jwtService) {
         this.userRepository = userRepository;
         this.gamificationService = gamificationService;
-    }
-
-    private Map<String, UserInfo> activeTokens = new HashMap<>();
-
-    private final String ADMIN_EMAIL = "admin@school.kz";
-    private final String ADMIN_PASSWORD = "admin";
-
-
-    private static class UserInfo {
-        Long userId;
-        String email;
-        String role;
-
-        UserInfo(Long userId, String email, String role) {
-            this.userId = userId;
-            this.email = email;
-            this.role = role;
-        }
+        this.jwtService = jwtService;
     }
 
     public Map<String, Object> login(String email, String password) {
         logger.info("Login attempt for email: {}", email);
 
         User user = userRepository.findByEmail(email).orElse(null);
-        if (user != null && user.getPasswordHash().equals(password)) {
-            String token = generateToken();
-
-            String role = determineUserRole(user);
-
-            UserInfo userInfo = new UserInfo(user.getId(), email, role);
-            activeTokens.put(token, userInfo);
-
-            // АВТОМАТИЧЕСКАЯ ИНИЦИАЛИЗАЦИЯ СТАТИСТИКИ ДЛЯ СТУДЕНТОВ
-            if ("student".equals(role)) {
-                try {
-                    gamificationService.initializeStudentStats(user.getId());
-                    logger.info("Auto-initialized gamification stats for student: {}", user.getId());
-                } catch (Exception e) {
-                    logger.warn("Could not initialize gamification stats for student {}: {}", user.getId(), e.getMessage());
-                }
-            }
-
-            logger.info("User login successful, email: {}, role: {}, token: {}", email, role, token);
-            return createLoginResponse(token, user.getId(), user.getEmail(),
-                    user.getFirstName(), user.getLastName(), role);
+        if (user == null || !user.getPasswordHash().equals(password)) {
+            logger.warn("Login failed for email: {}", email);
+            throw new RuntimeException("Invalid credentials");
         }
 
-        logger.warn("Login failed for email: {}", email);
-        throw new RuntimeException("Invalid credentials");
+        String role = determineUserRole(user);
+        String token = jwtService.generate(user.getId(), user.getEmail(), role);
+
+        // АВТОИНИЦИАЛИЗАЦИЯ СТАТИСТИКИ ДЛЯ СТУДЕНТОВ
+        if ("student".equals(role)) {
+            try {
+                gamificationService.initializeStudentStats(user.getId());
+                logger.info("Auto-initialized gamification stats for student: {}", user.getId());
+            } catch (Exception e) {
+                logger.warn("Could not initialize gamification stats for student {}: {}", user.getId(), e.getMessage());
+            }
+        }
+
+        logger.info("User login successful, email: {}, role: {}", email, role);
+        return createLoginResponse(token, user.getId(), user.getEmail(),
+                user.getFirstName(), user.getLastName(), role);
     }
 
     private String determineUserRole(User user) {
         if (user.getRoles() == null || user.getRoles().isEmpty()) {
             return "unknown";
         }
-
-        // Берем первую роль из списка (обычно у пользователя одна основная роль)
         return user.getRoles().get(0).getName();
     }
 
@@ -90,36 +87,35 @@ public class AuthService {
         response.put("firstName", firstName);
         response.put("lastName", lastName);
         response.put("role", role);
+        response.put("expiresInMs", jwtService.getExpirationMs());
         response.put("message", "Login successful");
         return response;
     }
 
+    public boolean isValidToken(String token) {
+        if (token == null) return false;
+        if (revokedTokens.contains(token)) return false;
+        return jwtService.isValid(token);
+    }
+
     public boolean isAdmin(String token) {
-        UserInfo userInfo = activeTokens.get(token);
-        return userInfo != null && "admin".equals(userInfo.role);
+        if (!isValidToken(token)) return false;
+        return "admin".equalsIgnoreCase(jwtService.getRole(token));
     }
 
     public Long getUserId(String token) {
-        UserInfo userInfo = activeTokens.get(token);
-        return userInfo != null ? userInfo.userId : null;
+        if (!isValidToken(token)) return null;
+        return jwtService.getUserId(token);
     }
 
     public String getUserRole(String token) {
-        UserInfo userInfo = activeTokens.get(token);
-        return userInfo != null ? userInfo.role : null;
-    }
-    public boolean isValidToken(String token) {
-        return activeTokens.containsKey(token);
+        if (!isValidToken(token)) return null;
+        return jwtService.getRole(token);
     }
 
     public void logout(String token) {
-        activeTokens.remove(token);
-        logger.info("User logged out, token removed: {}", token);
+        if (token == null) return;
+        revokedTokens.add(token);
+        logger.info("Token revoked (logout)");
     }
-
-    private String generateToken() {
-        return UUID.randomUUID().toString();
-    }
-
-
 }

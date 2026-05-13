@@ -18,6 +18,7 @@ export default function StudentChatPage() {
     draft,
     setDraft,
     handleSend,
+    startChat,
     loading,
     error,
   } = useChatApi(user?.id);
@@ -47,6 +48,7 @@ export default function StudentChatPage() {
       draft={draft}
       onDraftChange={setDraft}
       onSend={handleSend}
+      onStartChat={startChat}
       emptyText={t("student.chat.empty")}
     />
   );

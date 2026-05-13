@@ -20,13 +20,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
-  const [forgotOpen, setForgotOpen] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState("");
-  const [forgotStatus, setForgotStatus] = useState("");
 
   const isMountedRef = useRef(true);
-  const forgotStatusTimeoutRef = useRef(null);
-  const forgotCloseTimeoutRef = useRef(null);
 
   const fieldErrors = useMemo(() => {
     const errors = {};
@@ -42,19 +37,12 @@ export default function LoginPage() {
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
-      clearTimeout(forgotStatusTimeoutRef.current);
-      clearTimeout(forgotCloseTimeoutRef.current);
     };
   }, []);
 
   const updateFormField = (field) => (event) => {
     const { value } = event.target;
     setForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const clearForgotTimers = () => {
-    clearTimeout(forgotStatusTimeoutRef.current);
-    clearTimeout(forgotCloseTimeoutRef.current);
   };
 
   async function onSubmit(event) {
@@ -67,7 +55,6 @@ export default function LoginPage() {
     try {
       setLoading(true);
 
-      // Логин и пароль подчищаем только в момент отправки, чтобы не мешать вводу.
       const result = await doLogin({
         email: form.email.trim(),
         password: form.password,
@@ -81,38 +68,6 @@ export default function LoginPage() {
         setLoading(false);
       }
     }
-  }
-
-  function openForgot() {
-    clearForgotTimers();
-    setForgotEmail("");
-    setForgotStatus("");
-    setForgotOpen(true);
-  }
-
-  function closeForgot() {
-    clearForgotTimers();
-    setForgotOpen(false);
-  }
-
-  async function sendForgot(event) {
-    event.preventDefault();
-
-    if (!forgotEmail.trim()) {
-      setForgotStatus("Введите почту");
-      return;
-    }
-
-    // Чистим таймеры, чтобы статус не обновлялся после закрытия окна.
-    clearForgotTimers();
-    setForgotStatus("Отправка...");
-
-    forgotStatusTimeoutRef.current = setTimeout(() => {
-      setForgotStatus("Инструкция отправлена на вашу почту");
-      forgotCloseTimeoutRef.current = setTimeout(() => {
-        setForgotOpen(false);
-      }, 1200);
-    }, 800);
   }
 
   return (
@@ -203,49 +158,16 @@ export default function LoginPage() {
 
             {submitError ? <div className={styles.submitError}>{submitError}</div> : null}
 
-            <div className={styles.rowActions}>
-              <button type="button" className={styles.forgot} onClick={openForgot}>
-                Забыли пароль?
-              </button>
-            </div>
-
             <Button type="submit" loading={loading} disabled={loading}>
               Войти
             </Button>
           </form>
+
+          <div className={styles.cardFooter}>
+            © {new Date().getFullYear()} StudIX · v1.0
+          </div>
         </section>
       </main>
-
-      {forgotOpen ? (
-        <div className={styles.forgotOverlay} role="dialog" aria-modal="true">
-          <div className={styles.forgotBox}>
-            <h3>Восстановление пароля</h3>
-
-            <form onSubmit={sendForgot} className={styles.forgotForm}>
-              <Input
-                label="Почта"
-                placeholder=""
-                value={forgotEmail}
-                onChange={(event) => setForgotEmail(event.target.value)}
-                icon={
-                  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
-                  </svg>
-                }
-              />
-
-              <div className={styles.forgotStatus}>{forgotStatus}</div>
-
-              <div style={{ display: "flex", gap: 10 }}>
-                <Button type="submit">Отправить</Button>
-                <button type="button" className={styles.ghost} onClick={closeForgot}>
-                  Отмена
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

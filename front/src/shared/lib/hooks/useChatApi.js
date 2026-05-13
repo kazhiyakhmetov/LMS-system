@@ -25,6 +25,15 @@ function mapMessage(msg, currentUserId) {
     sender: String(msg.senderId) === String(currentUserId) ? "out" : "in",
     text: msg.content || "",
     time: msg.createdAt ? formatChatTime(new Date(msg.createdAt)) : "",
+    attachmentUrl: msg.attachmentUrl || null,
+    attachmentName: msg.attachmentName || null,
+    attachmentSize: msg.attachmentSize ?? null,
+    replyTo: msg.replyTo ? {
+      id: msg.replyTo.id,
+      text: msg.replyTo.content || "",
+      senderName: msg.replyTo.senderName || "",
+    } : null,
+    reactions: msg.reactions || null,
   };
 }
 
@@ -117,12 +126,31 @@ export function useChatApi(currentUserId, options = {}) {
     [chats, activeChatId],
   );
 
-  const handleSend = useCallback(async (event) => {
-    event?.preventDefault?.();
+  /**
+   * Отправка сообщения. Принимает либо form-event, либо объект-payload
+   * с опциональными полями replyToId / attachmentUrl / attachmentName / attachmentSize.
+   * Сохраняет обратную совместимость с <form onSubmit={handleSend}>.
+   */
+  const handleSend = useCallback(async (eventOrPayload) => {
+    let extra = {};
+    if (eventOrPayload && typeof eventOrPayload.preventDefault === "function") {
+      eventOrPayload.preventDefault();
+    } else if (eventOrPayload && typeof eventOrPayload === "object") {
+      extra = eventOrPayload;
+      extra.event?.preventDefault?.();
+    }
     const text = draft.trim();
-    if (!text || activeChatId == null) return;
+    if (activeChatId == null) return;
+    if (!text && !extra.attachmentUrl) return;
     try {
-      await chatApi.send({ receiverId: activeChatId, content: text });
+      await chatApi.send({
+        receiverId: activeChatId,
+        content: text,
+        replyToId: extra.replyToId ?? null,
+        attachmentUrl: extra.attachmentUrl ?? null,
+        attachmentName: extra.attachmentName ?? null,
+        attachmentSize: extra.attachmentSize ?? null,
+      });
       setDraft("");
       await loadMessages(activeChatId);
       await loadConversations();
@@ -130,6 +158,34 @@ export function useChatApi(currentUserId, options = {}) {
       setError(err);
     }
   }, [draft, activeChatId, loadMessages, loadConversations]);
+
+  /**
+   * Открыть/создать чат с произвольным пользователем (например, после клика
+   * на «Новый чат» → выбор человека). Если у нас уже есть с ним переписка —
+   * просто переключаемся; иначе добавляем "stub" в список, чтобы UI мог
+   * показать пустой диалог. Реальная запись в БД появится после первого
+   * отправленного сообщения.
+   */
+  const startChat = useCallback((peer) => {
+    if (!peer || peer.id == null) return;
+    setChats((prev) => {
+      if (prev.some((c) => String(c.id) === String(peer.id))) return prev;
+      const stub = {
+        id: peer.id,
+        name: peer.name || peer.fullName || peer.email || "Без имени",
+        email: peer.email || "",
+        role: peer.role || "",
+        type: "chat",
+        unread: 0,
+        avatar: peer.avatarPath || peer.profilePhotoPath || null,
+        lastMessage: "",
+        lastMessageTime: null,
+        messages: [],
+      };
+      return [stub, ...prev];
+    });
+    setActiveChatId(peer.id);
+  }, []);
 
   return {
     chats,
@@ -144,6 +200,7 @@ export function useChatApi(currentUserId, options = {}) {
     filteredChats,
     activeChat,
     handleSend,
+    startChat,
     loading,
     error,
     refetch: loadConversations,

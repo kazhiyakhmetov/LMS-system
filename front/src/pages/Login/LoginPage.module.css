@@ -82,13 +82,29 @@
 
 .card {
   background: var(--panel);
-  padding: 96px 50px;
+  padding: 48px 50px;
   position: relative;
   overflow: hidden;
   animation: pop 420ms ease-out both;
   color: var(--text);
   font-family: var(--font-sans);
   border-left: 1px solid var(--stroke);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+}
+
+.cardFooter {
+  padding-top: 12px;
+  border-top: 1px solid var(--stroke);
+  margin-top: 4px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted-soft);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 600;
 }
 
 @keyframes pop {
@@ -257,30 +273,6 @@
   margin-top: 10px;
 }
 
-.rowActions {
-  display: flex;
-  justify-content: flex-start;
-  margin-top: 4px;
-  margin-bottom: 6px;
-}
-
-.forgot {
-  background: transparent;
-  border: 0;
-  color: var(--muted);
-  font-weight: 600;
-  cursor: pointer;
-  padding: 6px 8px;
-  border-radius: 8px;
-  transition:
-    background 160ms ease,
-    transform 120ms ease;
-}
-.forgot:hover {
-  background: var(--accent-soft);
-  transform: translateY(-1px);
-}
-
 .submitError {
   border: 1px solid rgba(217, 76, 83, 0.2);
   background: rgba(217, 76, 83, 0.08);
@@ -288,43 +280,6 @@
   padding: 10px 12px;
   border-radius: var(--radius-sm);
   font-size: 13px;
-}
-
-.forgotOverlay {
-  position: fixed;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(
-    rgba(255, 255, 255, 0.9),
-    rgba(238, 245, 252, 0.92)
-  );
-  z-index: 60;
-}
-.forgotBox {
-  width: min(520px, 92%);
-  background: var(--panel);
-  padding: 18px;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow2);
-  border: 1px solid var(--stroke);
-}
-.forgotForm {
-  display: grid;
-  gap: 10px;
-}
-.forgotStatus {
-  color: var(--muted);
-  font-size: 13px;
-  min-height: 20px;
-}
-.ghost {
-  background: transparent;
-  border: 1px solid var(--stroke);
-  color: var(--text);
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
 }
 
 @media (max-width: 900px) {

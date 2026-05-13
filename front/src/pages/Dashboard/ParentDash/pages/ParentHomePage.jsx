@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import styles from "./ParentHomePage.module.css";
 import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { parentApi, aiApi } from "../../../../shared/lib/api";
 import { formatDateTime, formatTime, toISODate } from "../../../../shared/lib/utils/date";
 import { useT } from "../../../../shared/lib/i18n";
+import NewsSlider from "../../../../shared/ui/NewsSlider/NewsSlider";
 
 const LOCALE_MAP = { ru: "ru-RU", kk: "kk-KZ", en: "en-US" };
 
@@ -99,18 +101,6 @@ export default function ParentHomePage() {
 
   return (
     <div className={styles.page}>
-      <section className={styles.hero}>
-        <div className={styles.heroBody}>
-          <p className={styles.heroEyebrow}>{t("parent.home.eyebrow")}</p>
-          <h2 className={styles.heroTitle}>{t("parent.home.title")}</h2>
-          <p className={styles.heroSub}>{t("parent.home.sub")}</p>
-        </div>
-        <div className={styles.heroDate}>
-          <span className={styles.heroDateLabel}>{t("parent.home.todayLabel")}</span>
-          <span className={styles.heroDateValue}>{longDate}</span>
-        </div>
-      </section>
-
       <section className={styles.studentCard}>
         <div className={styles.studentInfo}>
           <p className={styles.studentName}>{selectedChild?.fio || "—"}</p>
@@ -170,21 +160,33 @@ export default function ParentHomePage() {
         </section>
       ) : null}
 
-      <section className={styles.kpiRow}>
-        {kpis.map((k) => (
-          <article key={k.key} className={`${styles.kpiCard} ${styles[`tone_${k.tone}`]}`}>
-            <div className={styles.kpiHead}>
-              <span className={styles.kpiLabel}>{k.label}</span>
-              <span className={styles.kpiIcon}><StatIcon name={k.icon} /></span>
-            </div>
-            <p className={styles.kpiValue}>{k.value}</p>
-            {k.sub ? <p className={styles.kpiSub}>{k.sub}</p> : null}
-          </article>
-        ))}
-      </section>
-
       <section className={styles.layout}>
         <div className={styles.mainColumn}>
+          <section className={styles.hero}>
+            <div className={styles.heroBody}>
+              <p className={styles.heroEyebrow}>{t("parent.home.eyebrow")}</p>
+              <h2 className={styles.heroTitle}>{t("parent.home.title")}</h2>
+              <p className={styles.heroSub}>{t("parent.home.sub")}</p>
+            </div>
+            <div className={styles.heroDate}>
+              <span className={styles.heroDateLabel}>{t("parent.home.todayLabel")}</span>
+              <span className={styles.heroDateValue}>{longDate}</span>
+            </div>
+          </section>
+
+          <section className={styles.kpiRow}>
+            {kpis.map((k) => (
+              <article key={k.key} className={`${styles.kpiCard} ${styles[`tone_${k.tone}`]}`}>
+                <div className={styles.kpiHead}>
+                  <span className={styles.kpiLabel}>{k.label}</span>
+                  <span className={styles.kpiIcon}><StatIcon name={k.icon} /></span>
+                </div>
+                <p className={styles.kpiValue}>{k.value}</p>
+                {k.sub ? <p className={styles.kpiSub}>{k.sub}</p> : null}
+              </article>
+            ))}
+          </section>
+
           <article className={styles.scheduleCard}>
             <div className={styles.cardHead}>
               <h3 className={styles.sectionTitle}>{t("parent.home.todaySchedule")}</h3>
@@ -243,30 +245,42 @@ export default function ParentHomePage() {
           </article>
         </div>
 
-        <aside className={styles.deadlineCard}>
-          <div className={styles.cardHead}>
-            <h3 className={styles.sectionTitle}>{t("parent.home.todayLessons")}</h3>
-            <span className={styles.lessonCount}>{lessons.length}</span>
+        <aside className={styles.sideColumn}>
+          <div className={styles.newsSlot}>
+            <NewsSlider />
           </div>
 
-          {lessons.length ? (
-            <ul className={styles.deadlineList}>
-              {lessons.slice(0, 5).map((lesson) => (
-                <li key={`d-${lesson.id}`} className={`${styles.deadlineItem} ${styles[toneFor(lesson.date)]}`}>
-                  <p className={styles.deadlineSubject}>{lesson.subjectName}</p>
-                  <p className={styles.deadlineTitle}>
-                    {formatTime(lesson.startTime)} - {formatTime(lesson.endTime)}
-                  </p>
-                  <p className={styles.deadlineMeta}>
-                    {lesson.classroom ? t("parent.common.classroomShort", { room: lesson.classroom }) : ""}
-                    {lesson.teacherName ? ` • ${lesson.teacherName}` : ""}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className={styles.emptyState}>{t("parent.home.todayLessonsEmpty")}</p>
-          )}
+          <article className={styles.deadlineCard}>
+            <div className={styles.cardHead}>
+              <h3 className={styles.sectionTitle}>{t("parent.home.todayLessons")}</h3>
+              <span className={styles.lessonCount}>{lessons.length}</span>
+            </div>
+
+            {lessons.length ? (
+              <ul className={styles.deadlineList}>
+                {lessons.slice(0, 5).map((lesson) => (
+                  <Link
+                    key={`d-${lesson.id}`}
+                    to="/parent/assignments"
+                    className={styles.deadlineLink}
+                  >
+                    <article className={`${styles.deadlineItem} ${styles[toneFor(lesson.date)]}`}>
+                      <p className={styles.deadlineSubject}>{lesson.subjectName}</p>
+                      <p className={styles.deadlineTitle}>
+                        {formatTime(lesson.startTime)} - {formatTime(lesson.endTime)}
+                      </p>
+                      <p className={styles.deadlineMeta}>
+                        {lesson.classroom ? t("parent.common.classroomShort", { room: lesson.classroom }) : ""}
+                        {lesson.teacherName ? ` • ${lesson.teacherName}` : ""}
+                      </p>
+                    </article>
+                  </Link>
+                ))}
+              </ul>
+            ) : (
+              <p className={styles.emptyState}>{t("parent.home.todayLessonsEmpty")}</p>
+            )}
+          </article>
         </aside>
       </section>
     </div>

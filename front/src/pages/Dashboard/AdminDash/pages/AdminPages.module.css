@@ -277,6 +277,240 @@
   background: var(--bg-soft);
 }
 
+/* === Rich schools list === */
+.schoolListRich {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+
+.schoolItemRich {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+  background: var(--bg-soft);
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.schoolItemRich:hover {
+  border-color: var(--stroke-accent);
+  transform: translateY(-1px);
+}
+
+.schoolItemHead {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.schoolAvatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-alt));
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: -0.02em;
+}
+
+.schoolMeta { min-width: 0; }
+
+.schoolName {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.schoolSub {
+  margin: 2px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.schoolBarTrack {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 20, 0.06);
+  overflow: hidden;
+}
+
+.schoolBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-alt));
+  border-radius: 999px;
+  transition: width 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.schoolChips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.schoolChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.schoolChip strong {
+  color: var(--text);
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.chipStudents { border-color: rgba(79, 70, 229, 0.25); }
+.chipStudents strong { color: #4f46e5; }
+.chipTeachers { border-color: rgba(16, 185, 129, 0.25); }
+.chipTeachers strong { color: var(--accent-strong); }
+.chipParents { border-color: rgba(245, 158, 11, 0.25); }
+.chipParents strong { color: #b45309; }
+
+/* === Rich surveys list === */
+.surveyListRich {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.surveyItemRich {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--stroke);
+  border-radius: 10px;
+  background: var(--bg-soft);
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.surveyItemRich:hover {
+  background: var(--panel);
+  border-color: var(--stroke-accent);
+}
+
+.surveyBadge {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-size: 14px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.surveyBody { min-width: 0; }
+
+.surveyName {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.surveySub {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* === System summary row (4 mini cards) === */
+.summaryRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.summaryCard {
+  padding: 16px 18px;
+  border: 1px solid var(--stroke);
+  border-radius: 14px;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.summaryCard:hover {
+  transform: translateY(-1px);
+  border-color: var(--stroke-accent);
+}
+
+.summaryAccent {
+  background: linear-gradient(135deg, var(--accent-soft) 0%, var(--panel) 60%);
+  border-color: var(--stroke-accent);
+}
+
+.summaryLabel {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.summaryValue {
+  margin: 4px 0 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.summarySub {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .summaryRow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 .activityItem::before {
   content: "";
   position: absolute;

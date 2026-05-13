@@ -85,8 +85,19 @@ public class Message {
     @JoinColumn(name = "receiver_id", nullable = false)
     private User receiver;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    // Текст сообщения. Может быть пустым, если у сообщения есть вложение.
+    @Column(columnDefinition = "TEXT")
     private String content;
+
+    // Прикреплённый файл (опционально).
+    @Column(name = "attachment_url", length = 512)
+    private String attachmentUrl;
+
+    @Column(name = "attachment_name", length = 255)
+    private String attachmentName;
+
+    @Column(name = "attachment_size")
+    private Long attachmentSize;
 
     @Column(name = "is_read")
     private boolean isRead = false;
@@ -151,6 +162,12 @@ public class Message {
     public void setReplyTo(Message replyTo) { this.replyTo = replyTo; }
     public Map<Long, String> getReactions() { return reactions; }
     public void setReactions(Map<Long, String> reactions) { this.reactions = reactions; }
+    public String getAttachmentUrl() { return attachmentUrl; }
+    public void setAttachmentUrl(String attachmentUrl) { this.attachmentUrl = attachmentUrl; }
+    public String getAttachmentName() { return attachmentName; }
+    public void setAttachmentName(String attachmentName) { this.attachmentName = attachmentName; }
+    public Long getAttachmentSize() { return attachmentSize; }
+    public void setAttachmentSize(Long attachmentSize) { this.attachmentSize = attachmentSize; }
 
     // Метод для добавления/изменения реакции
     public void addReaction(Long userId, String reaction) {
