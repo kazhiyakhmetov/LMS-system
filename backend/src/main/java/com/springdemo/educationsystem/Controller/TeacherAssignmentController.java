@@ -9,10 +9,8 @@ import com.springdemo.educationsystem.Repository.StudentRepository;
 import com.springdemo.educationsystem.Service.AssignmentService;
 import com.springdemo.educationsystem.Service.AuthService;
 import com.springdemo.educationsystem.Service.NotificationService;
-import com.springdemo.educationsystem.Service.TeacherService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,13 +26,11 @@ public class TeacherAssignmentController {
 
     private final AssignmentService assignmentService;
     private final AuthService authService;
-    private final TeacherService teacherService;
     private final NotificationService notificationService;
     private final StudentRepository studentRepository;
-    public TeacherAssignmentController(AssignmentService assignmentService, AuthService authService,TeacherService teacherService, NotificationService notificationService, StudentRepository studentRepository) {
+    public TeacherAssignmentController(AssignmentService assignmentService, AuthService authService, NotificationService notificationService, StudentRepository studentRepository) {
         this.assignmentService = assignmentService;
         this.authService = authService;
-        this.teacherService = teacherService;
         this.notificationService = notificationService;
         this.studentRepository = studentRepository;
     }

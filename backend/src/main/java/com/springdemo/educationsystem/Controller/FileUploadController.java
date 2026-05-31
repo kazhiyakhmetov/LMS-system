@@ -3,8 +3,6 @@ package com.springdemo.educationsystem.Controller;
 import com.springdemo.educationsystem.Entity.Submission;
 import com.springdemo.educationsystem.Repository.SubmissionRepository;
 import com.springdemo.educationsystem.Service.FileStorageService;
-import com.springdemo.educationsystem.Service.SubmissionService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;

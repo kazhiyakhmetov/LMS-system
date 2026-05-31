@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
 @Service
 public class TeacherScheduleService {
@@ -56,6 +56,12 @@ public class TeacherScheduleService {
             if (scheduleDTO.getClassId() != null) {
                 schoolClass = schoolClassRepository.findById(scheduleDTO.getClassId())
                         .orElseThrow(() -> new RuntimeException("School class not found with id: " + scheduleDTO.getClassId()));
+
+                if (day.getTemplate() == null ||
+                        day.getTemplate().getSchoolClass() == null ||
+                        !Objects.equals(day.getTemplate().getSchoolClass().getId(), schoolClass.getId())) {
+                    throw new RuntimeException("Schedule day does not belong to school class with id: " + scheduleDTO.getClassId());
+                }
             }
 
             // Проверяем конфликты расписания для учителя

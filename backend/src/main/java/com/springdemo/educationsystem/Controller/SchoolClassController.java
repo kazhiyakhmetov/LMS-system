@@ -2,7 +2,6 @@ package com.springdemo.educationsystem.Controller;
 
 import com.springdemo.educationsystem.Entity.SchoolClass;
 import com.springdemo.educationsystem.Repository.SchoolClassRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

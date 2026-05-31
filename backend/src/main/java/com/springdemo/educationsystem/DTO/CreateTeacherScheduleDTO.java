@@ -1,7 +1,6 @@
 package com.springdemo.educationsystem.DTO;
 
 import java.time.LocalTime;
-import java.util.List;
 
 public class CreateTeacherScheduleDTO {
     private Long teacherId;

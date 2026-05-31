@@ -4,7 +4,6 @@ import com.springdemo.educationsystem.DTO.UserDTO;
 import com.springdemo.educationsystem.Entity.User;
 import com.springdemo.educationsystem.Repository.UserRepository;
 import com.springdemo.educationsystem.Service.AuthService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;

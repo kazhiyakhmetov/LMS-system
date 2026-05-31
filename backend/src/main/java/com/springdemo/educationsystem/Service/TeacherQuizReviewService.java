@@ -4,7 +4,6 @@ import com.springdemo.educationsystem.DTO.GradeTextQuizAnswersDTO;
 import com.springdemo.educationsystem.DTO.TeacherQuizAttemptDetailsDTO;
 import com.springdemo.educationsystem.Entity.QuizAnswer;
 import com.springdemo.educationsystem.Entity.QuizAttempt;
-import com.springdemo.educationsystem.Entity.QuizOption;
 import com.springdemo.educationsystem.Entity.QuizQuestion;
 import com.springdemo.educationsystem.Entity.Teacher;
 import com.springdemo.educationsystem.Enum.QuizQuestionType;

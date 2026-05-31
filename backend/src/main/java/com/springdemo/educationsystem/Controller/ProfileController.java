@@ -3,7 +3,6 @@ package com.springdemo.educationsystem.Controller;
 import com.springdemo.educationsystem.Entity.User;
 import com.springdemo.educationsystem.Service.AuthService;
 import com.springdemo.educationsystem.Service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;

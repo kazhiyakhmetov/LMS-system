@@ -1,12 +1,15 @@
 package com.springdemo.educationsystem.Service;
 
 import com.springdemo.educationsystem.DTO.WikipediaDTO;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,8 +27,8 @@ public class WikipediaService {
 
         try {
             // НЕ кодируем вручную - Spring сделает это автоматически
-            String url = UriComponentsBuilder
-                    .fromHttpUrl("https://ru.wikipedia.org/w/api.php")
+            URI url = UriComponentsBuilder
+                    .fromUriString("https://ru.wikipedia.org/w/api.php")
                     .queryParam("action", "query")
                     .queryParam("format", "json")
                     .queryParam("list", "search")
@@ -34,7 +37,7 @@ public class WikipediaService {
                     .queryParam("srprop", "snippet")
                     .queryParam("utf8", "1")
                     .build()
-                    .toUriString();
+                    .toUri();
 
             System.out.println("📡 API URL: " + url);
 
@@ -44,16 +47,20 @@ public class WikipediaService {
 
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<Map> response = restTemplate.exchange(
-                    url, HttpMethod.GET, entity, Map.class);
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    entity,
+                    new ParameterizedTypeReference<Map<String, Object>>() {}
+            );
 
             System.out.println("📥 Response status: " + response.getStatusCode());
 
             Map<String, Object> responseBody = response.getBody();
 
             if (responseBody != null && responseBody.containsKey("query")) {
-                Map<String, Object> queryData = (Map<String, Object>) responseBody.get("query");
-                List<Map<String, Object>> searchResults = (List<Map<String, Object>>) queryData.get("search");
+                Map<String, Object> queryData = asStringObjectMap(responseBody.get("query"));
+                List<Map<String, Object>> searchResults = asSearchResults(queryData.get("search"));
 
                 System.out.println("📊 Found " + (searchResults != null ? searchResults.size() : 0) + " results");
 
@@ -105,5 +112,34 @@ public class WikipediaService {
                 .replaceAll("&#39;", "'")
                 .replaceAll("&nbsp;", " ")
                 .trim();
+    }
+
+    private Map<String, Object> asStringObjectMap(Object value) {
+        if (!(value instanceof Map<?, ?> source)) {
+            return Map.of();
+        }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        for (Map.Entry<?, ?> entry : source.entrySet()) {
+            if (entry.getKey() instanceof String key) {
+                result.put(key, entry.getValue());
+            }
+        }
+        return result;
+    }
+
+    private List<Map<String, Object>> asSearchResults(Object value) {
+        if (!(value instanceof List<?> source)) {
+            return List.of();
+        }
+
+        List<Map<String, Object>> results = new ArrayList<>();
+        for (Object item : source) {
+            Map<String, Object> result = asStringObjectMap(item);
+            if (!result.isEmpty()) {
+                results.add(result);
+            }
+        }
+        return results;
     }
 }

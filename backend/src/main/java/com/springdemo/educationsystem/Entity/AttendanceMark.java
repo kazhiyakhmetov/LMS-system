@@ -1,6 +1,5 @@
 package com.springdemo.educationsystem.Entity;
 
-import com.springdemo.educationsystem.Entity.AttendanceStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;

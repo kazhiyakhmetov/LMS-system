@@ -25,16 +25,13 @@ public class FriendshipService {
     private final FriendshipRepository friendshipRepository;
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
-    private final AuthService authService;
 
     public FriendshipService(FriendshipRepository friendshipRepository,
                              UserRepository userRepository,
-                             NotificationRepository notificationRepository,
-                             AuthService authService) {
+                             NotificationRepository notificationRepository) {
         this.friendshipRepository = friendshipRepository;
         this.userRepository = userRepository;
         this.notificationRepository = notificationRepository;
-        this.authService = authService;
     }
 
     public FriendshipDTO sendFriendRequest(Long requesterId, Long addresseeId) {

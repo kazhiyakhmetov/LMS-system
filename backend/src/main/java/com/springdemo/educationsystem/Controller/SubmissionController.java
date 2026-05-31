@@ -4,7 +4,6 @@ import com.springdemo.educationsystem.DTO.SubmissionDTO;
 import com.springdemo.educationsystem.DTO.GradeDTO;
 import com.springdemo.educationsystem.Service.SubmissionService;
 import com.springdemo.educationsystem.Service.AuthService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

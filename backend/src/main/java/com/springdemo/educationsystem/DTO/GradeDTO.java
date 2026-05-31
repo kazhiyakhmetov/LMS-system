@@ -1,7 +1,5 @@
 package com.springdemo.educationsystem.DTO;
 
-import java.time.LocalDateTime;
-
 public class GradeDTO {
     private Long submissionId;
     private Integer gradeValue;

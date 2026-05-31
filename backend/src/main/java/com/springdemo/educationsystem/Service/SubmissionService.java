@@ -21,7 +21,6 @@ public class SubmissionService {
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
     private final NotificationRepository notificationRepository;
-    private final UserRepository userRepository;
     private final GamificationService gamificationService;
     private static final Logger logger = LoggerFactory.getLogger(SubmissionService.class);
 
@@ -31,7 +30,6 @@ public class SubmissionService {
                              StudentRepository studentRepository,
                              TeacherRepository teacherRepository,
                              NotificationRepository notificationRepository,
-                             UserRepository userRepository,
                              GamificationService gamificationService) {
         this.submissionRepository = submissionRepository;
         this.gradeRepository = gradeRepository;
@@ -39,7 +37,6 @@ public class SubmissionService {
         this.studentRepository = studentRepository;
         this.teacherRepository = teacherRepository;
         this.notificationRepository = notificationRepository;
-        this.userRepository = userRepository;
         this.gamificationService = gamificationService;
     }
 

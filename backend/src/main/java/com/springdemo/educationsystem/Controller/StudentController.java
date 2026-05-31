@@ -10,7 +10,6 @@ import com.springdemo.educationsystem.Service.AssignmentService;
 import com.springdemo.educationsystem.Service.AuthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -102,13 +101,6 @@ public class StudentController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
-
-//    private String extractToken(String authorizationHeader) {
-//        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-//            return authorizationHeader.substring(7);
-//        }
-//        return "";
-//    }
 
     @GetMapping("/grades")
     public ResponseEntity<?> getMyGrades(

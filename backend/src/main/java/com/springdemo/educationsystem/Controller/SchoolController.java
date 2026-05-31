@@ -5,7 +5,6 @@ import com.springdemo.educationsystem.Entity.SchoolClass;
 import com.springdemo.educationsystem.Repository.SchoolClassRepository;
 import com.springdemo.educationsystem.Repository.SchoolRepository;
 import com.springdemo.educationsystem.Service.SchoolService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;

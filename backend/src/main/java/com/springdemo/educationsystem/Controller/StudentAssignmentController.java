@@ -2,7 +2,6 @@ package com.springdemo.educationsystem.Controller;
 
 import com.springdemo.educationsystem.DTO.SubmissionDTO;
 import com.springdemo.educationsystem.Entity.Assignment;
-import com.springdemo.educationsystem.Entity.Submission;
 import com.springdemo.educationsystem.Entity.Student;
 import com.springdemo.educationsystem.Repository.AssignmentRepository;
 import com.springdemo.educationsystem.Repository.SubmissionRepository;

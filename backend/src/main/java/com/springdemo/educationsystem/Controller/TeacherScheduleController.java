@@ -14,7 +14,6 @@ import com.springdemo.educationsystem.Repository.SchoolClassRepository;
 import com.springdemo.educationsystem.Service.AuthService;
 import com.springdemo.educationsystem.Service.ScheduleDayService;
 import com.springdemo.educationsystem.Service.TeacherScheduleService;
-import com.springdemo.educationsystem.Service.LessonService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +34,6 @@ public class TeacherScheduleController {
     private static final Logger logger = LoggerFactory.getLogger(TeacherScheduleController.class);
 
     private final TeacherScheduleService teacherScheduleService;
-    private final LessonService lessonService;
     private final AuthService authService;
     private final SchoolClassRepository schoolClassRepository;
     private final ScheduleDayRepository scheduleDayRepository;
@@ -44,7 +42,6 @@ public class TeacherScheduleController {
     private final LessonRepository lessonRepository;
 
     public TeacherScheduleController(TeacherScheduleService teacherScheduleService,
-                                     LessonService lessonService,
                                      AuthService authService,
                                      SchoolClassRepository schoolClassRepository,
                                      ScheduleDayRepository scheduleDayRepository,
@@ -52,7 +49,6 @@ public class TeacherScheduleController {
                                      ScheduleDayService scheduleDayService,
                                      LessonRepository lessonRepository) {
         this.teacherScheduleService = teacherScheduleService;
-        this.lessonService = lessonService;
         this.authService = authService;
         this.schoolClassRepository = schoolClassRepository;
         this.scheduleDayRepository = scheduleDayRepository;

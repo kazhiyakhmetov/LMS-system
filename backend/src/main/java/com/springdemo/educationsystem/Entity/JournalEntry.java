@@ -1,6 +1,5 @@
 package com.springdemo.educationsystem.Entity;
 
-import com.springdemo.educationsystem.Entity.JournalEntryType;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;

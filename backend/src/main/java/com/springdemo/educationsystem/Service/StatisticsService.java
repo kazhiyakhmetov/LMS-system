@@ -17,20 +17,17 @@ public class StatisticsService {
     private final GradeRepository gradeRepository;
     private final StudentRepository studentRepository;
     private final SchoolClassRepository schoolClassRepository;
-    private final TeacherRepository teacherRepository;
     private final QuizAssignmentRepository quizAssignmentRepository;
 
     public StatisticsService(AssignmentRepository assignmentRepository,
                              GradeRepository gradeRepository,
                              StudentRepository studentRepository,
                              SchoolClassRepository schoolClassRepository,
-                             TeacherRepository teacherRepository,
                              QuizAssignmentRepository quizAssignmentRepository) {
         this.assignmentRepository = assignmentRepository;
         this.gradeRepository = gradeRepository;
         this.studentRepository = studentRepository;
         this.schoolClassRepository = schoolClassRepository;
-        this.teacherRepository = teacherRepository;
         this.quizAssignmentRepository = quizAssignmentRepository;
     }
 

@@ -2,11 +2,9 @@ package com.springdemo.educationsystem.Service;
 
 import com.springdemo.educationsystem.DTO.NotificationDTO;
 import com.springdemo.educationsystem.Entity.Notification;
-import com.springdemo.educationsystem.Entity.Submission;
 import com.springdemo.educationsystem.Entity.User;
 import com.springdemo.educationsystem.Repository.NotificationRepository;
 import com.springdemo.educationsystem.Repository.SubmissionRepository;
-import com.springdemo.educationsystem.Repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,14 +14,11 @@ import java.util.stream.Collectors;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final UserRepository userRepository;
     private final SubmissionRepository submissionRepository; // Добавили репозиторий
 
     public NotificationService(NotificationRepository notificationRepository,
-                               UserRepository userRepository,
                                SubmissionRepository submissionRepository) {
         this.notificationRepository = notificationRepository;
-        this.userRepository = userRepository;
         this.submissionRepository = submissionRepository;
     }
 

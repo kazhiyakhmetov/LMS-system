@@ -1,4 +1,4 @@
-package com.springdemo.educationsystem.DTO.quiz;
+package com.springdemo.educationsystem.DTO;
 
 import java.time.LocalDateTime;
 
