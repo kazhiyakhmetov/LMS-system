@@ -13,7 +13,9 @@ def _dsn() -> str:
     port = os.getenv("DB_PORT", "5432")
     name = os.getenv("DB_NAME", "EducationSystem")
     user = os.getenv("DB_USER", "postgres")
-    pwd = os.getenv("DB_PASSWORD", "123")
+    pwd = os.getenv("DB_PASSWORD")
+    if not pwd:
+        raise RuntimeError("DB_PASSWORD environment variable is required")
     return f"host={host} port={port} dbname={name} user={user} password={pwd}"
 
 

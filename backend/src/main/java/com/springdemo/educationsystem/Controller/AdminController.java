@@ -23,15 +23,12 @@ public class AdminController {
         this.authService = authService;
     }
     private boolean isAdminAuthorized(String authorizationHeader) {
-        logger.info("Checking authorization header: {}", authorizationHeader);
-
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             logger.warn("Invalid authorization header");
             return false;
         }
 
         String token = authorizationHeader.substring(7);
-        logger.info("Token: {}", token);
 
         String role = authService.getUserRole(token);
         boolean isAdmin = "admin".equals(role);
@@ -48,7 +45,6 @@ public class AdminController {
     ) {
 
         logger.info("Received register teacher request for email: {}", user.getEmail());
-        logger.info("Authorization header: {}", authorizationHeader);
         logger.info("SchoolId: {}", schoolId);
 
         if (!isAdminAuthorized(authorizationHeader)) {
