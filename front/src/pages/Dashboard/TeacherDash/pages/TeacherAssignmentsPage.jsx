@@ -5,7 +5,7 @@ import { assignmentsApi, filesApi, submissionsApi, teachingApi } from "../../../
 import { formatDateTime } from "../../../../shared/lib/utils/date";
 import { useT } from "../../../../shared/lib/i18n";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 
 const ASSIGNMENT_TYPE_KEYS = ["homework", "test", "sor", "soch", "quiz"];
 

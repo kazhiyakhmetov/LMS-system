@@ -4,7 +4,7 @@ import { useApi } from "../../../../shared/lib/hooks/useApi";
 import { statisticsApi, aiApi } from "../../../../shared/lib/api";
 import { useT } from "../../../../shared/lib/i18n";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 
 function pageNumbers(current, total) {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
@@ -39,8 +39,14 @@ export default function TeacherStatsPage() {
 
   const [classFilter, setClassFilter] = useState("all");
   const [page, setPage] = useState(1);
+  const [progressPage, setProgressPage] = useState(1);
+  const [planPage, setPlanPage] = useState(1);
 
-  useEffect(() => { setPage(1); }, [classFilter]);
+  useEffect(() => {
+    setPage(1);
+    setProgressPage(1);
+    setPlanPage(1);
+  }, [classFilter]);
 
   const classOptions = useMemo(
     () => ["all", ...new Set(summary.map((s) => s.className).filter(Boolean))],
@@ -63,6 +69,24 @@ export default function TeacherStatsPage() {
       averageMark: avgGrades.length ? avg(avgGrades).toFixed(1) : "—",
     };
   }, [filtered]);
+
+  const progressTotalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const progressSafePage = Math.min(progressPage, progressTotalPages);
+  const progressSliceStart = (progressSafePage - 1) * PAGE_SIZE;
+  const progressRows = useMemo(
+    () => filtered.slice(progressSliceStart, progressSliceStart + PAGE_SIZE),
+    [filtered, progressSliceStart],
+  );
+  const progressPageNums = pageNumbers(progressSafePage, progressTotalPages);
+
+  const planTotalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const planSafePage = Math.min(planPage, planTotalPages);
+  const planSliceStart = (planSafePage - 1) * PAGE_SIZE;
+  const planRows = useMemo(
+    () => filtered.slice(planSliceStart, planSliceStart + PAGE_SIZE),
+    [filtered, planSliceStart],
+  );
+  const planPageNums = pageNumbers(planSafePage, planTotalPages);
 
   const riskRows = useMemo(
     () => filtered.map((s) => ({ ...s, riskKey: riskKey(s) }))
@@ -115,6 +139,53 @@ export default function TeacherStatsPage() {
   const aiPageItems = aiRiskSorted.slice(aiSliceStart, aiSliceStart + PAGE_SIZE);
   const aiPageNums = pageNumbers(aiSafePage, aiTotalPages);
 
+  function renderPager(pageTotal, safe, start, totalItems, nums, setter, label) {
+    if (pageTotal <= 1) return null;
+    return (
+      <nav className={styles.pagination} aria-label={label}>
+        <span className={styles.pageInfo}>
+          {t("parent.assignments.pagination.info", {
+            start: start + 1,
+            end: Math.min(start + PAGE_SIZE, totalItems),
+            total: totalItems,
+          })}
+        </span>
+        <div className={styles.pageBtns}>
+          <button
+            type="button"
+            className={styles.pageBtn}
+            onClick={() => setter((p) => Math.max(1, p - 1))}
+            disabled={safe <= 1}
+          >
+            {t("parent.assignments.pagination.prev")}
+          </button>
+          {nums.map((n, i) => (
+            n === "вЂ¦" ? (
+              <span key={`${label}-dots-${i}`} className={styles.pageDots}>вЂ¦</span>
+            ) : (
+              <button
+                key={n}
+                type="button"
+                className={`${styles.pageBtn} ${n === safe ? styles.pageBtnActive : ""}`}
+                onClick={() => setter(n)}
+              >
+                {n}
+              </button>
+            )
+          ))}
+          <button
+            type="button"
+            className={styles.pageBtn}
+            onClick={() => setter((p) => Math.min(pageTotal, p + 1))}
+            disabled={safe >= pageTotal}
+          >
+            {t("parent.assignments.pagination.next")}
+          </button>
+        </div>
+      </nav>
+    );
+  }
+
   if (summaryQuery.loading && !summary.length) {
     return <div style={{ padding: 24 }}>{t("common.loading")}</div>;
   }
@@ -166,7 +237,7 @@ export default function TeacherStatsPage() {
         <article className={styles.panel}>
           <h3 className={styles.panelTitle}>{t("teacher.stats.classProgress")}</h3>
           <ul className={styles.progressList}>
-            {filtered.length ? filtered.map((s) => {
+            {filtered.length ? progressRows.map((s) => {
               const percent = s.classAverageGrade ? Math.round((s.classAverageGrade / 5) * 100) : 0;
               return (
                 <li key={s.classId} className={styles.progressItem}>
@@ -185,12 +256,13 @@ export default function TeacherStatsPage() {
               <li className={styles.emptyState}>{t("teacher.stats.empty")}</li>
             )}
           </ul>
+          {renderPager(progressTotalPages, progressSafePage, progressSliceStart, filtered.length, progressPageNums, setProgressPage, "Class progress pagination")}
         </article>
 
         <article className={styles.panel}>
           <h3 className={styles.panelTitle}>{t("teacher.stats.planTitle")}</h3>
           <ul className={styles.planList}>
-            {filtered.length ? filtered.map((s) => (
+            {filtered.length ? planRows.map((s) => (
               <li key={`load-${s.classId}`} className={styles.planItem}>
                 <span>{s.className}</span>
                 <span>{t("teacher.classes.meta.assignments", { n: s.totalAssignments ?? 0 })} • {t("teacher.classes.meta.students", { n: s.totalStudents ?? 0 })}</span>
@@ -199,6 +271,7 @@ export default function TeacherStatsPage() {
               <li className={styles.emptyState}>{t("teacher.stats.noPlanData")}</li>
             )}
           </ul>
+          {renderPager(planTotalPages, planSafePage, planSliceStart, filtered.length, planPageNums, setPlanPage, "Plan pagination")}
         </article>
       </section>
 

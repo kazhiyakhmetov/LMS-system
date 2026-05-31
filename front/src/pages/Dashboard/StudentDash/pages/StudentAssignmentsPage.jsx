@@ -5,7 +5,7 @@ import { assignmentsApi, filesApi, submissionsApi } from "../../../../shared/lib
 import { formatDateTime } from "../../../../shared/lib/utils/date";
 import { useT } from "../../../../shared/lib/i18n";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 const FILTER_KEYS = ["all", "completed", "notCompleted", "urgent", "inProgress", "new"];
 
 function pageNumbers(current, total) {

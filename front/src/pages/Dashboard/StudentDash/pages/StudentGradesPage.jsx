@@ -9,7 +9,7 @@ import { DonutChart, BarList, ChartLegend } from "../../../../shared/ui/Chart/Ch
 import { useT } from "../../../../shared/lib/i18n";
 
 const ABSENCE_KEYS = ["Н", "П", "Б", "О", "N", "P", "B", "O"];
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 const RECENT_PAGE_SIZE = 5;
 
 function pageNumbers(current, total) {

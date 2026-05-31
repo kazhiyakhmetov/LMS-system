@@ -6,7 +6,7 @@ import { formatDateTime } from "../../../../shared/lib/utils/date";
 import { useT } from "../../../../shared/lib/i18n";
 
 const FILTER_KEYS = ["all", "pending", "submitted", "graded", "overdue"];
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 
 function pageNumbers(current, total) {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);

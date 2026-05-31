@@ -6,7 +6,7 @@ import { parentApi } from "../../../../shared/lib/api";
 import { getAvatarUrl, getInitials } from "../../../../shared/lib/utils/avatar";
 import { useT } from "../../../../shared/lib/i18n";
 
-const TEACHERS_PAGE_SIZE = 8;
+const TEACHERS_PAGE_SIZE = 5;
 
 function pageNumbers(current, total) {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);

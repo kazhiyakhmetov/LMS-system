@@ -6,7 +6,7 @@ import { useT } from "../../../../shared/lib/i18n";
 import { formatDateTime } from "../../../../shared/lib/utils/date";
 import AIQuizGenerator from "../../../../shared/ui/AIQuizGenerator/AIQuizGenerator";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 
 function pageNumbers(current, total) {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);

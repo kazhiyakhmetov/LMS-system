@@ -5,7 +5,7 @@ import { surveysApi } from "../../../../shared/lib/api";
 import { useT } from "../../../../shared/lib/i18n";
 
 const FILTER_KEYS = ["all", "active", "done"];
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 
 function pageNumbers(current, total) {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);

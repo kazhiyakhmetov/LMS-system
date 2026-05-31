@@ -7,7 +7,7 @@ import AIQuizGenerator from "../../../../shared/ui/AIQuizGenerator/AIQuizGenerat
 import styles from "./TeacherQuizzesPage.module.css";
 
 const QUESTION_TYPE_KEYS = ["SINGLE_CHOICE", "MULTIPLE_CHOICE", "TEXT_ANSWER"];
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 5;
 
 function pageNumbers(current, total) {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
