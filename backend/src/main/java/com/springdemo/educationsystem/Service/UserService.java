@@ -29,10 +29,12 @@ public class UserService {
     private final SchoolClassRepository classRepository;
     private final SchoolRepository schoolRepository;
     private final ParentStudentRepository parentStudentRepository;
+    private final PasswordHashService passwordHashService;
     public UserService (UserRepository userRepository, RoleRepository roleRepository,
                         StudentRepository studentRepository, TeacherRepository teacherRepository,
                         ParentRepository parentRepository, SchoolRepository schoolRepository, SchoolClassRepository classRepository,
-                        ParentStudentRepository parentStudentRepository) {
+                        ParentStudentRepository parentStudentRepository,
+                        PasswordHashService passwordHashService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.studentRepository = studentRepository;
@@ -41,6 +43,7 @@ public class UserService {
         this.schoolRepository = schoolRepository;
         this.classRepository = classRepository;
         this.parentStudentRepository = parentStudentRepository;
+        this.passwordHashService = passwordHashService;
     }
 
     @Value("${file.upload-dir:uploads}")
@@ -93,6 +96,7 @@ public class UserService {
             user.setSchool(schoolClass.getSchool());
         }
 
+        user.setPasswordHash(passwordHashService.encode(user.getPasswordHash()));
         user.getRoles().add(studentRole);
         User savedUser = userRepository.save(user);
 
@@ -117,6 +121,7 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("School not found: " + schoolId));
 
         user.setSchool(school);
+        user.setPasswordHash(passwordHashService.encode(user.getPasswordHash()));
 
         if (user.getRoles() == null) user.setRoles(new ArrayList<>());
         user.getRoles().add(teacherRole);
@@ -148,7 +153,7 @@ public class UserService {
         // 1) create user
         User user = new User();
         user.setEmail(req.getEmail());
-        user.setPasswordHash(req.getPasswordHash()); // если есть encoder - используй его
+        user.setPasswordHash(passwordHashService.encode(req.getPasswordHash()));
         user.setFirstName(req.getFirstName());
         user.setLastName(req.getLastName());
         user.setPatronymic(req.getPatronymic());
@@ -272,7 +277,7 @@ public class UserService {
         user.setPatronymic(updateDTO.getPatronymic());
 
         if (updateDTO.getPassword() != null && !updateDTO.getPassword().trim().isEmpty()) {
-            user.setPasswordHash(updateDTO.getPassword());
+            user.setPasswordHash(passwordHashService.encode(updateDTO.getPassword()));
         }
 
         user.setLastModifiedAt(LocalDateTime.now());

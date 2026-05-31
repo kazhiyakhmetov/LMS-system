@@ -32,26 +32,30 @@ public class AuthService {
     private final UserRepository userRepository;
     private final GamificationService gamificationService;
     private final JwtService jwtService;
+    private final PasswordHashService passwordHashService;
 
     /** Отозванные (logout) токены — стают невалидными до своей natural-expiry. */
     private final Set<String> revokedTokens = ConcurrentHashMap.newKeySet();
 
     public AuthService(UserRepository userRepository,
                        GamificationService gamificationService,
-                       JwtService jwtService) {
+                       JwtService jwtService,
+                       PasswordHashService passwordHashService) {
         this.userRepository = userRepository;
         this.gamificationService = gamificationService;
         this.jwtService = jwtService;
+        this.passwordHashService = passwordHashService;
     }
 
     public Map<String, Object> login(String email, String password) {
         logger.info("Login attempt for email: {}", email);
 
         User user = userRepository.findByEmail(email).orElse(null);
-        if (user == null || !user.getPasswordHash().equals(password)) {
+        if (user == null || !passwordHashService.matches(password, user.getPasswordHash())) {
             logger.warn("Login failed for email: {}", email);
             throw new RuntimeException("Invalid credentials");
         }
+        upgradeLegacyPasswordHash(user, password);
 
         String role = determineUserRole(user);
         String token = jwtService.generate(user.getId(), user.getEmail(), role);
@@ -90,6 +94,15 @@ public class AuthService {
         response.put("expiresInMs", jwtService.getExpirationMs());
         response.put("message", "Login successful");
         return response;
+    }
+
+    private void upgradeLegacyPasswordHash(User user, String rawPassword) {
+        if (!passwordHashService.needsRehash(user.getPasswordHash())) {
+            return;
+        }
+        user.setPasswordHash(passwordHashService.encode(rawPassword));
+        userRepository.save(user);
+        logger.info("Migrated legacy password hash for user id: {}", user.getId());
     }
 
     public boolean isValidToken(String token) {
