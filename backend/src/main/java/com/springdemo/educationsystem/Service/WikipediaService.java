@@ -6,8 +6,10 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.util.UriUtils;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,6 +38,7 @@ public class WikipediaService {
                     .queryParam("srlimit", "10")
                     .queryParam("srprop", "snippet")
                     .queryParam("utf8", "1")
+                    .encode(StandardCharsets.UTF_8)
                     .build()
                     .toUri();
 
@@ -77,7 +80,7 @@ public class WikipediaService {
 
                         // Формируем URL статьи (кодируем только здесь для URL)
                         String articleUrl = "https://ru.wikipedia.org/wiki/" +
-                                title.replace(" ", "_");
+                                UriUtils.encodePathSegment(title.replace(" ", "_"), StandardCharsets.UTF_8);
 
                         results.add(new WikipediaDTO(title, cleanSnippet, articleUrl));
                     }

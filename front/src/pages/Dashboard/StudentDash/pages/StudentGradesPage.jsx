@@ -86,10 +86,16 @@ function buildRow(subjectDto) {
   };
 }
 
+function formatGradeDate(date) {
+  if (!date) return null;
+  return new Date(date).toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
+}
+
 export default function StudentGradesPage() {
   const { t } = useT();
   const [quarterKey, setQuarterKey] = useState("q3");
   const [subjectFilter, setSubjectFilter] = useState("all");
+  const [expandedSubject, setExpandedSubject] = useState(null);
 
   const quarterNum = quarterKeyToNumber(quarterKey);
 
@@ -194,6 +200,7 @@ export default function StudentGradesPage() {
   const recentPageNums = pageNumbers(recentSafePage, recentTotalPages);
 
   useEffect(() => { setRecentPage(1); }, [subjectFilter, quarterKey]);
+  useEffect(() => { setExpandedSubject(null); }, [subjectFilter, quarterKey]);
 
   return (
     <div className={styles.page}>
@@ -314,6 +321,7 @@ export default function StudentGradesPage() {
       ) : journalQuery.error ? (
         <p className={styles.errorState}>{t("common.error")}: {journalQuery.error.message}</p>
       ) : (
+        <>
         <section className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
@@ -348,7 +356,7 @@ export default function StudentGradesPage() {
                             </span>
                             {date ? (
                               <span className={styles.markDate}>
-                                {new Date(date).toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" })}
+                                {formatGradeDate(date)}
                               </span>
                             ) : null}
                           </div>
@@ -384,6 +392,90 @@ export default function StudentGradesPage() {
             </tbody>
           </table>
         </section>
+
+        <section className={styles.mobileSubjects}>
+          {rows.length ? rows.map((row) => {
+            const absences = Object.entries(row.absence || {}).filter(([, value]) => value > 0);
+            const expanded = expandedSubject === row.subject;
+            return (
+              <article
+                key={`mobile-${row.subject}`}
+                className={`${styles.subjectGradeCard} ${expanded ? styles.subjectGradeCardOpen : ""}`}
+              >
+                <button
+                  type="button"
+                  className={styles.subjectGradeToggle}
+                  onClick={() => setExpandedSubject((current) => current === row.subject ? null : row.subject)}
+                  aria-expanded={expanded}
+                >
+                  <span>
+                    <span className={styles.mobileSubjectName}>{row.subject}</span>
+                    <span className={styles.mobileSubjectTeacher}>{row.teacher || "вЂ”"}</span>
+                  </span>
+                  <span className={styles.mobileSubjectSummary}>
+                    {row.quarterGrade ? (
+                      <span className={`${styles.quarterMark} ${styles[`quarterMark_${row.quarterGrade}`] || ""}`}>
+                        {row.quarterGrade}
+                      </span>
+                    ) : (
+                      <span className={styles.empty}>вЂ”</span>
+                    )}
+                    <span className={styles.subjectChevron}>{expanded ? "-" : "+"}</span>
+                  </span>
+                </button>
+
+                {expanded ? (
+                  <div className={styles.subjectGradeDetails}>
+                    <div className={styles.mobileSubjectStats}>
+                      <span>
+                        <strong>{row.progress ? `${row.progress}%` : "вЂ”"}</strong>
+                        {t("student.grades.tableHeaders.progress")}
+                      </span>
+                      <span>
+                        <strong>{row.attendancePercent ? `${row.attendancePercent}%` : "вЂ”"}</strong>
+                        {t("student.grades.tableHeaders.attendance")}
+                      </span>
+                    </div>
+
+                    <div className={styles.progressTrack}>
+                      <div className={styles.progressFill} style={{ width: `${row.progress}%` }} />
+                    </div>
+
+                    {row.marks.length ? (
+                      <div className={styles.mobileMarks}>
+                        {row.marks.map((mark, index) => {
+                          const value = typeof mark === "object" ? mark.value : mark;
+                          const date = typeof mark === "object" ? mark.date : null;
+                          return (
+                            <div key={`${row.subject}-mobile-${index}`} className={styles.markCell}>
+                              <span className={`${styles.markChip} ${styles[`markChip_${value}`] || ""}`}>
+                                {value}
+                              </span>
+                              {date ? <span className={styles.markDate}>{formatGradeDate(date)}</span> : null}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className={styles.mobileEmptyLine}>{t("student.grades.gradesEmpty")}</p>
+                    )}
+
+                    {absences.length ? (
+                      <div className={styles.mobileAbsence}>
+                        {absences.map(([key, value]) => (
+                          <span key={key}>{key}: {value}</span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </article>
+            );
+          }) : (
+            <p className={styles.emptyState}>{t("student.grades.noPeriodData")}</p>
+          )}
+        </section>
+        </>
       )}
 
       <section className={styles.bottom}>
