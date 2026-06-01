@@ -450,6 +450,10 @@
   overflow: auto;
 }
 
+.mobileRiskList {
+  display: none;
+}
+
 .table {
   width: 100%;
   min-width: 760px;
@@ -532,10 +536,195 @@
 }
 
 @media (max-width: 760px) {
-  .metrics { grid-template-columns: 1fr; }
-  .filterRow { flex-direction: column; }
-  .select { min-width: auto; width: 100%; }
-  .pagination { flex-direction: column; align-items: stretch; }
+  .page {
+    gap: 12px;
+    padding: 0 0 12px;
+  }
+
+  .hero {
+    padding: 18px 16px;
+    border-radius: 16px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .sub {
+    font-size: 13px;
+  }
+
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .metricCard {
+    padding: 14px 12px;
+    border-radius: 14px;
+  }
+
+  .metricLabel {
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  .metricValue {
+    font-size: 24px;
+  }
+
+  .filterRow {
+    flex-direction: column;
+  }
+
+  .select {
+    min-width: auto;
+    width: 100%;
+    height: 42px;
+    font-size: 14px;
+  }
+
+  .panel,
+  .riskPanel,
+  .aiPanel {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .aiPanelHead {
+    display: grid;
+  }
+
+  .panelTitle {
+    font-size: 15px;
+    line-height: 1.25;
+  }
+
+  .aiSummaryRow {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .aiSummaryCard {
+    padding: 9px 8px;
+    align-items: center;
+    text-align: center;
+  }
+
+  .aiSummaryLabel {
+    font-size: 9px;
+  }
+
+  .aiSummaryValue {
+    font-size: 20px;
+  }
+
+  .aiSummaryHint {
+    grid-column: 1 / -1;
+    text-align: left;
+    font-size: 11px;
+  }
+
+  .aiItem {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .aiScore {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .aiFactors {
+    line-height: 1.4;
+  }
+
+  .planItem,
+  .progressItem {
+    padding: 11px 12px;
+  }
+
+  .planItem {
+    display: grid;
+    gap: 4px;
+  }
+
+  .tableWrap {
+    border-radius: 12px;
+  }
+
+  .riskPanel .tableWrap {
+    display: none;
+  }
+
+  .mobileRiskList {
+    display: grid;
+    gap: 10px;
+  }
+
+  .mobileRiskCard {
+    border: 1px solid var(--stroke);
+    border-radius: 14px;
+    background: var(--panel-2);
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+  }
+
+  .mobileRiskHead {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .mobileRiskTitle {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 850;
+    color: var(--text);
+  }
+
+  .mobileRiskMeta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .mobileRiskMeta span {
+    min-width: 0;
+    padding: 8px;
+    border: 1px solid var(--stroke);
+    border-radius: 10px;
+    background: var(--panel);
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 750;
+    line-height: 1.25;
+  }
+
+  .mobileRiskMeta strong {
+    display: block;
+    margin-top: 3px;
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 850;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pagination {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .pageBtns {
+    justify-content: center;
+    gap: 6px;
+  }
 }
 
 /* === Pagination === */

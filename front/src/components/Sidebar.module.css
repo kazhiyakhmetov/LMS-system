@@ -212,3 +212,9 @@
     height: 40px;
   }
 }
+
+@media (max-width: 760px) {
+  .wrap {
+    display: none;
+  }
+}

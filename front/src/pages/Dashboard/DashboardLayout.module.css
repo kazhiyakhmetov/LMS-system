@@ -33,3 +33,17 @@
     padding: 16px;
   }
 }
+
+@media (max-width: 760px) {
+  .shell {
+    margin-left: 0;
+  }
+
+  .main {
+    padding: 12px 12px 92px;
+  }
+
+  .contentCard {
+    min-height: calc(100vh - 56px - 104px);
+  }
+}

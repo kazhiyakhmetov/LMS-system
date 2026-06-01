@@ -1,9 +1,10 @@
 import styles from "./DashboardLayout.module.css";
 import Header from "../../components/Header";
+import MobileBottomNav from "../../components/MobileBottomNav";
 import Sidebar from "../../components/Sidebar";
 import NotificationBannerBar from "../../shared/ui/NotificationBannerBar/NotificationBannerBar";
 
-export default function DashboardLayout({ menu, children, showBanners = true }) {
+export default function DashboardLayout({ menu, children, showBanners = true, mobileNavigation = true }) {
   const items = menu ?? [];
 
   return (
@@ -16,6 +17,7 @@ export default function DashboardLayout({ menu, children, showBanners = true }) 
           <div className={styles.contentCard}>{children}</div>
         </main>
       </div>
+      {mobileNavigation ? <MobileBottomNav items={items} /> : null}
     </div>
   );
 }

@@ -186,6 +186,10 @@
   overflow: auto;
 }
 
+.mobileJournal {
+  display: none;
+}
+
 .table {
   width: 100%;
   min-width: 1220px;
@@ -446,7 +450,225 @@
 }
 
 @media (max-width: 760px) {
-  .cards { grid-template-columns: 1fr; }
+  .page {
+    gap: 12px;
+    padding: 0 0 12px;
+  }
+
+  .header {
+    padding: 18px 16px;
+    border-radius: 16px;
+    gap: 12px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .sub {
+    font-size: 13px;
+  }
+
+  .headerControls,
+  .actions {
+    display: grid;
+    width: 100%;
+  }
+
+  .quarterTabs {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 3px;
+    border-radius: 14px;
+  }
+
+  .tabBtn {
+    height: 34px;
+    padding: 0 4px;
+    font-size: 10px;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+
+  .select {
+    width: 100%;
+  }
+
+  .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .card {
+    padding: 14px 12px;
+    border-radius: 14px;
+  }
+
+  .cardLabel {
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  .cardValue {
+    font-size: 24px;
+  }
+
+  .mainJournalWrap {
+    display: none;
+  }
+
+  .mobileJournal {
+    display: grid;
+    gap: 10px;
+  }
+
+  .studentGradeCard {
+    border: 1px solid var(--stroke);
+    border-radius: 16px;
+    background: var(--panel);
+    box-shadow: var(--shadow-1);
+    overflow: hidden;
+  }
+
+  .studentGradeCardOpen {
+    border-color: var(--stroke-accent);
+  }
+
+  .studentGradeHead {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 14px;
+    border-bottom: 1px solid var(--stroke);
+    background: var(--bg-soft);
+  }
+
+  .studentGradeToggle {
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    text-align: left;
+    font-family: inherit;
+    display: grid;
+    grid-template-columns: 1fr 28px;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .studentGradeName {
+    display: block;
+    margin: 0;
+    font-size: 15px;
+    font-weight: 850;
+    color: var(--text);
+    line-height: 1.25;
+  }
+
+  .studentGradeMeta {
+    display: block;
+    margin: 4px 0 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  .studentGradeChevron {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--panel);
+    color: var(--accent-strong);
+    font-size: 18px;
+    font-weight: 850;
+    line-height: 1;
+  }
+
+  .mobileFinalSelect {
+    width: 58px;
+    height: 38px;
+    border: 1px solid var(--stroke);
+    border-radius: 12px;
+    background: var(--panel);
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 850;
+    font-family: inherit;
+    text-align: center;
+  }
+
+  .mobileDateGrid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .mobileDateCell {
+    min-width: 0;
+    min-height: 58px;
+    border: 1px solid var(--stroke);
+    border-radius: 12px;
+    background: var(--panel-2);
+    color: var(--text);
+    font-family: inherit;
+    display: grid;
+    place-items: center;
+    gap: 5px;
+    padding: 6px 4px;
+  }
+
+  .mobileDate {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mobileDot {
+    color: var(--muted);
+    opacity: 0.45;
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .absenceChip {
+    background: rgba(239, 68, 68, 0.12);
+    color: #dc2626;
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+
+  .studentGradeFoot {
+    display: flex;
+    gap: 8px;
+    padding: 0 12px 12px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mobileEmpty {
+    margin: 0;
+    padding: 16px;
+    border: 1px dashed var(--stroke-strong);
+    border-radius: 14px;
+    color: var(--muted);
+    background: var(--panel-2);
+    text-align: center;
+    font-size: 13px;
+  }
+
+  .bottom {
+    display: none;
+  }
+
   .eventItem { grid-template-columns: 50px 1fr auto; }
   .eventType { display: none; }
   .pagination { flex-direction: column; align-items: stretch; }

@@ -345,10 +345,106 @@
 }
 
 @media (max-width: 760px) {
-  .summary { grid-template-columns: 1fr; }
-  .selectRow { grid-template-columns: 1fr; }
-  .metrics { grid-template-columns: 1fr; }
-  .pagination { flex-direction: column; align-items: stretch; }
+  .page {
+    gap: 12px;
+    padding: 0 0 12px;
+  }
+
+  .header {
+    padding: 18px 16px;
+    border-radius: 16px;
+  }
+
+  .title {
+    font-size: 22px;
+  }
+
+  .sub {
+    font-size: 13px;
+  }
+
+  .summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .summaryCard {
+    padding: 14px 12px;
+    border-radius: 14px;
+  }
+
+  .summaryLabel {
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  .summaryValue {
+    font-size: 24px;
+  }
+
+  .selectRow {
+    grid-template-columns: 1fr;
+  }
+
+  .searchInput,
+  .select {
+    height: 42px;
+    font-size: 14px;
+  }
+
+  .classGrid {
+    gap: 10px;
+  }
+
+  .classCard {
+    padding: 14px;
+    border-radius: 14px;
+    gap: 10px;
+  }
+
+  .classTitle {
+    font-size: 15px;
+  }
+
+  .classMeta {
+    font-size: 12px;
+  }
+
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .metrics span {
+    padding: 8px;
+    font-size: 11px;
+    line-height: 1.25;
+  }
+
+  .tableCard {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .tableCard .sectionTitle,
+  .table {
+    display: none;
+  }
+
+  .pagination {
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: 0;
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .pageBtns {
+    justify-content: center;
+    gap: 6px;
+  }
 }
 
 /* === Pagination === */

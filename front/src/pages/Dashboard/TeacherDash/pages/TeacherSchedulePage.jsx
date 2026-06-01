@@ -49,7 +49,6 @@ export default function TeacherSchedulePage() {
       weekDays={weekDays}
       slots={lessonSlots}
       schedule={schedule}
-      actionLabel={t("teacher.schedule.examsBtn")}
       emptyLabel="—"
       onPrevWeek={() => setStartDate(addDaysISO(startDate, -7))}
       onNextWeek={() => setStartDate(addDaysISO(startDate, 7))}

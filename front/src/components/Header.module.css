@@ -174,7 +174,20 @@
 }
 
 @media (max-width: 480px) {
-  .notifMenu { width: calc(100vw - 32px); right: -8px; }
+  .notifMenu {
+    position: fixed;
+    top: 56px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+    max-height: min(420px, calc(100dvh - 132px));
+    z-index: 90;
+  }
+
+  .notifList {
+    max-height: calc(100dvh - 230px);
+  }
 }
 
 .notifHead {
@@ -373,4 +386,30 @@
 
 @media (max-width: 900px) {
   .header { padding: 0 16px; }
+}
+
+@media (max-width: 760px) {
+  .header {
+    height: 56px;
+    padding: 0 12px;
+  }
+
+  .right {
+    gap: 4px;
+  }
+
+  .iconBtn,
+  .langBtn,
+  .userBtn {
+    height: 34px;
+  }
+
+  .iconBtn,
+  .userBtn {
+    width: 34px;
+  }
+
+  .langBtn {
+    padding: 0 8px;
+  }
 }

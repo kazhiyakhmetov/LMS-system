@@ -362,7 +362,74 @@
 
 /* ===== Responsive ===== */
 @media (max-width: 720px) {
-  .sectionTitle { font-size: 24px; }
-  .modalBody { padding: 18px 20px 20px; }
-  .modalTitle { font-size: 18px; }
+  .stack {
+    gap: 14px;
+    padding-bottom: 12px;
+  }
+
+  .sectionHead {
+    gap: 12px;
+    padding: 0;
+  }
+
+  .sectionTitle {
+    font-size: 24px;
+  }
+
+  .sectionSub {
+    margin-top: 6px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .statusChip {
+    height: 28px;
+    padding: 0 12px;
+    font-size: 11px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .card {
+    border-radius: 14px;
+  }
+
+  .cardBody {
+    padding: 14px;
+    gap: 8px;
+  }
+
+  .cardTitle {
+    font-size: 16px;
+  }
+
+  .moreBtn {
+    width: 100%;
+  }
+
+  .modalOverlay {
+    padding: 12px;
+    align-items: end;
+  }
+
+  .modal {
+    max-height: 84vh;
+    border-radius: 16px;
+  }
+
+  .modalBody {
+    padding: 18px 20px 20px;
+  }
+
+  .modalTitle {
+    font-size: 18px;
+  }
+
+  .modalDesc {
+    font-size: 14px;
+    line-height: 1.55;
+  }
 }

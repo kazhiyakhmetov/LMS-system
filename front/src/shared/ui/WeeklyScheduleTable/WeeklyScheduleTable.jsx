@@ -15,6 +15,10 @@ export default function WeeklyScheduleTable({
   onToday = null,
   todayLabel = "Сегодня",
 }) {
+  const getDayLessons = (day) => slots
+    .map((slot, index) => ({ slot, lesson: schedule?.[day.key]?.[index] }))
+    .filter((item) => item.lesson);
+
   return (
     <div className={styles.page}>
       <section className={styles.toolbar}>
@@ -77,7 +81,7 @@ export default function WeeklyScheduleTable({
                   </th>
 
                   {weekDays.map((day) => {
-                    const lesson = schedule[day.key][index];
+                    const lesson = schedule?.[day.key]?.[index];
                     return (
                       <td key={`${day.key}-${slot.number}`}>
                         {lesson ? (
@@ -97,6 +101,39 @@ export default function WeeklyScheduleTable({
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section className={styles.mobileDays} aria-label={title}>
+        {weekDays.map((day) => {
+          const lessons = getDayLessons(day);
+          return (
+            <article key={day.key} className={styles.mobileDay}>
+              <header className={styles.mobileDayHead}>
+                <h3 className={styles.mobileDayTitle}>{day.label}</h3>
+                <span className={styles.mobileCount}>{lessons.length}</span>
+              </header>
+              {lessons.length ? (
+                <div className={styles.mobileLessonList}>
+                  {lessons.map(({ slot, lesson }) => (
+                    <div key={`${day.key}-${slot.number}`} className={styles.mobileLesson}>
+                      <div className={styles.mobileSlot}>
+                        <span className={styles.mobileSlotNumber}>{slot.number}</span>
+                        <span className={styles.mobileSlotTime}>{slot.time}</span>
+                      </div>
+                      <div className={styles.mobileLessonBody}>
+                        <p className={styles.lessonSubject}>{lesson.subject}</p>
+                        <p className={styles.lessonMeta}>{lesson.metaLine}</p>
+                        <p className={styles.lessonExtra}>{lesson.extraLine}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className={styles.mobileEmpty}>{emptyLabel}</p>
+              )}
+            </article>
+          );
+        })}
       </section>
     </div>
   );

@@ -96,6 +96,7 @@ export default function TeacherGradesPage() {
   const [editComment, setEditComment] = useState("");
   const [savingCell, setSavingCell] = useState(false);
   const [cellError, setCellError] = useState("");
+  const [openStudentId, setOpenStudentId] = useState(null);
 
   const pairsQuery = useApi(() => journalApi.teacherPairs(), []);
   const pairs = useMemo(() => Array.isArray(pairsQuery.data) ? pairsQuery.data : [], [pairsQuery.data]);
@@ -132,7 +133,10 @@ export default function TeacherGradesPage() {
   const rows = useMemo(() => students.map((s) => buildStudentRow(s, t)), [students, t]);
 
   // Reset to first page when class/subject pair or quarter changes
-  useEffect(() => { setPage(1); }, [pairKey, quarter]);
+  useEffect(() => {
+    setPage(1);
+    setOpenStudentId(null);
+  }, [pairKey, quarter]);
 
   const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -314,7 +318,7 @@ export default function TeacherGradesPage() {
         <p style={{ padding: 16, color: "var(--danger)" }}>{t("common.error")}: {journalQuery.error.message}</p>
       ) : (
         <>
-          <section className={styles.tableWrap}>
+          <section className={`${styles.tableWrap} ${styles.mainJournalWrap}`}>
             <table className={styles.table}>
               <thead>
                 <tr>
@@ -377,6 +381,84 @@ export default function TeacherGradesPage() {
                 )}
               </tbody>
             </table>
+          </section>
+
+          <section className={styles.mobileJournal}>
+            {pagedRows.length ? pagedRows.map((row) => (
+              <article
+                key={`mobile-${row.studentId}`}
+                className={`${styles.studentGradeCard} ${openStudentId === row.studentId ? styles.studentGradeCardOpen : ""}`}
+              >
+                <header
+                  className={styles.studentGradeHead}
+                  onClick={() => setOpenStudentId((value) => (value === row.studentId ? null : row.studentId))}
+                >
+                  <button type="button" className={styles.studentGradeToggle}>
+                    <span>
+                    <h3 className={styles.studentGradeName}>{row.student}</h3>
+                    <p className={styles.studentGradeMeta}>
+                      {row.progress ? `${row.progress}%` : "—"} • {row.attendancePercent ? `${row.attendancePercent}%` : "—"}
+                    </p>
+                    </span>
+                    <span className={styles.studentGradeChevron}>{openStudentId === row.studentId ? "−" : "+"}</span>
+                  </button>
+                  <select
+                    className={styles.mobileFinalSelect}
+                    value={row.quarterGrade || ""}
+                    onChange={(e) => setQuarterFinal(row.studentId, e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    disabled={!!savingFinal[row.studentId]}
+                    aria-label={t("teacher.grades.quarterCol")}
+                  >
+                    <option value="">—</option>
+                    <option value="5">5</option>
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2">2</option>
+                  </select>
+                </header>
+
+                {openStudentId === row.studentId && dates.length ? (
+                  <div className={styles.mobileDateGrid}>
+                    {dates.map((d, idx) => {
+                      const cell = row.cells?.[idx];
+                      const code = normalizeAbsenceCode(cell?.attendanceCode);
+                      const entry = (cell?.entries || []).find((e) => e?.numericValue != null);
+                      const mark = entry?.numericValue != null ? Math.round(entry.numericValue) : null;
+                      return (
+                        <button
+                          key={`${row.studentId}-mobile-${idx}`}
+                          type="button"
+                          className={styles.mobileDateCell}
+                          onClick={() => openCellEditor(row, idx)}
+                        >
+                          <span className={styles.mobileDate}>{formatShortDate(d, lang)}</span>
+                          {mark != null ? (
+                            <span className={`${styles.markChip} ${styles[`markChip_${mark}`] || ""}`}>{mark}</span>
+                          ) : code ? (
+                            <span className={`${styles.markChip} ${styles.absenceChip}`}>{code}</span>
+                          ) : (
+                            <span className={styles.mobileDot}>·</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : openStudentId === row.studentId ? (
+                  <p className={styles.mobileEmpty}>—</p>
+                ) : null}
+
+                {openStudentId === row.studentId ? (
+                <footer className={styles.studentGradeFoot}>
+                  {Object.entries(row.absence).map(([label, value]) => (
+                    <span key={label}>{label}:{value}</span>
+                  ))}
+                </footer>
+                ) : null}
+              </article>
+            )) : (
+              <p className={styles.mobileEmpty}>{t("teacher.grades.noStudents")}</p>
+            )}
           </section>
 
           {totalPages > 1 ? (

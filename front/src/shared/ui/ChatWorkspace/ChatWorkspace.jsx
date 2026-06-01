@@ -255,7 +255,7 @@ export default function ChatWorkspace({
           </div>
         </header>
 
-        <div className={styles.layout}>
+        <div className={`${styles.layout} ${activeChat ? styles.chatOpen : ""}`}>
           <aside className={styles.leftPane}>
             <div className={styles.searchWrap}>
               <span className={styles.searchIcon} aria-hidden="true">
@@ -313,6 +313,14 @@ export default function ChatWorkspace({
             {activeChat ? (
               <>
                 <header className={styles.dialogHead}>
+                  <button
+                    type="button"
+                    className={styles.backBtn}
+                    onClick={() => onSelectChat(null)}
+                    aria-label="Назад к чатам"
+                  >
+                    ‹
+                  </button>
                   <span className={styles.dialogAvatar}>{getInitials(activeChat.name)}</span>
                   <div className={styles.dialogMeta}>
                     <p className={styles.dialogName}>{activeChat.name}</p>

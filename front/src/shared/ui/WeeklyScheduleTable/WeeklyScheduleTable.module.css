@@ -123,6 +123,10 @@
   overflow: hidden;
 }
 
+.mobileDays {
+  display: none;
+}
+
 .tableWrap {
   overflow: auto;
 }
@@ -269,9 +273,125 @@
 }
 
 @media (max-width: 700px) {
+  .toolbar {
+    gap: 10px;
+    padding: 0;
+  }
+
   .rightBlock {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .tableCard {
+    display: none;
+  }
+
+  .mobileDays {
+    display: grid;
+    gap: 12px;
+  }
+
+  .mobileDay {
+    border: 1px solid var(--stroke);
+    border-radius: 14px;
+    background: var(--panel);
+    overflow: hidden;
+  }
+
+  .mobileDayHead {
+    min-height: 48px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--bg-soft);
+    border-bottom: 1px solid var(--stroke);
+  }
+
+  .mobileDayTitle {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 850;
+    color: var(--text);
+  }
+
+  .mobileCount {
+    min-width: 26px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .mobileLessonList {
+    display: grid;
+  }
+
+  .mobileLesson {
+    display: grid;
+    grid-template-columns: 76px 1fr;
+    gap: 12px;
+    padding: 13px 14px;
+    align-items: start;
+  }
+
+  .mobileLesson:not(:last-child) {
+    border-bottom: 1px solid var(--stroke);
+  }
+
+  .mobileSlot {
+    display: grid;
+    gap: 3px;
+  }
+
+  .mobileSlotNumber {
+    font-size: 13px;
+    font-weight: 850;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mobileSlotNumber::after {
+    content: " урок";
+    margin-left: 3px;
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .mobileSlotTime {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mobileLessonBody {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+  }
+
+  .mobileLessonBody .lessonSubject,
+  .mobileLessonBody .lessonMeta,
+  .mobileLessonBody .lessonExtra {
+    text-align: left;
+  }
+
+  .mobileEmpty {
+    margin: 0;
+    padding: 18px 14px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 650;
   }
 }
 
@@ -282,5 +402,14 @@
 
   .weekRange {
     font-size: 13px;
+  }
+
+  .weekControls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .rightBlock {
+    width: 100%;
   }
 }

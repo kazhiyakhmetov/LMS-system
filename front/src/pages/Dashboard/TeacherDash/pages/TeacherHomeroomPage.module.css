@@ -639,6 +639,107 @@
 }
 
 @media (max-width: 540px) {
-  .kpis { grid-template-columns: 1fr; }
+  .page {
+    gap: 12px;
+    padding: 0 0 12px;
+  }
+
+  .hero {
+    padding: 20px 18px;
+    border-radius: 18px;
+  }
+
+  .heroTitle {
+    font-size: 25px;
+  }
+
+  .heroSub {
+    font-size: 13px;
+  }
+
+  .heroBadges {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+  }
+
+  .heroBadge {
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .kpiCard {
+    padding: 12px 10px;
+    border-radius: 14px;
+  }
+
+  .kpiLabel {
+    font-size: 9px;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .kpiValue {
+    margin-top: 8px;
+    font-size: 23px;
+    text-align: center;
+  }
+
+  .kpiMeta {
+    display: none;
+  }
+
+  .tabs {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .tabBtn {
+    padding: 9px 6px;
+    font-size: 12px;
+  }
+
+  .section {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .studentsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .modalOverlay {
+    padding: 0;
+    align-items: end;
+  }
+
   .modalCard { max-height: 100vh; border-radius: 0; }
+
+  .modalHead {
+    padding: 14px;
+    align-items: flex-start;
+  }
+
+  .modalClose {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .modalQuarterTabs {
+    overflow-x: auto;
+    padding: 10px 14px;
+  }
+
+  .quarterTab {
+    white-space: nowrap;
+  }
 }

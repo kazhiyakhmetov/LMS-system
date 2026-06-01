@@ -1,0 +1,165 @@
+.bar,
+.sheet,
+.backdrop {
+  display: none;
+}
+
+.icon {
+  width: 21px;
+  height: 21px;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (max-width: 760px) {
+  .bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 70;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+    border-top: 1px solid var(--stroke);
+    background: color-mix(in srgb, var(--panel) 96%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 -12px 28px rgba(15, 23, 20, 0.10);
+  }
+
+  .item {
+    min-width: 0;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--muted);
+    text-decoration: none;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 750;
+    line-height: 1.15;
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 4px;
+    padding: 4px 2px;
+  }
+
+  .item span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .active {
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+  }
+
+  .moreBtn {
+    cursor: pointer;
+  }
+
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: block;
+    border: 0;
+    background: rgba(15, 23, 20, 0.28);
+  }
+
+  .sheet {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    z-index: 80;
+    display: grid;
+    gap: 12px;
+    max-height: min(62vh, 520px);
+    overflow-y: auto;
+    padding: 10px 12px 14px;
+    border: 1px solid var(--stroke);
+    border-radius: 18px;
+    background: var(--panel);
+    box-shadow: 0 24px 60px rgba(15, 23, 20, 0.24);
+    transform: translateY(18px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+
+  .sheetOpen {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sheetHandle {
+    width: 42px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--stroke-strong);
+    justify-self: center;
+  }
+
+  .sheetTitle {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 850;
+    color: var(--text);
+  }
+
+  .sheetGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .sheetLink {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 8px 10px;
+    border: 1px solid var(--stroke);
+    border-radius: 12px;
+    background: var(--bg-soft);
+    color: var(--text);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 750;
+  }
+
+  .sheetLink span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sheetIcon {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: var(--panel);
+    color: var(--accent-strong);
+  }
+
+  .sheetLinkActive {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+  }
+}

@@ -164,7 +164,7 @@ export default function TeacherClassesPage() {
       </section>
 
       <section className={styles.classGrid}>
-        {filteredRows.length ? filteredRows.map((row) => {
+        {pagedRows.length ? pagedRows.map((row) => {
           const tone = getRiskTone(row);
           return (
             <article key={row.id} className={`${styles.classCard} ${styles[tone]}`}>

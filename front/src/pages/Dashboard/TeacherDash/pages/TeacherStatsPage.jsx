@@ -426,6 +426,32 @@ export default function TeacherStatsPage() {
           </table>
         </div>
 
+        <div className={styles.mobileRiskList}>
+          {pagedRiskRows.length ? pagedRiskRows.map((row) => (
+            <article key={`risk-card-${row.classId}`} className={styles.mobileRiskCard}>
+              <header className={styles.mobileRiskHead}>
+                <h4 className={styles.mobileRiskTitle}>{row.className}</h4>
+                <span
+                  className={`${styles.riskBadge} ${
+                    row.riskKey === "high" ? styles.riskHigh
+                      : row.riskKey === "mid" ? styles.riskMid
+                      : styles.riskLow
+                  }`}
+                >
+                  {t(`teacher.stats.riskLevels.${row.riskKey}`)}
+                </span>
+              </header>
+              <div className={styles.mobileRiskMeta}>
+                <span>{t("teacher.classes.tableHeaders.students")}: <strong>{row.totalStudents ?? "—"}</strong></span>
+                <span>{t("teacher.classes.tableHeaders.assignments")}: <strong>{row.totalAssignments ?? "—"}</strong></span>
+                <span>{t("teacher.classes.tableHeaders.avgScore")}: <strong>{row.classAverageGrade != null ? row.classAverageGrade.toFixed(1) : "—"}</strong></span>
+              </div>
+            </article>
+          )) : (
+            <p className={styles.emptyState}>{t("teacher.stats.noRisk")}</p>
+          )}
+        </div>
+
         {totalPages > 1 ? (
           <nav className={styles.pagination} aria-label="Pagination">
             <span className={styles.pageInfo}>
