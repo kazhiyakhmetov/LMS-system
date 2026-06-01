@@ -228,3 +228,226 @@
   color: var(--muted);
   text-align: center;
 }
+
+.mobileSubjects {
+  display: none;
+}
+
+.subjectCard {
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.subjectCardOpen {
+  border-color: var(--stroke-accent);
+  box-shadow: var(--shadow-2);
+}
+
+.subjectToggle {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text);
+}
+
+.mobileSubjectName {
+  display: block;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.25;
+}
+
+.mobileSubjectMeta {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.subjectSummary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.finalBadge {
+  min-width: 34px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--stroke-accent);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.subjectChevron {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--stroke);
+  background: var(--panel-2);
+  color: var(--accent-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.subjectDetails {
+  border-top: 1px solid var(--stroke-soft);
+  padding: 12px 14px 14px;
+  display: grid;
+  gap: 12px;
+  background:
+    radial-gradient(260px 120px at 100% 0%, rgba(99, 102, 241, 0.07), transparent 70%),
+    var(--panel);
+}
+
+.mobileFinalGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mobileFinalGrid span {
+  min-width: 0;
+  border: 1px solid var(--stroke-soft);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  padding: 9px 10px;
+  display: grid;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.mobileFinalGrid strong {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.mobileDayList {
+  display: grid;
+  gap: 8px;
+}
+
+.mobileDayItem {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  border: 1px solid var(--stroke-soft);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  padding: 9px 10px;
+}
+
+.mobileDayDate {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.mobileDayMarks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.mobileMuted {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .page {
+    gap: 12px;
+    padding: 0 0 18px;
+  }
+
+  .header {
+    padding: 18px 16px;
+    border-radius: 18px;
+  }
+
+  .title {
+    font-size: 23px;
+  }
+
+  .headerControls,
+  .actions {
+    display: grid;
+    width: 100%;
+  }
+
+  .tabs {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    border-radius: 16px;
+  }
+
+  .tabBtn {
+    min-width: 0;
+    padding: 0 6px;
+    font-size: 11px;
+  }
+
+  .select {
+    width: 100%;
+  }
+
+  .legendCard {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 12px;
+    gap: 8px;
+    border-radius: 16px;
+  }
+
+  .legendItem {
+    min-width: 0;
+    font-size: 11px;
+    gap: 6px;
+  }
+
+  .tableWrap {
+    display: none;
+  }
+
+  .mobileSubjects {
+    display: grid;
+    gap: 10px;
+  }
+}

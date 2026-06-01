@@ -30,12 +30,14 @@ export default function ParentGradesPage() {
   const [childId, setChildId] = useState(null);
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [recentPage, setRecentPage] = useState(1);
+  const [expandedSubject, setExpandedSubject] = useState(null);
 
   useEffect(() => {
     if (childId == null && children.length) setChildId(children[0].id);
   }, [children, childId]);
 
   useEffect(() => { setRecentPage(1); }, [childId, subjectFilter]);
+  useEffect(() => { setExpandedSubject(null); }, [childId, subjectFilter]);
 
   const gradesQuery = useApi(
     () => (childId ? parentApi.childGrades(childId, 200) : Promise.resolve([])),
@@ -129,6 +131,7 @@ export default function ParentGradesPage() {
       {gradesQuery.loading && !grades.length ? (
         <p style={{ padding: 16, color: "var(--muted)" }}>{t("parent.grades.loadingTable")}</p>
       ) : (
+        <>
         <section className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
@@ -159,6 +162,62 @@ export default function ParentGradesPage() {
             </tbody>
           </table>
         </section>
+
+        <section className={styles.mobileSubjects}>
+          {subjectStats.length ? subjectStats.map((row) => {
+            const expanded = expandedSubject === row.subject;
+            return (
+              <article
+                key={`mobile-${row.subject}`}
+                className={`${styles.subjectCard} ${expanded ? styles.subjectCardOpen : ""}`}
+              >
+                <button
+                  type="button"
+                  className={styles.subjectToggle}
+                  onClick={() => setExpandedSubject((current) => current === row.subject ? null : row.subject)}
+                  aria-expanded={expanded}
+                >
+                  <span>
+                    <span className={styles.subjectName}>{row.subject}</span>
+                    <span className={styles.subjectMeta}>{t("parent.grades.headers.count")}: {row.count}</span>
+                  </span>
+                  <span className={styles.subjectSummary}>
+                    <span className={styles.avgBadge}>{row.average}</span>
+                    <span className={styles.subjectChevron}>{expanded ? "-" : "+"}</span>
+                  </span>
+                </button>
+
+                {expanded ? (
+                  <div className={styles.subjectDetails}>
+                    <div className={styles.mobileStatGrid}>
+                      <span>
+                        <strong>{row.average}</strong>
+                        {t("parent.grades.headers.avg")}
+                      </span>
+                      <span>
+                        <strong>{row.count}</strong>
+                        {t("parent.grades.headers.count")}
+                      </span>
+                    </div>
+
+                    {row.marks.length ? (
+                      <div className={styles.mobileMarks}>
+                        {row.marks.map((m, idx) => (
+                          <span key={`${row.subject}-mobile-${idx}`} className={styles.markChip}>{m}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className={styles.mobileEmptyLine}>{t("parent.grades.noData")}</p>
+                    )}
+                  </div>
+                ) : null}
+              </article>
+            );
+          }) : (
+            <p className={styles.eventEmpty}>{t("parent.grades.noData")}</p>
+          )}
+        </section>
+        </>
       )}
 
       <section className={styles.bottom}>

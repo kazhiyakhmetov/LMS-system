@@ -698,7 +698,98 @@
 }
 
 @media (max-width: 540px) {
-  .kpiRow { grid-template-columns: 1fr; }
+  .page {
+    gap: 14px;
+    padding: 0 0 18px;
+  }
+
+  .studentCard {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    padding: 16px;
+    border-radius: 16px;
+    gap: 10px;
+  }
+
+  .studentName {
+    font-size: 16px;
+    line-height: 1.2;
+  }
+
+  .studentMeta {
+    font-size: 12px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  .riskBadge {
+    min-width: 68px;
+    padding: 6px 10px;
+    border-radius: 12px;
+  }
+
+  .riskBadgeLabel {
+    font-size: 8px;
+    letter-spacing: 0.04em;
+  }
+
+  .riskBadgeValue {
+    font-size: 18px;
+  }
+
+  .childSelect {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .hero {
+    padding: 18px 16px;
+    border-radius: 18px;
+  }
+
+  .heroTitle {
+    font-size: 22px;
+  }
+
+  .heroSub {
+    font-size: 12px;
+  }
+
+  .kpiRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .kpiCard {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .kpiHead {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .kpiLabel {
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  .kpiIcon {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+  }
+
+  .kpiValue {
+    font-size: 24px;
+  }
+
+  .kpiSub {
+    font-size: 11px;
+  }
+
   .lessonItem { grid-template-columns: 56px 1fr; }
   .lessonItem::before { left: 67px; }
   .lessonNumber::after { right: -14px; }

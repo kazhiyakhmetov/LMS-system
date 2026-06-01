@@ -31,6 +31,7 @@ export default function ParentJournalPage() {
 
   const [childId, setChildId] = useState(null);
   const [quarter, setQuarter] = useState(1);
+  const [expandedSubject, setExpandedSubject] = useState(null);
 
   useEffect(() => {
     if (childId == null && children.length) setChildId(children[0].id);
@@ -44,6 +45,8 @@ export default function ParentJournalPage() {
 
   const subjects = Array.isArray(journalQuery.data) ? journalQuery.data : [];
   const dates = subjects[0]?.dates || [];
+
+  useEffect(() => { setExpandedSubject(null); }, [childId, quarter]);
 
   if (childrenQuery.loading && !children.length) {
     return <div style={{ padding: 24, color: "var(--muted)" }}>{t("parent.common.loading")}</div>;
@@ -111,6 +114,7 @@ export default function ParentJournalPage() {
       {journalQuery.loading && !subjects.length ? (
         <p style={{ padding: 16, color: "var(--muted)" }}>{t("parent.journal.loading")}</p>
       ) : subjects.length ? (
+        <>
         <section className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
@@ -154,6 +158,76 @@ export default function ParentJournalPage() {
             </tbody>
           </table>
         </section>
+
+        <section className={styles.mobileSubjects}>
+          {subjects.map((subject) => {
+            const expanded = expandedSubject === subject.subjectId;
+            const quarterGrade = subject.finalGrade?.quarterGrade ?? subject.finalGrade?.calculatedQuarterGrade ?? "вЂ”";
+            const yearGrade = subject.finalGrade?.yearGrade ?? subject.finalGrade?.calculatedYearGrade ?? "вЂ”";
+            return (
+              <article
+                key={`mobile-${subject.subjectId}`}
+                className={`${styles.subjectCard} ${expanded ? styles.subjectCardOpen : ""}`}
+              >
+                <button
+                  type="button"
+                  className={styles.subjectToggle}
+                  onClick={() => setExpandedSubject((current) => current === subject.subjectId ? null : subject.subjectId)}
+                  aria-expanded={expanded}
+                >
+                  <span>
+                    <span className={styles.mobileSubjectName}>{subject.subjectName}</span>
+                    <span className={styles.mobileSubjectMeta}>
+                      {t("parent.journal.headers.final")}: {quarterGrade} - {t("parent.journal.headers.year")}: {yearGrade}
+                    </span>
+                  </span>
+                  <span className={styles.subjectSummary}>
+                    <span className={styles.finalBadge}>{quarterGrade}</span>
+                    <span className={styles.subjectChevron}>{expanded ? "-" : "+"}</span>
+                  </span>
+                </button>
+
+                {expanded ? (
+                  <div className={styles.subjectDetails}>
+                    <div className={styles.mobileFinalGrid}>
+                      <span>
+                        <strong>{quarterGrade}</strong>
+                        {t("parent.journal.headers.final")}
+                      </span>
+                      <span>
+                        <strong>{yearGrade}</strong>
+                        {t("parent.journal.headers.year")}
+                      </span>
+                    </div>
+
+                    <div className={styles.mobileDayList}>
+                      {(subject.cells || []).map((cell) => (
+                        <div key={`${subject.subjectId}-${cell.date}`} className={styles.mobileDayItem}>
+                          <span className={styles.mobileDayDate}>{formatDayMonth(cell.date)}</span>
+                          <span className={styles.mobileDayMarks}>
+                            {cell.attendanceCode ? (
+                              <span className={styles.attendChip} style={attendStyle(cell.attendanceColor)}>
+                                {cell.attendanceCode}
+                              </span>
+                            ) : null}
+                            {(cell.entries || []).length ? (cell.entries || []).map((e, idx) => (
+                              <span key={idx} className={`${styles.markChip} ${markChipClass(e.numericValue)}`}>
+                                {e.displayValue ?? e.numericValue ?? "вЂ”"}
+                              </span>
+                            )) : (
+                              <span className={styles.mobileMuted}>вЂ”</span>
+                            )}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </article>
+            );
+          })}
+        </section>
+        </>
       ) : (
         <p className={styles.empty}>{t("parent.journal.empty")}</p>
       )}
