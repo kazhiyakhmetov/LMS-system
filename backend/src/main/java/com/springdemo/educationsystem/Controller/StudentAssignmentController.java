@@ -35,12 +35,22 @@ public class StudentAssignmentController {
         this.authService = authService;
     }
 
-    private Long getStudentId(String authHeader) {
+    private Student getStudent(String authHeader) {
         String token = authHeader.replace("Bearer ", "");
         Long userId = authService.getUserId(token);
-        Student student = studentRepository.findByUserId(userId)
+        return studentRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
-        return student.getId();
+    }
+
+    private Long getStudentId(String authHeader) {
+        return getStudent(authHeader).getId();
+    }
+
+    // Класс задания относится к классу ученика
+    private boolean sameClass(Assignment a, Student student) {
+        return a.getSchoolClass() != null
+                && student.getSchoolClass() != null
+                && a.getSchoolClass().getId().equals(student.getSchoolClass().getId());
     }
 
     // -------------------------------
@@ -48,12 +58,15 @@ public class StudentAssignmentController {
     // -------------------------------
     @GetMapping("/to-submit")
     public List<Assignment> getAssignmentsToSubmit(@RequestHeader("Authorization") String auth) {
-        Long studentId = getStudentId(auth);
+        Student student = getStudent(auth);
+        Long studentId = student.getId();
 
         return assignmentRepository.findAll()
                 .stream()
+                .filter(a -> sameClass(a, student))
                 .filter(a -> submissionRepository.findByAssignmentIdAndStudentId(a.getId(), studentId).isEmpty())
-                .filter(a -> a.getDeadline().isAfter(LocalDateTime.now()))
+                // deadline == null -> задание показываем (бессрочное, ещё можно сдать)
+                .filter(a -> a.getDeadline() == null || a.getDeadline().isAfter(LocalDateTime.now()))
                 .collect(Collectors.toList());
     }
 
@@ -61,28 +74,19 @@ public class StudentAssignmentController {
     // 2️⃣ Активные задания (сдано, но НЕ оценено)
     // -------------------------------
     @GetMapping("/active")
-    public List<SubmissionDTO> getActiveAssignments(@RequestHeader("Authorization") String auth) {
+    public List<Assignment> getActiveAssignments(@RequestHeader("Authorization") String auth) {
         Long studentId = getStudentId(auth);
 
+        // Задания, по которым студент сдал работу, но она ещё не оценена.
+        // Возвращаем сами задания (с title/deadline/subjectName/teacherName),
+        // чтобы фронт отображал их корректно; статус "в процессе" выводится по источнику.
         return submissionRepository.findByStudentId(studentId)
                 .stream()
-                .filter(s -> s.getStatus().equals("submitted"))
-                .map(s -> new SubmissionDTO(
-                        s.getId(),
-                        s.getAssignment().getId(),
-                        s.getAssignment().getTitle(),
-                        studentId,
-                        s.getStudent().getUser().getFirstName() + " " + s.getStudent().getUser().getLastName(),
-                        s.getFileName(),
-                        s.getFileSize(),
-                        s.getSubmittedAt(),
-                        s.getStatus(),
-                        s.getComment(),
-                        null,        // Оценки пока нет
-                        null         // Комментария учителя пока нет
-                ))
+                .filter(s -> "submitted".equals(s.getStatus()))
+                .map(s -> s.getAssignment())
+                .filter(a -> a != null)
+                .distinct()
                 .collect(Collectors.toList());
-
     }
 
     // -------------------------------
@@ -90,11 +94,14 @@ public class StudentAssignmentController {
     // -------------------------------
     @GetMapping("/overdue")
     public List<Assignment> getOverdueAssignments(@RequestHeader("Authorization") String auth) {
-        Long studentId = getStudentId(auth);
+        Student student = getStudent(auth);
+        Long studentId = student.getId();
 
         return assignmentRepository.findAll()
                 .stream()
-                .filter(a -> a.getDeadline().isBefore(LocalDateTime.now()))
+                .filter(a -> sameClass(a, student))
+                // deadline == null -> не считаем просроченным
+                .filter(a -> a.getDeadline() != null && a.getDeadline().isBefore(LocalDateTime.now()))
                 .filter(a -> submissionRepository.findByAssignmentIdAndStudentId(a.getId(), studentId).isEmpty())
                 .collect(Collectors.toList());
     }

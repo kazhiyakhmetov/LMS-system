@@ -7,6 +7,7 @@ public class SaveAnswerDTO {
 
     private String answerText;
     private String selectedOptionIdsJson;
+    private java.util.List<Long> selectedOptionIds;
     private String matchingJson;
     private String orderingJson;
 
@@ -26,6 +27,10 @@ public class SaveAnswerDTO {
 
     public String getSelectedOptionIdsJson() {
         return selectedOptionIdsJson;
+    }
+
+    public java.util.List<Long> getSelectedOptionIds() {
+        return selectedOptionIds;
     }
 
     public String getMatchingJson() {
@@ -50,6 +55,10 @@ public class SaveAnswerDTO {
 
     public void setSelectedOptionIdsJson(String selectedOptionIdsJson) {
         this.selectedOptionIdsJson = selectedOptionIdsJson;
+    }
+
+    public void setSelectedOptionIds(java.util.List<Long> selectedOptionIds) {
+        this.selectedOptionIds = selectedOptionIds;
     }
 
     public void setMatchingJson(String matchingJson) {

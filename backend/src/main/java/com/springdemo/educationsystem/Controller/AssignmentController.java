@@ -70,11 +70,6 @@ public class AssignmentController {
         }
     }
 
-    @GetMapping("/my-class")
-    public ResponseEntity<?> getAssignmentsForMyClass(@RequestHeader("Authorization") String authorizationHeader) {
-        return ResponseEntity.status(404).body(Map.of("error", "Use /api/students/assignments/my-class endpoint"));
-    }
-
     @GetMapping("/class/{classId}")
     public ResponseEntity<?> getAssignmentsByClass(
             @PathVariable Long classId,

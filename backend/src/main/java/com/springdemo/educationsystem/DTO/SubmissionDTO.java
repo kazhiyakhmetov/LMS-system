@@ -15,6 +15,10 @@ public class SubmissionDTO {
     private String comment;
     private Integer grade;
     private String teacherComment;
+    private String subjectName;
+    private String teacherName;
+    private LocalDateTime deadline;
+    private Integer maxGrade;
 
     public SubmissionDTO() {}
 
@@ -70,4 +74,12 @@ public class SubmissionDTO {
     public void setGrade(Integer grade) { this.grade = grade; }
     public String getTeacherComment() { return teacherComment; }
     public void setTeacherComment(String teacherComment) { this.teacherComment = teacherComment; }
+    public String getSubjectName() { return subjectName; }
+    public void setSubjectName(String subjectName) { this.subjectName = subjectName; }
+    public String getTeacherName() { return teacherName; }
+    public void setTeacherName(String teacherName) { this.teacherName = teacherName; }
+    public LocalDateTime getDeadline() { return deadline; }
+    public void setDeadline(LocalDateTime deadline) { this.deadline = deadline; }
+    public Integer getMaxGrade() { return maxGrade; }
+    public void setMaxGrade(Integer maxGrade) { this.maxGrade = maxGrade; }
 }

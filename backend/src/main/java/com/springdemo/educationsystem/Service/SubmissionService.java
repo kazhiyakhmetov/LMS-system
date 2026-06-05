@@ -53,6 +53,17 @@ public class SubmissionService {
         dto.setStatus(submission.getStatus());
         dto.setComment(submission.getComment());
 
+        Assignment a = submission.getAssignment();
+        if (a != null) {
+            dto.setDeadline(a.getDeadline());
+            dto.setMaxGrade(a.getMaxGrade());
+            if (a.getSubject() != null) dto.setSubjectName(a.getSubject().getName());
+            if (a.getTeacher() != null && a.getTeacher().getUser() != null) {
+                dto.setTeacherName(a.getTeacher().getUser().getFirstName() + " "
+                        + a.getTeacher().getUser().getLastName());
+            }
+        }
+
         Grade grade = gradeRepository.findBySubmissionId(submission.getId()).orElse(null);
         if (grade != null) {
             dto.setGrade(grade.getGradeValue());
@@ -73,6 +84,13 @@ public class SubmissionService {
 
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        // Ученик может сдавать только задания своего класса
+        if (assignment.getSchoolClass() == null
+                || student.getSchoolClass() == null
+                || !student.getSchoolClass().getId().equals(assignment.getSchoolClass().getId())) {
+            throw new RuntimeException("You can only submit assignments for your own class");
+        }
 
         // Ищем существующую сдачу
         Submission submission = submissionRepository
@@ -121,6 +139,12 @@ public class SubmissionService {
 
         Teacher teacher = teacherRepository.findById(teacherId)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
+
+        // Учитель может оценивать только сдачи по своим заданиям
+        Teacher assignmentTeacher = submission.getAssignment().getTeacher();
+        if (assignmentTeacher == null || !assignmentTeacher.getId().equals(teacherId)) {
+            throw new RuntimeException("You can only grade submissions for your own assignments");
+        }
 
         Grade existingGrade = gradeRepository.findBySubmissionId(gradeDTO.getSubmissionId()).orElse(null);
         Grade grade;
@@ -177,6 +201,26 @@ public class SubmissionService {
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Просмотр всех сдач по заданию.
+     * Доступ только админу или учителю-владельцу задания (защита от IDOR).
+     */
+    public List<SubmissionDTO> getSubmissionsByAssignment(Long assignmentId, String userRole, Long userId) {
+        Assignment assignment = assignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new RuntimeException("Assignment not found"));
+
+        boolean isAdmin = "admin".equals(userRole);
+        boolean isOwnerTeacher = "teacher".equals(userRole)
+                && assignment.getTeacher() != null
+                && assignment.getTeacher().getId().equals(userId);
+
+        if (!isAdmin && !isOwnerTeacher) {
+            throw new SecurityException("You are not allowed to view submissions for this assignment");
+        }
+
+        return getSubmissionsByAssignment(assignmentId);
     }
 
     public List<SubmissionDTO> getSubmissionsForTeacher(Long teacherId) {

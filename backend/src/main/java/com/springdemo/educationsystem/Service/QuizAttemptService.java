@@ -90,7 +90,24 @@ public class QuizAttemptService {
         answer.setQuestion(question);
 
         answer.setAnswerText(dto.getAnswerText());
-        answer.setSelectedOptionIdsJson(dto.getSelectedOptionIdsJson());
+
+        // Backward-compatible binding: the frontend sends selectedOptionIds as an
+        // array of numbers (e.g. [143]) instead of selectedOptionIdsJson (String).
+        // If the JSON string is missing but the list is present, build the same
+        // "[143,150]" format that finishAttempt()/parseSelectedIds() expects.
+        String selectedJson = dto.getSelectedOptionIdsJson();
+        if ((selectedJson == null || selectedJson.isBlank()) && dto.getSelectedOptionIds() != null) {
+            StringBuilder sb = new StringBuilder("[");
+            List<Long> ids = dto.getSelectedOptionIds();
+            for (int i = 0; i < ids.size(); i++) {
+                if (i > 0) sb.append(",");
+                sb.append(ids.get(i));
+            }
+            sb.append("]");
+            selectedJson = sb.toString();
+        }
+        answer.setSelectedOptionIdsJson(selectedJson);
+
         answer.setMatchingJson(dto.getMatchingJson());
         answer.setOrderingJson(dto.getOrderingJson());
 

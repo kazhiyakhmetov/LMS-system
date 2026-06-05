@@ -385,13 +385,23 @@ public class StudentQuizController {
             @RequestBody StartQuizDTO dto,
             @RequestHeader("Authorization") String auth
     ) {
-        String token = auth.substring(7);
-
+        String token = auth != null && auth.startsWith("Bearer ") ? auth.substring(7) : "";
         if (!authService.isValidToken(token)) {
-            return ResponseEntity.status(401).build();
+            return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
+        }
+        if (!"student".equals(authService.getUserRole(token))) {
+            return ResponseEntity.status(403).body(Map.of("error", "Student only"));
         }
 
         Long studentId = authService.getUserId(token);
+
+        // Verify the student actually has access to this assignment (class/explicit)
+        // BEFORE creating an attempt — prevents IDOR via arbitrary assignmentId.
+        try {
+            quizAssignmentService.getAssignmentForStudent(dto.getAssignmentId(), studentId);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
+        }
 
         QuizAttempt attempt = quizAttemptService.startAttempt(dto.getAssignmentId(), studentId);
 
@@ -400,24 +410,72 @@ public class StudentQuizController {
 
     @PostMapping("/answer")
     public ResponseEntity<?> saveAnswer(
-            @RequestBody SaveAnswerDTO dto
+            @RequestBody SaveAnswerDTO dto,
+            @RequestHeader("Authorization") String auth
     ) {
+        String token = auth != null && auth.startsWith("Bearer ") ? auth.substring(7) : "";
+        if (!authService.isValidToken(token)) {
+            return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
+        }
+        if (!"student".equals(authService.getUserRole(token))) {
+            return ResponseEntity.status(403).body(Map.of("error", "Student only"));
+        }
+        Long studentId = authService.getUserId(token);
+
+        QuizAttempt attempt = attemptRepository.findById(dto.getAttemptId())
+                .orElseThrow(() -> new RuntimeException("Attempt not found"));
+        if (attempt.getStudent() == null || !attempt.getStudent().getId().equals(studentId)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Not your attempt"));
+        }
+
         QuizAnswer answer = quizAttemptService.saveAnswer(dto);
         return ResponseEntity.ok(answer);
     }
 
     @PostMapping("/finish")
     public ResponseEntity<?> finishQuiz(
-            @RequestBody FinishQuizDTO dto
+            @RequestBody FinishQuizDTO dto,
+            @RequestHeader("Authorization") String auth
     ) {
+        String token = auth != null && auth.startsWith("Bearer ") ? auth.substring(7) : "";
+        if (!authService.isValidToken(token)) {
+            return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
+        }
+        if (!"student".equals(authService.getUserRole(token))) {
+            return ResponseEntity.status(403).body(Map.of("error", "Student only"));
+        }
+        Long studentId = authService.getUserId(token);
+
+        QuizAttempt owned = attemptRepository.findById(dto.getAttemptId())
+                .orElseThrow(() -> new RuntimeException("Attempt not found"));
+        if (owned.getStudent() == null || !owned.getStudent().getId().equals(studentId)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Not your attempt"));
+        }
+
         QuizAttempt attempt = quizAttemptService.finishAttempt(dto.getAttemptId());
         return ResponseEntity.ok(attempt);
     }
 
     @GetMapping("/attempt/{attemptId}")
     public ResponseEntity<?> getAttempt(
-            @PathVariable Long attemptId
+            @PathVariable Long attemptId,
+            @RequestHeader("Authorization") String auth
     ) {
+        String token = auth != null && auth.startsWith("Bearer ") ? auth.substring(7) : "";
+        if (!authService.isValidToken(token)) {
+            return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
+        }
+        if (!"student".equals(authService.getUserRole(token))) {
+            return ResponseEntity.status(403).body(Map.of("error", "Student only"));
+        }
+        Long studentId = authService.getUserId(token);
+
+        QuizAttempt owned = attemptRepository.findById(attemptId)
+                .orElseThrow(() -> new RuntimeException("Attempt not found"));
+        if (owned.getStudent() == null || !owned.getStudent().getId().equals(studentId)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Not your attempt"));
+        }
+
         return ResponseEntity.ok(
                 quizAttemptService.getAttempt(attemptId)
         );

@@ -123,10 +123,16 @@ public class SubmissionController {
             return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
         }
 
+        Long userId = authService.getUserId(token);
+        String userRole = authService.getUserRole(token);
+
         try {
-            List<SubmissionDTO> submissions = submissionService.getSubmissionsByAssignment(assignmentId);
+            List<SubmissionDTO> submissions =
+                    submissionService.getSubmissionsByAssignment(assignmentId, userRole, userId);
             return ResponseEntity.ok(submissions);
 
+        } catch (SecurityException e) {
+            return ResponseEntity.status(403).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

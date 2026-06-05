@@ -70,4 +70,18 @@ public class Assignment {
     public void setTeacher(Teacher teacher) { this.teacher = teacher; }
     public SchoolClass getSchoolClass() { return schoolClass; }
     public void setSchoolClass(SchoolClass schoolClass) { this.schoolClass = schoolClass; }
+
+    /** Flat name fields so the frontend gets subject/teacher without the @JsonIgnore'd relations. */
+    @com.fasterxml.jackson.annotation.JsonProperty("subjectName")
+    public String getSubjectName() {
+        return subject != null ? subject.getName() : null;
+    }
+
+    @com.fasterxml.jackson.annotation.JsonProperty("teacherName")
+    public String getTeacherName() {
+        if (teacher != null && teacher.getUser() != null) {
+            return teacher.getUser().getFirstName() + " " + teacher.getUser().getLastName();
+        }
+        return null;
+    }
 }
