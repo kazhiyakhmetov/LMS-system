@@ -1,10 +1,11 @@
 package com.springdemo.educationsystem.Controller;
 
-import com.springdemo.educationsystem.Entity.SchoolClass;
 import com.springdemo.educationsystem.Repository.SchoolClassRepository;
+import com.springdemo.educationsystem.Service.AuthService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/school-classes")
@@ -12,17 +13,36 @@ import java.util.List;
 public class SchoolClassController {
 
     private final SchoolClassRepository schoolClassRepository;
-    public SchoolClassController(SchoolClassRepository schoolClassRepository) {
+    private final AuthService authService;
+    public SchoolClassController(SchoolClassRepository schoolClassRepository, AuthService authService) {
         this.schoolClassRepository = schoolClassRepository;
+        this.authService = authService;
     }
+
+    private boolean isAuthenticated(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return false;
+        }
+        return authService.isValidToken(authorizationHeader.substring(7));
+    }
+
     @GetMapping
-    public List<SchoolClass> getAllClasses() {
-        return schoolClassRepository.findAll();
+    public ResponseEntity<?> getAllClasses(
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        if (!isAuthenticated(authorizationHeader)) {
+            return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
+        }
+        return ResponseEntity.ok(schoolClassRepository.findAll());
     }
 
     @GetMapping("/school/{schoolId}")
-    public List<SchoolClass> getClassesBySchool(@PathVariable Long schoolId) {
-        return schoolClassRepository.findBySchoolId(schoolId);
+    public ResponseEntity<?> getClassesBySchool(
+            @PathVariable Long schoolId,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        if (!isAuthenticated(authorizationHeader)) {
+            return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
+        }
+        return ResponseEntity.ok(schoolClassRepository.findBySchoolId(schoolId));
     }
 
 }

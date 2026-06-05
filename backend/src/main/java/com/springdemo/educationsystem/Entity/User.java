@@ -1,6 +1,8 @@
 package com.springdemo.educationsystem.Entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -18,6 +20,7 @@ public class User {
     private String email;
 
     @Column(name = "password_hash", nullable = false, length = 255)
+    @JsonProperty(access = Access.WRITE_ONLY)
     private String passwordHash;
 
     @Column(name = "first_name", nullable = false, length = 100)

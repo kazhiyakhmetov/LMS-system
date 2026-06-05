@@ -4,10 +4,12 @@ import com.springdemo.educationsystem.Entity.School;
 import com.springdemo.educationsystem.Entity.SchoolClass;
 import com.springdemo.educationsystem.Repository.SchoolClassRepository;
 import com.springdemo.educationsystem.Repository.SchoolRepository;
+import com.springdemo.educationsystem.Service.AuthService;
 import com.springdemo.educationsystem.Service.SchoolService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/schools")
@@ -16,10 +18,20 @@ public class SchoolController {
     private final SchoolService schoolService;
     private final SchoolRepository schoolRepository;
     private final SchoolClassRepository schoolClassRepository;
-    public SchoolController(SchoolService schoolService, SchoolRepository schoolRepository, SchoolClassRepository schoolClassRepository) {
+    private final AuthService authService;
+    public SchoolController(SchoolService schoolService, SchoolRepository schoolRepository, SchoolClassRepository schoolClassRepository, AuthService authService) {
         this.schoolService = schoolService;
         this.schoolRepository = schoolRepository;
         this.schoolClassRepository = schoolClassRepository;
+        this.authService = authService;
+    }
+
+    private boolean isAdminAuthorized(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return false;
+        }
+        String token = authorizationHeader.substring(7);
+        return "admin".equals(authService.getUserRole(token));
     }
 
     @GetMapping
@@ -40,18 +52,34 @@ public class SchoolController {
     }
 
     @PostMapping
-    public School createSchool(@RequestBody School school) {
-        return schoolService.createSchool(school);
+    public ResponseEntity<?> createSchool(
+            @RequestBody School school,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        if (!isAdminAuthorized(authorizationHeader)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied. Admin rights required."));
+        }
+        return ResponseEntity.ok(schoolService.createSchool(school));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<School> updateSchool(@PathVariable Long id, @RequestBody School schoolDetails) {
+    public ResponseEntity<?> updateSchool(
+            @PathVariable Long id,
+            @RequestBody School schoolDetails,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        if (!isAdminAuthorized(authorizationHeader)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied. Admin rights required."));
+        }
         School updatedSchool = schoolService.updateSchool(id, schoolDetails);
         return updatedSchool != null ? ResponseEntity.ok(updatedSchool) : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteSchool(@PathVariable Long id) {
+    public ResponseEntity<?> deleteSchool(
+            @PathVariable Long id,
+            @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        if (!isAdminAuthorized(authorizationHeader)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied. Admin rights required."));
+        }
         schoolService.deleteSchool(id);
         return ResponseEntity.ok().build();
     }

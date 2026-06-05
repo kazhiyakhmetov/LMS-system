@@ -57,6 +57,7 @@ public class UserService {
         dto.setLastName(user.getLastName());
         dto.setPatronymic(user.getPatronymic());
         dto.setCreatedAt(user.getCreatedAt());
+        dto.setProfilePhotoPath(user.getProfilePhotoPath());
 
         if (user.getSchool() != null) {
             dto.setSchoolId(user.getSchool().getId());
