@@ -8,8 +8,8 @@ function mapConversation(conv) {
   return {
     id: conv.otherUserId,
     name: conv.otherUserName || "Без имени",
-    email: "",
-    role: "",
+    email: conv.otherUserEmail || "",
+    role: conv.otherUserRole || "",
     type: "chat",
     unread: conv.unreadCount || 0,
     avatar: conv.otherUserAvatar || null,
