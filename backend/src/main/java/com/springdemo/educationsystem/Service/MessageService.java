@@ -107,6 +107,8 @@ public class MessageService {
                     dto.setOtherUserId(otherUser.getId());
                     dto.setOtherUserName(otherUser.getFirstName() + " " + otherUser.getLastName());
                     dto.setOtherUserAvatar(otherUser.getProfilePhotoPath());
+                    dto.setOtherUserEmail(otherUser.getEmail());
+                    dto.setOtherUserRole(getPrimaryRoleName(otherUser));
                     dto.setLastMessage(message.getContent());
                     dto.setLastMessageTime(message.getCreatedAt());
                     dto.setRead(message.isRead());
@@ -123,6 +125,11 @@ public class MessageService {
 
     public Long getUnreadCount(Long userId) {
         return messageRepository.countUnreadMessages(userId);
+    }
+
+    private String getPrimaryRoleName(User user) {
+        if (user.getRoles() == null || user.getRoles().isEmpty()) return null;
+        return user.getRoles().get(0).getName();
     }
 
     private MessageDTO convertToDTO(Message message) {

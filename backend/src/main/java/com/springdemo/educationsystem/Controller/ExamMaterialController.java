@@ -334,6 +334,7 @@ public class ExamMaterialController {
 
     // === DELETE ===
     @DeleteMapping("/{id}")
+    @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<?> deleteMaterial(
             @PathVariable Long id,
             @RequestHeader("Authorization") String authorizationHeader
@@ -355,15 +356,15 @@ public class ExamMaterialController {
                 return ResponseEntity.status(403).body(Map.of("error", "Only the author can delete"));
             }
 
-            try {
-                likeRepository.deleteByMaterialId(id);
-            } catch (Exception ignore) { /* ignore */ }
+            // Remove dependent like rows first to avoid FK constraint violation
+            likeRepository.deleteByMaterialId(id);
 
+            materialRepository.delete(material);
+
+            // File cleanup is best-effort; it must not roll back the DB deletion
             if (material.getFilePath() != null && !material.getFilePath().isEmpty()) {
                 try { fileStorageService.deleteFile(material.getFilePath()); } catch (Exception ignore) { /* ignore */ }
             }
-
-            materialRepository.delete(material);
             return ResponseEntity.ok(Map.of("message", "Material deleted"));
         } catch (Exception e) {
             logger.error("Error deleting material", e);

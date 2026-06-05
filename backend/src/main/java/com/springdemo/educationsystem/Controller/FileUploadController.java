@@ -91,20 +91,34 @@ public class FileUploadController {
         }
     }
 
+    /**
+     * Generic download by query param, e.g. GET /api/files/download?path=assignments/uuid_name.png
+     * The query param carries the sub-directory + file name so a "/" never appears in the URL path
+     * (avoids 404 from path matching and 400 from firewall blocking encoded "%2F").
+     * Path traversal is rejected inside FileStorageService.
+     */
+    @GetMapping("/download")
+    public ResponseEntity<?> downloadFileByQuery(@RequestParam("path") String path) {
+        return serveFile(path);
+    }
+
+    /**
+     * Backward-compatible download for a single file name (no sub-directory) sitting in the
+     * uploads root: GET /api/files/download/{fileName}. Sub-directory paths should use the
+     * query-param variant above because a literal "/" breaks this route.
+     */
     @GetMapping("/download/{filePath:.+}")
     public ResponseEntity<?> downloadFile(@PathVariable String filePath) {
+        // Декодируем путь, если он содержит спецсимволы
+        String decodedFilePath = URLDecoder.decode(filePath, StandardCharsets.UTF_8);
+        return serveFile(decodedFilePath);
+    }
+
+    private ResponseEntity<?> serveFile(String filePath) {
         try {
-            // Декодируем путь, если он содержит спецсимволы
-            String decodedFilePath = URLDecoder.decode(filePath, StandardCharsets.UTF_8);
-
-            // Загружаем файл
-            byte[] fileContent = fileStorageService.loadFile(decodedFilePath);
-
-            // Получаем оригинальное имя файла из пути
-            String originalFileName = getOriginalFileName(decodedFilePath);
-
-            // Определяем Content-Type
-            String contentType = determineContentType(decodedFilePath);
+            byte[] fileContent = fileStorageService.loadFile(filePath);
+            String originalFileName = getOriginalFileName(filePath);
+            String contentType = determineContentType(filePath);
 
             return ResponseEntity.ok()
                     .header("Content-Type", contentType)

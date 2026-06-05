@@ -330,9 +330,24 @@ public class TeacherScheduleController {
 
     private Integer calculateQuarter(LocalDate date) {
         int month = date.getMonthValue();
-        if (month >= 9 || month <= 1) return 2; // 2 четверть (сентябрь-январь)
-        else if (month >= 2 && month <= 4) return 3; // 3 четверть
-        else return 4; // 4 четверть
+        switch (month) {
+            case 9:
+            case 10:
+                return 1; // 1 четверть: сентябрь-октябрь
+            case 11:
+            case 12:
+                return 2; // 2 четверть: ноябрь-декабрь
+            case 1:
+            case 2:
+            case 3:
+                return 3; // 3 четверть: январь-март
+            case 4:
+            case 5:
+                return 4; // 4 четверть: апрель-май
+            default:
+                // Лето (июнь-август) — относим к 4-й (ближайшая завершившаяся четверть)
+                return 4;
+        }
     }
 
     private Integer calculateWeekNumber(LocalDate date) {

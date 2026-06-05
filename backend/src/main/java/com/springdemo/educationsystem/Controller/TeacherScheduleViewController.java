@@ -44,10 +44,13 @@ public class TeacherScheduleViewController {
         if (!authService.isValidToken(token)) {
             return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
         }
-
-        Long teacherId = getCurrentTeacherId(token);
+        if (!"teacher".equals(authService.getUserRole(token))) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied. Teacher rights required."));
+        }
 
         try {
+            Long teacherId = getCurrentTeacherId(token);
+
             // Если дата не указана, используем сегодняшнюю
             if (date == null) {
                 date = LocalDate.now();
@@ -75,10 +78,13 @@ public class TeacherScheduleViewController {
         if (!authService.isValidToken(token)) {
             return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
         }
-
-        Long teacherId = getCurrentTeacherId(token);
+        if (!"teacher".equals(authService.getUserRole(token))) {
+            return ResponseEntity.status(403).body(Map.of("error", "Access denied. Teacher rights required."));
+        }
 
         try {
+            Long teacherId = getCurrentTeacherId(token);
+
             // Если начальная дата не указана, используем начало текущей недели
             if (startDate == null) {
                 startDate = LocalDate.now().with(java.time.DayOfWeek.MONDAY);

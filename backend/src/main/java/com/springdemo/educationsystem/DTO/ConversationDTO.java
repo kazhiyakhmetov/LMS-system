@@ -7,6 +7,8 @@ public class ConversationDTO {
     private Long otherUserId;
     private String otherUserName;
     private String otherUserAvatar;
+    private String otherUserEmail;
+    private String otherUserRole;
     private String lastMessage;
     private LocalDateTime lastMessageTime;
     private boolean isRead;
@@ -23,6 +25,10 @@ public class ConversationDTO {
     public void setOtherUserName(String otherUserName) { this.otherUserName = otherUserName; }
     public String getOtherUserAvatar() { return otherUserAvatar; }
     public void setOtherUserAvatar(String otherUserAvatar) { this.otherUserAvatar = otherUserAvatar; }
+    public String getOtherUserEmail() { return otherUserEmail; }
+    public void setOtherUserEmail(String otherUserEmail) { this.otherUserEmail = otherUserEmail; }
+    public String getOtherUserRole() { return otherUserRole; }
+    public void setOtherUserRole(String otherUserRole) { this.otherUserRole = otherUserRole; }
     public String getLastMessage() { return lastMessage; }
     public void setLastMessage(String lastMessage) { this.lastMessage = lastMessage; }
     public LocalDateTime getLastMessageTime() { return lastMessageTime; }

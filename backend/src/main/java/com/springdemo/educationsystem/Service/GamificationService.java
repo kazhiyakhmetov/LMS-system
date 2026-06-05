@@ -186,28 +186,48 @@ public class GamificationService {
                 continue;
             }
 
-            boolean unlocked = false;
-
-            switch (a.getType()) {
-                case "assignments":
-                    unlocked = stats.getCompletedAssignments() >= a.getRequiredValue();
-                    break;
-
-                case "perfect_assignments":
-                    unlocked = stats.getPerfectAssignments() >= a.getRequiredValue();
-                    break;
-
-                case "streak":
-                    unlocked = stats.getMaxStreak() >= a.getRequiredValue();
-                    break;
-
-                case "level":
-                    unlocked = stats.getLevel() >= a.getRequiredValue();
-                    break;
-            }
+            int required = a.getRequiredValue() != null ? a.getRequiredValue() : Integer.MAX_VALUE;
+            boolean unlocked = progressForType(a.getType(), stats) >= required;
 
             if (unlocked) unlockAchievement(student, a);
         }
+    }
+
+    /**
+     * Текущий прогресс студента для данного типа достижения.
+     * Поддерживает оба варианта именования типа: snake_case (assignments,
+     * perfect_assignments, streak, level) и UPPER_CASE из сидов
+     * (ASSIGNMENT_COMPLETED, PERFECT_ASSIGNMENTS, STREAK, QUIZ_COMPLETED, LEVEL).
+     */
+    private int progressForType(String type, StudentStats stats) {
+        if (type == null) return 0;
+        switch (type.trim().toLowerCase()) {
+            case "assignments":
+            case "assignment_completed":
+            case "quiz_completed":
+                return stats.getCompletedAssignments() != null ? stats.getCompletedAssignments() : 0;
+            case "perfect_assignments":
+            case "perfect_assignment":
+                return stats.getPerfectAssignments() != null ? stats.getPerfectAssignments() : 0;
+            case "streak":
+                return stats.getMaxStreak() != null ? stats.getMaxStreak() : 0;
+            case "level":
+                return stats.getLevel() != null ? stats.getLevel() : 0;
+            default:
+                return 0;
+        }
+    }
+
+    /**
+     * Заполняет progress/progressPercentage в DTO с учётом текущего прогресса
+     * и требуемого значения (защита от деления на ноль / null).
+     */
+    private void fillProgress(AchievementDTO dto, Achievement achievement, StudentStats stats) {
+        int progress = stats != null ? progressForType(achievement.getType(), stats) : 0;
+        dto.setProgress(progress);
+        int required = achievement.getRequiredValue() != null ? achievement.getRequiredValue() : 0;
+        int percentage = required > 0 ? (int) ((double) progress / required * 100) : 0;
+        dto.setProgressPercentage(Math.min(percentage, 100));
     }
     private void unlockAchievement(Student student, Achievement achievement) {
         StudentAchievement studentAchievement = new StudentAchievement(student, achievement);
@@ -306,26 +326,13 @@ public class GamificationService {
                     dto.setXpReward(achievement.getXpReward());
                     dto.setUnlocked(unlockedAchievementIds.contains(achievement.getId()));
 
-                    if (stats != null) {
-                        int progress = 0;
-                        switch (achievement.getType()) {
-                            case "assignments":
-                                progress = stats.getCompletedAssignments();
-                                break;
-                            case "perfect_assignments":
-                                progress = stats.getPerfectAssignments();
-                                break;
-                            case "streak":
-                                progress = stats.getMaxStreak();
-                                break;
-                            case "level":
-                                progress = stats.getLevel();
-                                break;
-                        }
-                        dto.setProgress(progress);
-                        int percentage = (int) ((double) progress / achievement.getRequiredValue() * 100);
-                        dto.setProgressPercentage(Math.min(percentage, 100));
-                    }
+                    fillProgress(dto, achievement, stats);
+
+                    // Если достижение получено — проставим дату разблокировки
+                    studentAchievements.stream()
+                            .filter(sa -> sa.getAchievement().getId().equals(achievement.getId()))
+                            .findFirst()
+                            .ifPresent(sa -> dto.setUnlockedAt(sa.getUnlockedAt()));
 
                     return dto;
                 })
@@ -392,15 +399,19 @@ public class GamificationService {
                     .sorted((a1, a2) -> a2.getUnlockedAt().compareTo(a1.getUnlockedAt()))
                     .limit(3)
                     .map(sa -> {
+                        Achievement a = sa.getAchievement();
                         AchievementDTO dto = new AchievementDTO();
-                        dto.setId(sa.getAchievement().getId());
-                        dto.setName(sa.getAchievement().getName());
-                        dto.setDescription(sa.getAchievement().getDescription());
-                        dto.setIcon(sa.getAchievement().getIcon());
-                        dto.setType(sa.getAchievement().getType());
+                        dto.setId(a.getId());
+                        dto.setName(a.getName());
+                        dto.setDescription(a.getDescription());
+                        dto.setIcon(a.getIcon());
+                        dto.setType(a.getType());
+                        dto.setRequiredValue(a.getRequiredValue());
+                        dto.setXpReward(a.getXpReward());
                         dto.setUnlocked(true);
-                        dto.setProgress(sa.getAchievement().getRequiredValue());
+                        dto.setProgress(a.getRequiredValue());
                         dto.setProgressPercentage(100);
+                        dto.setUnlockedAt(sa.getUnlockedAt());
                         return dto;
                     })
                     .collect(Collectors.toList());
@@ -508,6 +519,8 @@ public class GamificationService {
                     dto.setDescription(a.getDescription());
                     dto.setType(a.getType());
                     dto.setIcon(a.getIcon());
+                    dto.setRequiredValue(a.getRequiredValue());
+                    dto.setXpReward(a.getXpReward());
                     dto.setUnlocked(true);
                     dto.setProgress(a.getRequiredValue());
                     dto.setProgressPercentage(100);
@@ -534,18 +547,11 @@ public class GamificationService {
                     dto.setDescription(a.getDescription());
                     dto.setType(a.getType());
                     dto.setIcon(a.getIcon());
+                    dto.setRequiredValue(a.getRequiredValue());
+                    dto.setXpReward(a.getXpReward());
                     dto.setUnlocked(false);
 
-                    int progress = switch (a.getType()) {
-                        case "assignments" -> stats.getCompletedAssignments();
-                        case "perfect_assignments" -> stats.getPerfectAssignments();
-                        case "streak" -> stats.getMaxStreak();
-                        case "level" -> stats.getLevel();
-                        default -> 0;
-                    };
-
-                    dto.setProgress(progress);
-                    dto.setProgressPercentage(Math.min(100, (progress * 100) / a.getRequiredValue()));
+                    fillProgress(dto, a, stats);
 
                     return dto;
                 })

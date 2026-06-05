@@ -31,13 +31,37 @@ public class FileStorageService {
     }
 
     public byte[] loadFile(String filePath) throws IOException {
-        Path path = Paths.get(uploadDir, filePath);
+        Path path = resolveSafe(filePath);
         return Files.readAllBytes(path);
     }
 
     public boolean deleteFile(String filePath) throws IOException {
-        Path path = Paths.get(uploadDir, filePath);
+        Path path = resolveSafe(filePath);
         return Files.deleteIfExists(path);
+    }
+
+    /**
+     * Resolves a relative file path against the upload base directory while
+     * preventing path-traversal attacks (no "..", no absolute paths escaping the base).
+     */
+    private Path resolveSafe(String filePath) throws IOException {
+        if (filePath == null || filePath.trim().isEmpty()) {
+            throw new IOException("File path is empty");
+        }
+
+        // Normalize separators and strip any leading slashes so the value is treated as relative.
+        String normalized = filePath.replace("\\", "/").trim();
+        while (normalized.startsWith("/")) {
+            normalized = normalized.substring(1);
+        }
+
+        Path base = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Path resolved = base.resolve(normalized).normalize();
+
+        if (!resolved.startsWith(base)) {
+            throw new IOException("Invalid file path: " + filePath);
+        }
+        return resolved;
     }
 
     public boolean isValidFileType(MultipartFile file) {
