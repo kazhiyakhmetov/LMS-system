@@ -51,7 +51,7 @@ public class GradeFormulaService {
             cfg.setExamWeight(examWeight / sum);
         }
         if (maxScale != null) {
-            if (maxScale != 5 && maxScale != 10) throw new RuntimeException("maxScale может быть 5 или 10");
+            if (maxScale != 5 && maxScale != 10 && maxScale != 100) throw new RuntimeException("maxScale может быть 5, 10 или 100");
             cfg.setMaxScale(maxScale);
         }
         cfg.setUpdatedAt(LocalDateTime.now());

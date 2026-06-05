@@ -34,8 +34,12 @@ public class SurveyController {
         }
 
         Long adminId = authService.getUserId(token);
-        surveyService.createSurvey(dto, adminId);
-        return ResponseEntity.ok(Map.of("message", "Survey created"));
+        try {
+            surveyService.createSurvey(dto, adminId);
+            return ResponseEntity.ok(Map.of("message", "Survey created"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/admin")
@@ -56,7 +60,11 @@ public class SurveyController {
             return ResponseEntity.status(403)
                     .body(Map.of("error", "Access denied. Admin rights required."));
         }
-        return ResponseEntity.ok(surveyService.getResults(surveyId));
+        try {
+            return ResponseEntity.ok(surveyService.getResults(surveyId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     // ====== STUDENT / TEACHER ======
@@ -71,7 +79,11 @@ public class SurveyController {
         Long userId = authService.getUserId(token);
         String role = authService.getUserRole(token);
 
-        return ResponseEntity.ok(surveyService.getAvailableSurveys(userId, role));
+        try {
+            return ResponseEntity.ok(surveyService.getAvailableSurveys(userId, role));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/{surveyId}")
@@ -81,7 +93,11 @@ public class SurveyController {
         if (!authService.isValidToken(token)) {
             return ResponseEntity.status(401).body(Map.of("error", "Authentication required"));
         }
-        return ResponseEntity.ok(surveyService.getSurveyDetails(surveyId));
+        try {
+            return ResponseEntity.ok(surveyService.getSurveyDetails(surveyId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/answer")
@@ -93,9 +109,12 @@ public class SurveyController {
         }
 
         Long userId = authService.getUserId(token);
-        surveyService.saveResponse(userId, request);
-
-        return ResponseEntity.ok(Map.of("message", "Ответы сохранены"));
+        try {
+            surveyService.saveResponse(userId, request);
+            return ResponseEntity.ok(Map.of("message", "Ответы сохранены"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(409).body(Map.of("error", e.getMessage()));
+        }
     }
 
     private String extractToken(String authorizationHeader) {

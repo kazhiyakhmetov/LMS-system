@@ -7,6 +7,7 @@ public class StudentJournalSubjectDTO {
 
     private Long subjectId;
     private String subjectName;
+    private String teacherName;
     private List<String> dates = new ArrayList<>();
     private List<DayCellDTO> cells = new ArrayList<>();
     private FinalDTO finalGrade;
@@ -73,6 +74,9 @@ public class StudentJournalSubjectDTO {
 
     public String getSubjectName() { return subjectName; }
     public void setSubjectName(String subjectName) { this.subjectName = subjectName; }
+
+    public String getTeacherName() { return teacherName; }
+    public void setTeacherName(String teacherName) { this.teacherName = teacherName; }
 
     public List<String> getDates() { return dates; }
     public void setDates(List<String> dates) { this.dates = dates; }

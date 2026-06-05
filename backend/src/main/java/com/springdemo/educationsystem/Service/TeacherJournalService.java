@@ -147,6 +147,11 @@ public class TeacherJournalService {
             StudentJournalSubjectDTO dto = new StudentJournalSubjectDTO();
             dto.setSubjectId(subject.getId());
             dto.setSubjectName(subject.getName());
+            dto.setTeacherName(resolveSubjectTeacherName(
+                    bySubjectEntries.getOrDefault(subjectId, List.of()),
+                    bySubjectAttendance.getOrDefault(subjectId, List.of()),
+                    bySubjectFinal.get(subjectId)
+            ));
             dto.setDates(dateStrings);
 
             Map<String, AttendanceMark> attendanceMap = new HashMap<>();
@@ -847,6 +852,35 @@ public class TeacherJournalService {
         Double weighted = gradeFormulaService.calcQuarter(foAvg, sorAvg, sochAvg);
         if (weighted == null) return null;
         return (int) Math.round(weighted);
+    }
+
+    private String resolveSubjectTeacherName(
+            List<JournalEntry> entries,
+            List<AttendanceMark> attendance,
+            JournalFinalGrade finalGrade
+    ) {
+        // Берём первого доступного учителя предмета: из записей журнала,
+        // иначе из отметок посещаемости, иначе из итоговой оценки.
+        for (JournalEntry e : entries) {
+            if (e.getTeacher() != null && e.getTeacher().getUser() != null) {
+                return buildTeacherName(e.getTeacher().getUser());
+            }
+        }
+        for (AttendanceMark a : attendance) {
+            if (a.getTeacher() != null && a.getTeacher().getUser() != null) {
+                return buildTeacherName(a.getTeacher().getUser());
+            }
+        }
+        if (finalGrade != null && finalGrade.getTeacher() != null && finalGrade.getTeacher().getUser() != null) {
+            return buildTeacherName(finalGrade.getTeacher().getUser());
+        }
+        return null;
+    }
+
+    private String buildTeacherName(User user) {
+        if (user == null) return null;
+        String name = (safe(user.getFirstName()) + " " + safe(user.getLastName())).trim();
+        return name.isEmpty() ? null : name;
     }
 
     private String buildStudentName(User user) {

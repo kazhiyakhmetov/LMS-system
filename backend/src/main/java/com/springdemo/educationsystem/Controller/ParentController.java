@@ -326,8 +326,21 @@ public class ParentController {
 
             var grades = gradeRepository.findByStudentId(studentId);
 
+            // Normalize every grade to a 5-point scale before averaging so that
+            // grades coming from different maxGrade scales (5-, 100-point, ...) are
+            // comparable: normalized = (gradeValue / maxGrade) * 5.
+            // Grades without a positive maxGrade are skipped (avoid division by zero).
             List<Double> values = grades.stream()
-                    .map(g -> g.getGradeValue() != null ? g.getGradeValue().doubleValue() : null)
+                    .map(g -> {
+                        if (g.getGradeValue() == null) return null;
+                        Integer maxGrade =
+                                g.getSubmission() != null
+                                        && g.getSubmission().getAssignment() != null
+                                        ? g.getSubmission().getAssignment().getMaxGrade()
+                                        : null;
+                        if (maxGrade == null || maxGrade <= 0) return null;
+                        return (g.getGradeValue().doubleValue() / maxGrade) * 5.0;
+                    })
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
@@ -372,7 +385,8 @@ public class ParentController {
             }
 
             Map<String, Object> result = new HashMap<>();
-            result.put("avgGrade", values.isEmpty() ? null : Math.round(avg * 10.0) / 10.0);
+            // avgGrade is expressed on a 5-point scale (see normalization above), rounded to 2 decimals.
+            result.put("avgGrade", values.isEmpty() ? null : Math.round(avg * 100.0) / 100.0);
             result.put("totalGrades", values.size());
             result.put("subjectsCount", subjects.size());
             result.put("submitted", submitted);
