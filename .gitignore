@@ -54,3 +54,4 @@ ai/scripts/seed_more.py
 ai/scripts/seed_teachers.py
 ai/scripts/seed_content.py
 ai/scripts/seed_assignments.py
+ai/scripts/seed_midrisk.py

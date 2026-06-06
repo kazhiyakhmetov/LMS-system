@@ -28,10 +28,16 @@ class GenerationError(RuntimeError):
 
 def _system_prompt() -> str:
     return (
-        "Ты помощник учителя школы. Генерируешь тестовые вопросы single-choice на "
-        "русском языке. Все варианты ответов должны быть осмысленными конкретными "
-        "значениями (не \"A\",\"B\",\"C\",\"D\"). Отвечаешь СТРОГО валидным JSON "
-        "без markdown, без комментариев, без префиксов."
+        "Ты — опытный учитель, который составляет качественные тестовые вопросы single-choice "
+        "на русском языке. СТРОГИЕ ПРАВИЛА каждого вопроса:\n"
+        "1. РОВНО 4 варианта ответа — все РАЗНЫЕ по смыслу.\n"
+        "2. ТОЛЬКО ОДИН вариант правильный. Остальные 3 — правдоподобные, но фактически НЕВЕРНЫЕ.\n"
+        "3. Неправильные варианты НЕ должны быть синонимами или эквивалентом правильного "
+        "(например «365 дней» и «1 год» — это одно и то же, так нельзя).\n"
+        "4. Запрещены варианты «все перечисленное», «всё верно», «нет правильного ответа», «правда/ложь».\n"
+        "5. Только русский язык — никаких иностранных слов в вопросах, вариантах и объяснениях.\n"
+        "6. Вопрос чёткий, однозначный, ответ выводится из текста.\n"
+        "Отвечаешь СТРОГО валидным JSON без markdown, без комментариев, без префиксов."
     )
 
 
@@ -45,18 +51,18 @@ def _user_prompt(text: str, n: int, difficulty: str, kind: str) -> str:
         f"Текст:\n«{text.strip()}»\n\n"
         "Требования:\n"
         f"- В массиве \"questions\" должно быть РОВНО {n} элементов.\n"
-        "- Каждый вопрос на русском языке, чёткий и однозначный.\n"
-        "- 4 разных осмысленных варианта ответа в \"options\" (не буквы, а реальные значения/фразы).\n"
-        "- Один вариант правильный — его индекс в поле correctIdx (0..3).\n"
-        "- Короткое объяснение в поле explanation (1 предложение).\n\n"
-        f"Структура ответа (массив должен содержать ИМЕННО {n} объектов):\n"
-        '{"questions":[\n'
-        + ",\n".join(
-            f'  {{"q":"Вопрос {i+1}?","options":["вариант 1","вариант 2","вариант 3","вариант 4"],"correctIdx":0,"explanation":"объяснение"}}'
-            for i in range(n)
-        )
-        + "\n]}\n\n"
-        f"Сгенерируй контент. ОБЯЗАТЕЛЬНО {n} вопросов. Только JSON, без префиксов и markdown."
+        "- Формулируй вопрос как ОТКРЫТЫЙ: начинай со слов «Сколько», «Какой», «Что», «Где», «Когда», «Почему».\n"
+        "- ЗАПРЕЩЕНО делать вопрос-утверждение со знаком вопроса в конце (типа «Земля круглая?»).\n"
+        "- РОВНО 4 РАЗНЫХ варианта-ЗНАЧЕНИЯ (числа, термины, факты). НЕ «правда»/«ложь»/«верно»/«неверно»/«это не так»/«нет правильного ответа».\n"
+        "- Только ОДИН правильный; остальные 3 — правдоподобные, но фактически НЕВЕРНЫЕ и НЕ синонимы правильного.\n"
+        "- correctIdx (0..3) ОБЯЗАТЕЛЬНО указывает на ВЕРНЫЙ вариант — перепроверь факт перед ответом.\n"
+        "- Только русский язык. Короткое объяснение в \"explanation\" (1 предложение).\n\n"
+        "ПРИМЕР правильного вопроса (формат и стиль — копируй):\n"
+        '{"q":"Сколько планет в Солнечной системе?","options":["восемь","девять","семь","десять"],"correctIdx":0,"explanation":"В Солнечной системе восемь планет."}\n\n'
+        "ПЛОХОЙ пример (так НЕ делай): вопрос-утверждение «Солнце — звезда?» с вариантами «правда/ложь».\n\n"
+        f"Структура ответа (массив РОВНО из {n} объектов):\n"
+        '{"questions":[ {"q":"...","options":["...","...","...","..."],"correctIdx":0,"explanation":"..."} ]}\n\n'
+        f"Сгенерируй {n} вопросов. Только JSON, без префиксов и markdown."
     )
 
 
@@ -153,13 +159,8 @@ def _sanitize_question(raw: dict, idx: int) -> dict | None:
         return None
     if not isinstance(options, list) or len(options) < 2:
         return None
-    options = [str(o).strip() for o in options if str(o).strip()]
-    if len(options) < 2:
-        return None
-    # ensure 4 options if possible (truncate to 4)
-    options = options[:4]
-    while len(options) < 2:
-        return None
+
+    # raw correct index (before normalization)
     correct_idx = raw.get("correctIdx")
     if correct_idx is None:
         correct_idx = raw.get("correctIndex")
@@ -169,8 +170,43 @@ def _sanitize_question(raw: dict, idx: int) -> dict | None:
         correct_idx = int(correct_idx)
     except (TypeError, ValueError):
         correct_idx = 0
-    if correct_idx < 0 or correct_idx >= len(options):
-        correct_idx = 0
+
+    raw_opts = [str(o).strip() for o in options]
+    # remember the correct option's TEXT before we dedupe/reorder
+    correct_text = raw_opts[correct_idx] if 0 <= correct_idx < len(raw_opts) and raw_opts[correct_idx] else None
+
+    # dedupe case-insensitively, drop empties — kills "365 дней"/"365 дней" type repeats
+    seen: set[str] = set()
+    uniq: list[str] = []
+    for o in raw_opts:
+        if not o:
+            continue
+        key = o.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        uniq.append(o)
+
+    # STRICT: exactly 4 distinct meaningful options, otherwise reject → retry re-asks
+    if len(uniq) < 4:
+        return None
+    options = uniq[:4]
+
+    # Reject degenerate true/false-style options the small model falls back to.
+    _banned = {
+        "правда", "ложь", "верно", "неверно", "это не так", "не так",
+        "нет правильного ответа", "все верно", "всё верно", "все правильно",
+        "все перечисленное", "всё перечисленное", "все перечисленные",
+        "да", "нет", "истина", "не соответствует факту", "фальсифицирует",
+    }
+    if any(o.lower().strip(" .!?") in _banned for o in options):
+        return None
+
+    # locate the correct option in the cleaned list; if it was dropped, the question is unreliable
+    if not correct_text or correct_text not in options:
+        return None
+    correct_idx = options.index(correct_text)
+
     explanation = raw.get("explanation") or raw.get("comment") or ""
     if not isinstance(explanation, str):
         explanation = str(explanation)
