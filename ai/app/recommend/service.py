@@ -105,9 +105,18 @@ def recommend(student_id: int, limit: int = 5) -> List:
             "subjectName": subj_name,
         })
 
-    # Sort & cut
+    # Sort, then dedupe by title (avoid recommending two quizzes with the same name)
     recs.sort(key=lambda r: r["score"], reverse=True)
-    sliced = recs[:limit]
+    sliced = []
+    seen_titles: set[str] = set()
+    for r in recs:
+        key = (r["title"] or "").strip().lower()
+        if key in seen_titles:
+            continue
+        seen_titles.add(key)
+        sliced.append(r)
+        if len(sliced) >= limit:
+            break
 
     # If still too few, add "topic to revise" suggestions from weak subjects
     weak_remaining = [w for w in weak_subjects if w[2] is not None and w[2] < 4.0]
