@@ -414,9 +414,20 @@ public class HomeroomController {
                 .filter(e -> e.getNumericValue() != null)
                 .toList();
         if (all.isEmpty()) return null;
-        double sum = all.stream().mapToDouble(JournalEntry::getNumericValue).sum();
-        double raw = sum / all.size();
-        return Math.round(raw * 10.0) / 10.0;
+        // Оценки в журнале на РАЗНЫХ шкалах (уроки /10, задания /100 или /5, квизы /N).
+        // Нормализуем каждую к 10-балльной шкале перед усреднением, иначе среднее бессмысленно.
+        double sum = 0.0;
+        int cnt = 0;
+        for (JournalEntry e : all) {
+            Double mv = e.getMaxValue();
+            if (mv == null || mv <= 0) continue;
+            double norm = e.getNumericValue() / mv * 10.0;
+            norm = Math.max(0.0, Math.min(10.0, norm));
+            sum += norm;
+            cnt++;
+        }
+        if (cnt == 0) return null;
+        return Math.round(sum / cnt * 10.0) / 10.0;  // 10-балльная шкала, 1 знак
     }
 
     private int currentQuarter() {

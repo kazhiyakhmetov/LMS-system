@@ -6,6 +6,16 @@ import { useT } from "../../../../shared/lib/i18n";
 
 const PAGE_SIZE = 5;
 
+// Понятный формат значения фактора риска: доли → проценты, средний балл → 1 знак, остальное → целое.
+const RATIO_FACTORS = ["attendance_rate", "submission_rate", "low_grades_ratio"];
+function formatFactorValue(f) {
+  const v = Number(f.value);
+  if (!Number.isFinite(v)) return "—";
+  if (RATIO_FACTORS.includes(f.feature)) return `${Math.round(v * 100)}%`;
+  if (f.feature === "avg_grade") return (v * 2).toFixed(1);  // модель в 5-балльной → показываем в 10-балльной
+  return Math.round(v).toString();
+}
+
 function pageNumbers(current, total) {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
   const set = new Set([1, 2, total - 1, total, current - 1, current, current + 1]);
@@ -320,11 +330,7 @@ export default function TeacherStatsPage() {
                 <div className={styles.aiItemMain}>
                   <p className={styles.aiStudentName}>{r.studentName || `Ученик #${r.studentId}`}</p>
                   <p className={styles.aiFactors}>
-                    {(r.topFactors || []).map((f) => `${f.label}: ${
-                      f.feature === "attendance_rate" || f.feature === "submission_rate"
-                        ? `${(Number(f.value) * 100).toFixed(0)}%`
-                        : Math.round(Number(f.value))
-                    }`).join(" • ") || "—"}
+                    {(r.topFactors || []).map((f) => `${f.label}: ${formatFactorValue(f)}`).join(" • ") || "—"}
                   </p>
                 </div>
                 <div className={styles.aiScore}>

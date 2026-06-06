@@ -9,6 +9,16 @@ import NewsSlider from "../../../../shared/ui/NewsSlider/NewsSlider";
 
 const LOCALE_MAP = { ru: "ru-RU", kk: "kk-KZ", en: "en-US" };
 
+// Понятный формат значения фактора риска: доли → проценты, средний балл → 1 знак, остальное → целое.
+const RATIO_FACTORS = ["attendance_rate", "submission_rate", "low_grades_ratio"];
+function formatFactorValue(f) {
+  const v = Number(f.value);
+  if (!Number.isFinite(v)) return "—";
+  if (RATIO_FACTORS.includes(f.feature)) return `${Math.round(v * 100)}%`;
+  if (f.feature === "avg_grade") return (v * 2).toFixed(1);  // модель в 5-балльной → показываем в 10-балльной
+  return Math.round(v).toString();
+}
+
 function toneFor(deadline) {
   if (!deadline) return "focus";
   const diffH = (new Date(deadline).getTime() - Date.now()) / 3_600_000;
@@ -114,7 +124,7 @@ export default function ParentHomePage() {
         {risk && risk.available !== false ? (
           <div
             className={`${styles.riskBadge} ${styles[`riskLevel_${risk.level}`]}`}
-            title={(risk.topFactors || []).map((f) => `${f.label}: ${f.value}`).join(" • ")}
+            title={(risk.topFactors || []).map((f) => `${f.label}: ${formatFactorValue(f)}`).join(" • ")}
           >
             <span className={styles.riskBadgeLabel}>AI · риск</span>
             <span className={styles.riskBadgeValue}>{Math.round(risk.score)}%</span>
@@ -150,9 +160,7 @@ export default function ParentHomePage() {
               <li key={f.feature} className={styles.riskAlertFactor}>
                 <span className={styles.riskAlertFactorLabel}>{f.label}</span>
                 <span className={styles.riskAlertFactorValue}>
-                  {f.feature === "attendance_rate" || f.feature === "submission_rate"
-                    ? `${(Number(f.value) * 100).toFixed(0)}%`
-                    : f.value}
+                  {formatFactorValue(f)}
                 </span>
               </li>
             ))}
