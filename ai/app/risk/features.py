@@ -55,21 +55,22 @@ def compute_features(student_ids: Iterable[int], cursor_or_conn, snapshot: Optio
 
         # Grades — normalize each grade to 0-5 scale: grade_value / max_grade * 5
         # so we can mix tasks graded out of 5 and 100 in one model.
+        # Source of grades = journal_entries (covers lesson / SOR / SOCH / assignment /
+        # quiz grades) — far richer than only graded submissions. Normalized to 0-5.
+        GRADE_TYPES = "('LESSON_GRADE','SOR_GRADE','SOCH_GRADE','ASSIGNMENT_GRADE','QUIZ_GRADE')"
         cur.execute(
-            """
+            f"""
             WITH norm AS (
-                SELECT s.student_id,
-                       a.subject_id,
-                       g.graded_at,
-                       LEAST(GREATEST((g.grade_value::float / NULLIF(a.max_grade, 0)) * 5.0, 0.0), 5.0) AS norm_grade
-                FROM submissions s
-                JOIN grades g ON g.submission_id = s.id
-                JOIN assignments a ON a.id = s.assignment_id
-                WHERE s.student_id = ANY(%s)
-                  AND (g.graded_at IS NULL OR g.graded_at::date <= %s)
-                  AND a.max_grade IS NOT NULL AND a.max_grade > 0
-                  AND g.grade_value IS NOT NULL
-                  AND g.grade_value <= a.max_grade * 1.2
+                SELECT je.student_id,
+                       je.subject_id,
+                       je.lesson_date,
+                       LEAST(GREATEST((je.numeric_value::float / NULLIF(je.max_value, 0)) * 5.0, 0.0), 5.0) AS norm_grade
+                FROM journal_entries je
+                WHERE je.student_id = ANY(%s)
+                  AND je.lesson_date <= %s
+                  AND je.entry_type IN {GRADE_TYPES}
+                  AND je.numeric_value IS NOT NULL
+                  AND je.max_value IS NOT NULL AND je.max_value > 0
             )
             SELECT student_id,
                    COUNT(*) AS cnt,
@@ -84,26 +85,24 @@ def compute_features(student_ids: Iterable[int], cursor_or_conn, snapshot: Optio
         )
         grades_rows = {r[0]: r for r in cur.fetchall()}
 
-        # Grade trend (normalized 0-5 scale)
+        # Grade trend (recent 30d vs previous 30-60d, normalized 0-5 scale)
         cur.execute(
-            """
+            f"""
             WITH norm AS (
-                SELECT s.student_id,
-                       g.graded_at,
-                       LEAST(GREATEST((g.grade_value::float / NULLIF(a.max_grade, 0)) * 5.0, 0.0), 5.0) AS norm_grade
-                FROM submissions s
-                JOIN grades g ON g.submission_id = s.id
-                JOIN assignments a ON a.id = s.assignment_id
-                WHERE s.student_id = ANY(%s)
-                  AND g.graded_at::date <= %s
-                  AND a.max_grade IS NOT NULL AND a.max_grade > 0
-                  AND g.grade_value IS NOT NULL
-                  AND g.grade_value <= a.max_grade * 1.2
+                SELECT je.student_id,
+                       je.lesson_date,
+                       LEAST(GREATEST((je.numeric_value::float / NULLIF(je.max_value, 0)) * 5.0, 0.0), 5.0) AS norm_grade
+                FROM journal_entries je
+                WHERE je.student_id = ANY(%s)
+                  AND je.lesson_date <= %s
+                  AND je.entry_type IN {GRADE_TYPES}
+                  AND je.numeric_value IS NOT NULL
+                  AND je.max_value IS NOT NULL AND je.max_value > 0
             )
             SELECT student_id,
-                   AVG(norm_grade) FILTER (WHERE graded_at::date > (%s::date - INTERVAL '30 day')::date) AS recent_avg,
-                   AVG(norm_grade) FILTER (WHERE graded_at::date <= (%s::date - INTERVAL '30 day')::date
-                                           AND graded_at::date > (%s::date - INTERVAL '60 day')::date) AS prev_avg
+                   AVG(norm_grade) FILTER (WHERE lesson_date > (%s::date - INTERVAL '30 day')::date) AS recent_avg,
+                   AVG(norm_grade) FILTER (WHERE lesson_date <= (%s::date - INTERVAL '30 day')::date
+                                           AND lesson_date > (%s::date - INTERVAL '60 day')::date) AS prev_avg
             FROM norm
             GROUP BY student_id
             """,

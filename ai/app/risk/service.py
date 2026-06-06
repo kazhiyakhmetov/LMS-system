@@ -25,10 +25,10 @@ FEATURE_LABELS_RU = {
     "grade_count": "Кол-во оценок",
     "grade_std": "Разброс оценок",
     "grade_trend": "Тренд оценок",
-    "low_grades_ratio": "Доля 2-3",
+    "low_grades_ratio": "Доля слабых оценок",
     "attendance_rate": "Посещаемость",
-    "absence_count": "Пропуски",
-    "submission_rate": "Сдано (%)",
+    "absence_count": "Пропусков",
+    "submission_rate": "Сдано работ",
     "overdue_count": "Просрочено",
     "graded_subjects": "Предметов с оценками",
 }
