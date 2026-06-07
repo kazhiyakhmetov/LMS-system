@@ -1,5 +1,8 @@
 import styles from "./ParentSettingsPage.module.css";
 import { useT } from "../../../../shared/lib/i18n";
+import { usePush } from "../../../../shared/lib/hooks/usePush";
+
+const TEST_BTN = { height: 30, fontSize: 12, padding: "0 12px", borderRadius: 8, border: "1px solid var(--stroke)", background: "var(--panel)", color: "var(--text)", cursor: "pointer" };
 
 const PREF_KEYS = [
   { key: "grades", enabled: true },
@@ -11,6 +14,7 @@ const PREF_KEYS = [
 
 export default function ParentSettingsPage() {
   const { t } = useT();
+  const push = usePush();
 
   return (
     <div className={styles.page}>
@@ -22,18 +26,32 @@ export default function ParentSettingsPage() {
       <section className={styles.settingsCard}>
         <h3 className={styles.blockTitle}>{t("parent.settings.preferencesTitle")}</h3>
         <ul className={styles.list}>
-          {PREF_KEYS.map((item) => (
-            <li key={item.key} className={styles.row}>
-              <div>
-                <p className={styles.rowTitle}>{t(`parent.settings.preferences.${item.key}Title`)}</p>
-                <p className={styles.rowHint}>{t(`parent.settings.preferences.${item.key}Hint`)}</p>
-              </div>
-              <label className={styles.switch}>
-                <input type="checkbox" defaultChecked={item.enabled} />
-                <span className={styles.slider} />
-              </label>
-            </li>
-          ))}
+          {PREF_KEYS.map((item) => {
+            const isPush = item.key === "grades";
+            return (
+              <li key={item.key} className={styles.row}>
+                <div>
+                  <p className={styles.rowTitle}>{t(`parent.settings.preferences.${item.key}Title`)}</p>
+                  <p className={styles.rowHint} style={isPush && push.error ? { color: "var(--danger)" } : undefined}>
+                    {isPush && push.error ? push.error : t(`parent.settings.preferences.${item.key}Hint`)}
+                  </p>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {isPush && push.enabled ? (
+                    <button type="button" style={TEST_BTN} onClick={push.test}>Тест</button>
+                  ) : null}
+                  <label className={styles.switch}>
+                    {isPush ? (
+                      <input type="checkbox" checked={push.enabled} disabled={push.busy || !push.supported} onChange={push.toggle} />
+                    ) : (
+                      <input type="checkbox" defaultChecked={item.enabled} />
+                    )}
+                    <span className={styles.slider} />
+                  </label>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       </section>
 
