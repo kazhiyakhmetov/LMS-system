@@ -87,6 +87,9 @@ services:
       SERVER_PORT: 8080
       FILE_UPLOAD_DIR: /app/uploads
       AI_SERVICE_URL: http://ai:8000
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@studix.local}
       # Cap the JVM so the whole stack fits in 2 GB RAM.
       JAVA_OPTS: "-Xmx640m -Xss512k"
     volumes:
