@@ -15,11 +15,14 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final SubmissionRepository submissionRepository; // Добавили репозиторий
+    private final PushNotificationService pushNotificationService;
 
     public NotificationService(NotificationRepository notificationRepository,
-                               SubmissionRepository submissionRepository) {
+                               SubmissionRepository submissionRepository,
+                               PushNotificationService pushNotificationService) {
         this.notificationRepository = notificationRepository;
         this.submissionRepository = submissionRepository;
+        this.pushNotificationService = pushNotificationService;
     }
 
     private NotificationDTO convertToDTO(Notification notification) {
@@ -86,11 +89,13 @@ public class NotificationService {
         String message = "Новое задание: " + assignmentTitle;
         Notification notification = new Notification(user, message, "new_assignment", assignmentId);
         notificationRepository.save(notification);
+        pushNotificationService.sendToUser(user.getId(), "Новое задание", message, "/");
     }
 
     public void createFriendRequestNotification(User user, String requesterName, Long requesterId) {
         String message = String.format("%s отправил(а) вам запрос на дружбу", requesterName);
         Notification notification = new Notification(user, message, "friend_request", requesterId);
         notificationRepository.save(notification);
+        pushNotificationService.sendToUser(user.getId(), "Запрос в друзья", message, "/");
     }
 }

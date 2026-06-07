@@ -25,13 +25,16 @@ public class FriendshipService {
     private final FriendshipRepository friendshipRepository;
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
+    private final PushNotificationService pushNotificationService;
 
     public FriendshipService(FriendshipRepository friendshipRepository,
                              UserRepository userRepository,
-                             NotificationRepository notificationRepository) {
+                             NotificationRepository notificationRepository,
+                             PushNotificationService pushNotificationService) {
         this.friendshipRepository = friendshipRepository;
         this.userRepository = userRepository;
         this.notificationRepository = notificationRepository;
+        this.pushNotificationService = pushNotificationService;
     }
 
     public FriendshipDTO sendFriendRequest(Long requesterId, Long addresseeId) {
@@ -290,6 +293,7 @@ public class FriendshipService {
 
         Notification notification = new Notification(addressee, message, "friend_request", requester.getId());
         notificationRepository.save(notification);
+        pushNotificationService.sendToUser(addressee.getId(), "Запрос в друзья", message, "/");
     }
 
     private void createFriendRequestAcceptedNotification(User requester, User addressee) {
@@ -298,6 +302,7 @@ public class FriendshipService {
 
         Notification notification = new Notification(requester, message, "friend_request_accepted", addressee.getId());
         notificationRepository.save(notification);
+        pushNotificationService.sendToUser(requester.getId(), "Заявка принята", message, "/");
     }
 
     private void createFriendRequestRejectedNotification(User requester, User addressee) {

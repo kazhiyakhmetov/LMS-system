@@ -19,8 +19,11 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final PushNotificationService pushNotificationService;
 
-    public MessageService(MessageRepository messageRepository, UserRepository userRepository) {
+    public MessageService(MessageRepository messageRepository, UserRepository userRepository,
+                          PushNotificationService pushNotificationService) {
+        this.pushNotificationService = pushNotificationService;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
     }
@@ -56,6 +59,11 @@ public class MessageService {
         }
 
         Message savedMessage = messageRepository.save(message);
+
+        String preview = text.isBlank() ? "📎 вложение" : (text.length() > 80 ? text.substring(0, 80) + "…" : text);
+        pushNotificationService.sendToUser(receiver.getId(), "Новое сообщение",
+                sender.getFirstName() + " " + sender.getLastName() + ": " + preview, "/");
+
         return convertToDTO(savedMessage);
     }
 

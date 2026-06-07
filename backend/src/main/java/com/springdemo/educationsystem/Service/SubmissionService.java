@@ -22,6 +22,7 @@ public class SubmissionService {
     private final TeacherRepository teacherRepository;
     private final NotificationRepository notificationRepository;
     private final GamificationService gamificationService;
+    private final PushNotificationService pushNotificationService;
     private static final Logger logger = LoggerFactory.getLogger(SubmissionService.class);
 
     public SubmissionService(SubmissionRepository submissionRepository,
@@ -30,7 +31,8 @@ public class SubmissionService {
                              StudentRepository studentRepository,
                              TeacherRepository teacherRepository,
                              NotificationRepository notificationRepository,
-                             GamificationService gamificationService) {
+                             GamificationService gamificationService,
+                             PushNotificationService pushNotificationService) {
         this.submissionRepository = submissionRepository;
         this.gradeRepository = gradeRepository;
         this.assignmentRepository = assignmentRepository;
@@ -38,6 +40,7 @@ public class SubmissionService {
         this.teacherRepository = teacherRepository;
         this.notificationRepository = notificationRepository;
         this.gamificationService = gamificationService;
+        this.pushNotificationService = pushNotificationService;
     }
 
     public SubmissionDTO convertToDTO(Submission submission) {
@@ -123,6 +126,7 @@ public class SubmissionService {
 
                 Notification notification = new Notification(teacherUser, message, "submission_graded", savedSubmission.getId());
                 notificationRepository.save(notification);
+                pushNotificationService.sendToUser(teacherUser.getId(), "Сдана работа", message, "/");
                 logger.info("Created submission notification for teacher: {}", teacherUser.getEmail());
             }
         } catch (Exception e) {
@@ -183,6 +187,7 @@ public class SubmissionService {
             String message = "Ваша работа \"" + submission.getAssignment().getTitle() + "\" оценена: " + gradeValue + "/100";
             Notification notification = new Notification(student, message, "grade", submission.getId());
             notificationRepository.save(notification);
+            pushNotificationService.sendToUser(student.getId(), "Новая оценка", message, "/");
             logger.info("Created grade notification for student: {}", student.getEmail());
         } catch (Exception e) {
             logger.error("Error creating grade notification: {}", e.getMessage());
