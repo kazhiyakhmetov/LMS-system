@@ -5,6 +5,7 @@ import { quizzesApi } from "../../../../shared/lib/api";
 import { useT } from "../../../../shared/lib/i18n";
 import { formatDateTime } from "../../../../shared/lib/utils/date";
 import AIQuizGenerator from "../../../../shared/ui/AIQuizGenerator/AIQuizGenerator";
+import VideoHelpModal from "../../../../shared/ui/VideoHelpModal/VideoHelpModal";
 
 const PAGE_SIZE = 5;
 
@@ -269,6 +270,7 @@ export default function StudentQuizPage() {
               cursor: "pointer", fontFamily: "inherit",
             }}
           >✨ Сгенерировать ИИ</button>
+          <VideoHelpModal title="Как пользоваться ИИ-генератором квизов" />
           <button
             type="button"
             onClick={openCreator}

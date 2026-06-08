@@ -4,6 +4,7 @@ import { quizzesApi, teachingApi } from "../../../../shared/lib/api";
 import { formatDateTime } from "../../../../shared/lib/utils/date";
 import { useT } from "../../../../shared/lib/i18n";
 import AIQuizGenerator from "../../../../shared/ui/AIQuizGenerator/AIQuizGenerator";
+import VideoHelpModal from "../../../../shared/ui/VideoHelpModal/VideoHelpModal";
 import styles from "./TeacherQuizzesPage.module.css";
 
 const QUESTION_TYPE_KEYS = ["SINGLE_CHOICE", "MULTIPLE_CHOICE", "TEXT_ANSWER"];
@@ -342,6 +343,7 @@ export default function TeacherQuizzesPage() {
               cursor: "pointer", fontFamily: "inherit",
             }}
           >✨ Сгенерировать ИИ</button>
+          <VideoHelpModal title="Как пользоваться ИИ-генератором тестов" />
           <button className={styles.createBtn} type="button" onClick={() => setCreateOpen(true)}>
             {t("teacher.quizzes.createBtn")}
           </button>

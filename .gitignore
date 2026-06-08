@@ -55,3 +55,6 @@ ai/scripts/seed_teachers.py
 ai/scripts/seed_content.py
 ai/scripts/seed_assignments.py
 ai/scripts/seed_midrisk.py
+
+# Tutorial video (large binary — keep out of git)
+front/public/quiz-tutorial.mp4
